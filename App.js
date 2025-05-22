@@ -1,20 +1,37 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, ImageBackground, SafeAreaView, Image } from 'react-native';
 
 export default function App() {
+  const fondo = require('./assets/Fondo-de-pantalla.png');
+  const logo = require('./assets/Logo.png');
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <SafeAreaView style={{ flex: 1 }}>
+      <StatusBar style="dark" backgroundColor="#eeda9d" />
+      <ImageBackground source={fondo} resizeMode="cover" style={styles.backgroundImage}>
+      <View style={styles.container}>
+      <Image source={logo} style={{alignItems: 'center'}}/>
+      </View>
+      </ImageBackground>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  backgroundImage: {
+    flex: 1,
+    justifyContent: 'center',
+    opacity: 0.8,
+  },
+  profileImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 1,
+    borderWidth: 2,
+    borderColor: 'white',
   },
 });
