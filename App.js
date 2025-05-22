@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, ImageBackground, SafeAreaView, Image } from 'react-native';
+import { StyleSheet, Text, View, ImageBackground, SafeAreaView, Image, Button } from 'react-native';
 
 export default function App() {
   const fondo = require('./assets/Fondo-de-pantalla.png');
@@ -9,7 +9,12 @@ export default function App() {
       <StatusBar style="dark" backgroundColor="#eeda9d" />
       <ImageBackground source={fondo} resizeMode="cover" style={styles.backgroundImage}>
       <View style={styles.container}>
-      <Image source={logo} style={{alignItems: 'center'}}/>
+        <Image source={logo} style={{alignItems: 'center'}}/>
+        <Text style={styles.tituloLogin}>Bienvenido</Text>
+      </View>
+      <View style={styles.container2}>
+        <Button style={styles.botonLogin}>Iniciar como Solver</Button>
+        <Button style={styles.botonLogin}>Iniciar como Cliente</Button>
       </View>
       </ImageBackground>
     </SafeAreaView>
@@ -20,11 +25,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
+    marginTop: '25%',
   },
   backgroundImage: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     opacity: 0.8,
   },
   profileImage: {
@@ -34,4 +40,14 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: 'white',
   },
+  tituloLogin: {
+    fontSize: 35,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  container2: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+  }
 });
