@@ -5,11 +5,11 @@ export default function App() {
   const fondo = require('./assets/Fondo-de-pantalla.png');
   const logo = require('./assets/Logo.png');
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={styles.SafeArea}>
       <StatusBar style="dark" backgroundColor="#eeda9d" />
       <ImageBackground source={fondo} resizeMode="cover" style={styles.backgroundImage}>
       <View style={styles.container}>
-        <Image source={logo} style={{alignItems: 'center'}}/>
+        <Image source={logo} style={styles.ImagenLogo}/>
         <Text style={styles.tituloLogin}>Bienvenido</Text>
       </View>
       <View style={styles.container2}>
@@ -22,6 +22,9 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
+  SafeArea:{
+    flex: 1 
+  },
   container: {
     flex: 1,
     alignItems: 'center',
@@ -49,5 +52,8 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-start',
+  },
+  ImagenLogo: {
+    alignItems: 'center'
   }
 });
