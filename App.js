@@ -14,7 +14,12 @@ export default function App() {
         <Text style={styles.tituloLogin}>Bienvenido</Text>
       </View>
       <View style={styles.container2}>
-        <TouchableOpacity style={styles.botonLogin}><ImageBackground source={fondoBoton}><Text style={styles.botonTexto}>Iniciar como Solver</Text></ImageBackground></TouchableOpacity>
+    <TouchableOpacity>
+  <ImageBackground source={fondoBoton} style={styles.botonLogin} imageStyle={styles.botonImagen}>
+    <Text style={styles.botonTexto}>Iniciar como Solver</Text>
+  </ImageBackground>
+</TouchableOpacity>
+
         <View style={styles.horizontalLine} />
         <Button style={styles.botonLogin} backgroundImage={fondoBoton} title='Iniciar como Cliente'/>
       </View>
@@ -60,5 +65,25 @@ const styles = StyleSheet.create({
   },
   ImagenLogo: {
     alignItems: 'center'
+  },
+  botonLogin: {
+    width: 200,
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginVertical: 8,
+  },
+  
+  botonImagen: {
+    resizeMode: 'stretch',
+    borderRadius: 10,
+  },
+  
+  botonTexto: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
   }
+  
+  
 });
