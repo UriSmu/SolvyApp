@@ -15,7 +15,11 @@ export default function App() {
       </View>
       <View style={styles.container2}>
         <TouchableOpacity style={styles.botonLogin}><ImageBackground source={fondoBoton}><Text style={styles.botonTexto}>Iniciar como Solver</Text></ImageBackground></TouchableOpacity>
+        <View style={styles.horizontalLine} />
         <Button style={styles.botonLogin} backgroundImage={fondoBoton} title='Iniciar como Cliente'/>
+      </View>
+      <View style={styles.container3}>
+        <Text style={styles.link} href='#'>Explorar Solvy</Text>
       </View>
       </ImageBackground>
     </SafeAreaView>
@@ -52,24 +56,9 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-start',
+    marginVertical: '50%'
   },
   ImagenLogo: {
     alignItems: 'center'
-  },
-  botonLogin: {
-  width: 300,             // Ancho fijo como en la imagen
-  height: 80,             // Alto fijo
-  justifyContent: 'center',
-  alignItems: 'center',
-  marginVertical: 10,     // Espaciado entre botones si hay más
-},
-
-
-botonTexto: {
-  color: 'white',
-  fontSize: 22,
-  fontWeight: 'bold',
-}
-
-  
+  }
 });
