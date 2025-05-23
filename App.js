@@ -1,5 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, ImageBackground, SafeAreaView, Image, Button, TouchableOpacity, Alert } from 'react-native';
+import { useRouter } from 'expo-router';
+
 
 export default function App() {
   const fondo = require('./assets/Fondo-de-pantalla.png');
@@ -9,7 +11,8 @@ export default function App() {
   const onPress = () => {
     console.log("PRESS")
   }
-
+  
+    const router = useRouter();
   return (
     <SafeAreaView style={styles.SafeArea}>
       <StatusBar style="dark" backgroundColor="#eeda9d" />
@@ -26,7 +29,7 @@ export default function App() {
 </TouchableOpacity>
 
         <View style={styles.horizontalLine} />
-        <TouchableOpacity>
+         <TouchableOpacity onPress={() => router.navigate('/Login')}> 
   <ImageBackground source={fondoBoton} style={styles.botonLogin} imageStyle={styles.botonImagen}>
     <Text style={styles.botonTexto}>Iniciar como Cliente</Text>
   </ImageBackground>

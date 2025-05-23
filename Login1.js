@@ -6,7 +6,10 @@ export default function Login() {
     const fondo = require('./assets/Fondo-de-pantalla.png');
     const logo = require('./assets/Logo.png');
     const fondoBoton = require('./assets/Fondo-boton.png')
-  
+    const FotoGoogle = require('./assets/Google-login.png');
+    const FotoFacebook = require('./assets/Facebook-login.png');
+    const FotoLinkedin = require('./assets/Linkedin-login.png');
+
     const onPress = () => {
       console.log("PRESS")
     }
@@ -33,6 +36,14 @@ export default function Login() {
     </ImageBackground>
   </TouchableOpacity>
         </View>
+        <View style={styles.container3}>
+        <Text style={styles.link} href='#'>Inicie sesion con redes</Text>
+        <View style={styles.containerLogos}>
+        <Image source={FotoGoogle} style={styles.LogosLogin}/>
+        <Image source={FotoFacebook} style={styles.LogosLogin}/>
+        <Image source={FotoLinkedin} style={styles.LogosLogin}/>
+        </View>
+      </View>
         </ImageBackground>
       </SafeAreaView>
     );
@@ -120,5 +131,14 @@ export default function Login() {
       textDecorationLine: 'underline',
       marginBottom: '10%'
     },  
+    LogosLogin:
+    {
+        marginHorizontal: 5,
+
+    },
+    containerLogos:
+    {
+        flexDirection: 'row'
+    }
     
   });
