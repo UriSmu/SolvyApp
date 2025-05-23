@@ -66,6 +66,7 @@ const styles = StyleSheet.create({
   ImagenLogo: {
     alignItems: 'center'
   },
+  
   botonLogin: {
     width: 200,
     height: 50,
