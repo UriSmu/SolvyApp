@@ -1,10 +1,15 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, ImageBackground, SafeAreaView, Image, Button, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, ImageBackground, SafeAreaView, Image, Button, TouchableOpacity, Alert } from 'react-native';
 
 export default function App() {
   const fondo = require('./assets/Fondo-de-pantalla.png');
   const logo = require('./assets/Logo.png');
   const fondoBoton = require('./assets/Fondo-boton.png')
+
+  const onPress = () => {
+    console.log("PRESS")
+  }
+
   return (
     <SafeAreaView style={styles.SafeArea}>
       <StatusBar style="dark" backgroundColor="#eeda9d" />
@@ -14,7 +19,7 @@ export default function App() {
         <Text style={styles.tituloLogin}>Bienvenido</Text>
       </View>
       <View style={styles.container2}>
-    <TouchableOpacity>
+    <TouchableOpacity onPress={onPress}>
   <ImageBackground source={fondoBoton} style={styles.botonLogin} imageStyle={styles.botonImagen}>
     <Text style={styles.botonTexto}>Iniciar como Solver</Text>
   </ImageBackground>
