@@ -15,7 +15,11 @@ export default function App() {
       </View>
       <View style={styles.container2}>
         <Button style={styles.botonLogin} backgroundImage={fondoBoton} title='Iniciar como Solver'/>
+        <View style={styles.horizontalLine} />
         <Button style={styles.botonLogin} backgroundImage={fondoBoton} title='Iniciar como Cliente'/>
+      </View>
+      <View style={styles.container3}>
+        <Text style={styles.link} href='#'>Explorar Solvy</Text>
       </View>
       </ImageBackground>
     </SafeAreaView>
@@ -53,8 +57,30 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-start',
+    marginVertical: '50%'
   },
   ImagenLogo: {
     alignItems: 'center'
-  }
+  },
+  horizontalLine: {
+    borderTopWidth: 1,
+    borderStyle: 'solid',
+    borderColor: 'white',
+    width: '75%',
+  },
+  container3: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+  },
+  link: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'white',
+    alignItems: 'center',
+    textDecorationLine: 'underline',
+  },
+  botonLogin: {
+
+  },
 });
