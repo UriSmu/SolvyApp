@@ -66,6 +66,13 @@ const styles = StyleSheet.create({
   ImagenLogo: {
     alignItems: 'center'
   },
+
+  horizontalLine: {
+    borderTopWidth: 1,
+    borderStyle: 'solid',
+    borderColor: 'white',
+    width: '75%',
+  },
   
   botonLogin: {
     width: 200,
@@ -84,7 +91,20 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 18,
     fontWeight: 'bold',
-  }
-  
+  },
+
+  container3: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+  },
+
+  link: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'white',
+    alignItems: 'center',
+    textDecorationLine: 'underline',
+  },  
   
 });
