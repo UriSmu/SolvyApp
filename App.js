@@ -60,7 +60,8 @@ const styles = StyleSheet.create({
     marginVertical: '50%'
   },
   ImagenLogo: {
-    alignItems: 'center'
+    alignItems: 'center',
+    marginHorizontal: '50%',
   },
   horizontalLine: {
     borderTopWidth: 1,
