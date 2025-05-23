@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, ImageBackground, SafeAreaView, Image, Button } from 'react-native';
+import { StyleSheet, Text, View, ImageBackground, SafeAreaView, Image, Button, TouchableOpacity } from 'react-native';
 
 export default function App() {
   const fondo = require('./assets/Fondo-de-pantalla.png');
@@ -14,7 +14,7 @@ export default function App() {
         <Text style={styles.tituloLogin}>Bienvenido</Text>
       </View>
       <View style={styles.container2}>
-        <Button style={styles.botonLogin} backgroundImage={fondoBoton} title='Iniciar como Solver'/>
+        <TouchableOpacity style={styles.botonLogin}><ImageBackground source={fondoBoton}><Text style={styles.botonTexto}>Iniciar como Solver</Text></ImageBackground></TouchableOpacity>
         <View style={styles.horizontalLine} />
         <Button style={styles.botonLogin} backgroundImage={fondoBoton} title='Iniciar como Cliente'/>
       </View>
@@ -25,7 +25,6 @@ export default function App() {
     </SafeAreaView>
   );
 }
-
 const styles = StyleSheet.create({
   SafeArea:{
     flex: 1 
