@@ -21,7 +21,11 @@ export default function App() {
 </TouchableOpacity>
 
         <View style={styles.horizontalLine} />
-        <Button style={styles.botonLogin} backgroundImage={fondoBoton} title='Iniciar como Cliente'/>
+        <TouchableOpacity>
+  <ImageBackground source={fondoBoton} style={styles.botonLogin} imageStyle={styles.botonImagen}>
+    <Text style={styles.botonTexto}>Iniciar como Cliente</Text>
+  </ImageBackground>
+</TouchableOpacity>
       </View>
       <View style={styles.container3}>
         <Text style={styles.link} href='#'>Explorar Solvy</Text>
@@ -53,33 +57,39 @@ const styles = StyleSheet.create({
     borderColor: 'white',
   },
   tituloLogin: {
-    fontSize: 35,
-    fontWeight: 'bold',
+    fontSize: 40,
+    fontWeight: 500,
     color: 'white',
+    marginTop: '2%'
   },
   container2: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-start',
-    marginVertical: '50%'
+    marginVertical: '40%',
+    paddingBottom: '20%',
+    margin: '10%'
   },
   ImagenLogo: {
-    alignItems: 'center'
+    alignItems: 'center',
+   
   },
 
   horizontalLine: {
     borderTopWidth: 1,
     borderStyle: 'solid',
     borderColor: 'white',
-    width: '75%',
+    width: '90%',
+    marginVertical: '5%'
   },
   
   botonLogin: {
-    width: 200,
+    width: 250,
     height: 50,
     justifyContent: 'center',
     alignItems: 'center',
     marginVertical: 8,
+    marginTop: 10 
   },
   
   botonImagen: {
@@ -89,7 +99,7 @@ const styles = StyleSheet.create({
   
   botonTexto: {
     color: 'white',
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
   },
 
@@ -105,6 +115,7 @@ const styles = StyleSheet.create({
     color: 'white',
     alignItems: 'center',
     textDecorationLine: 'underline',
+    marginBottom: '10%'
   },  
   
 });
