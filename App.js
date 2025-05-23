@@ -13,8 +13,8 @@ export default function App() {
         <Text style={styles.tituloLogin}>Bienvenido</Text>
       </View>
       <View style={styles.container2}>
-        <Button style={styles.botonLogin}>Iniciar como Solver</Button>
-        <Button style={styles.botonLogin}>Iniciar como Cliente</Button>
+        <Button style={styles.botonLogin} title='Iniciar como Solver'/>
+        <Button style={styles.botonLogin} title='Iniciar como Cliente'/>
       </View>
       </ImageBackground>
     </SafeAreaView>
