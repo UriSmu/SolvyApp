@@ -4,6 +4,7 @@ import { StyleSheet, Text, View, ImageBackground, SafeAreaView, Image, Button } 
 export default function App() {
   const fondo = require('./assets/Fondo-de-pantalla.png');
   const logo = require('./assets/Logo.png');
+  const fondoBoton = require('./assets/Fondo-boton.png')
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <StatusBar style="dark" backgroundColor="#eeda9d" />
@@ -13,8 +14,8 @@ export default function App() {
         <Text style={styles.tituloLogin}>Bienvenido</Text>
       </View>
       <View style={styles.container2}>
-        <Button style={styles.botonLogin} title='Iniciar como Solver'/>
-        <Button style={styles.botonLogin} title='Iniciar como Cliente'/>
+        <Button style={styles.botonLogin} backgroundImage={fondoBoton} title='Iniciar como Solver'/>
+        <Button style={styles.botonLogin} backgroundImage={fondoBoton} title='Iniciar como Cliente'/>
       </View>
       </ImageBackground>
     </SafeAreaView>
@@ -49,5 +50,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-start',
-  }
+  },
+
 });
