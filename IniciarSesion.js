@@ -1,12 +1,16 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, ImageBackground, SafeAreaView, Image, Button, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, Text, View, ImageBackground, SafeAreaView, Image, Button, TouchableOpacity, Alert, TextInput} from 'react-native';
 import { useRouter } from 'expo-router';
+
 
 
 export default function App() {
   const fondo = require('./assets/Fondo-de-pantalla.png');
   const logo = require('./assets/Logo.png');
   const fondoBoton = require('./assets/Fondo-boton.png')
+  const facebook = require('./assets/Facebook-login.png')
+  const linkedin = require('./assets/Linkedin-login.png')
+  const gmail = require('./assets/Google-login.png')
 
   const onPress = (obj) => {
     console.log(`Se quiere iniciar como ${obj}`)
@@ -19,21 +23,24 @@ export default function App() {
       <ImageBackground source={fondo} resizeMode="cover" style={styles.backgroundImage}>
       <View style={styles.container}>
         <Image source={logo} style={styles.ImagenLogo}/>
-        <TouchableOpacity onPress={() => onPress("Solver")}>
-  <ImageBackground source={fondoBoton} style={styles.botonLogin} imageStyle={styles.botonImagen}>
-    <Text style={styles.botonTexto}>Iniciar como Solver</Text>
-  </ImageBackground>
-</TouchableOpacity>
-
-        <View style={styles.horizontalLine} />
-         <TouchableOpacity onPress={() => onPress("Cliente")}> 
-  <ImageBackground source={fondoBoton} style={styles.botonLogin} imageStyle={styles.botonImagen}>
-    <Text style={styles.botonTexto}>Iniciar como Cliente</Text>
-  </ImageBackground>
-</TouchableOpacity>
+        <Text style={styles.tituloLogin}>Iniciar Sesión</Text>
+      </View>
+      <View style={styles.container2}>
+        <View style={styles.textInput}>
+            <TextInput placeholder='Ingrese su DNI, Username, Mail o Teléfono'/>
+        </View>
+        <View style={styles.textInput}>
+            <TextInput placeholder='Ingrese su contraseña'/>
+        </View>
       </View>
       <View style={styles.container3}>
-        <Text style={styles.link} href='#'>Explorar Solvy</Text>
+      <View style={styles.horizontalLine} />
+        <Text style={styles.subtituloLogin}>Iniciar Sesión con:</Text>
+      <View style={styles.containerLogos}>
+        <Image source={gmail} style={styles.LogosLogin}/>
+        <Image source={facebook} style={styles.LogosLogin}/>
+        <Image source={linkedin} style={styles.LogosLogin}/>
+      </View>
       </View>
       </ImageBackground>
     </SafeAreaView>
@@ -67,13 +74,20 @@ const styles = StyleSheet.create({
     color: 'white',
     marginTop: '2%'
   },
+  subtituloLogin: {
+    fontSize: 25,
+    fontWeight: 500,
+    color: 'white',
+    marginTop: '2%',
+    marginBottom: '2%'
+  },
   container2: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-start',
-    marginVertical: '40%',
-    paddingBottom: '20%',
-    margin: '10%'
+    marginTop: '40%',
+    margin: '10%',
+    marginBottom: '15%',
   },
   ImagenLogo: {
     alignItems: 'center',
@@ -85,7 +99,7 @@ const styles = StyleSheet.create({
     borderStyle: 'solid',
     borderColor: 'white',
     width: '90%',
-    marginVertical: '5%'
+    marginVertical: '5%',
   },
   
   botonLogin: {
@@ -109,7 +123,8 @@ const styles = StyleSheet.create({
   },
 
   container3: {
-    flex: 1,
+    flex: 3,
+    marginBottom: '15%',
     alignItems: 'center',
     justifyContent: 'flex-start',
   },
@@ -122,5 +137,20 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
     marginBottom: '10%'
   },  
+  containerLogos: {
+    flexDirection: 'row',
+  },
+  LogosLogin:
+  {
+    marginHorizontal: 5,
+  },
+  textInput: {
+    backgroundColor: 'white',
+    marginTop: '5%',
+    opacity: 0.9,
+    borderRadius: 10, // valor numérico razonable
+    paddingVertical: 5,
+    width: '100%',
+  },
   
 });
