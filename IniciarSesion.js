@@ -13,7 +13,7 @@ export default function App() {
   const gmail = require('./assets/Google-login.png')
 
   const onPress = (obj) => {
-    console.log(`Se quiere iniciar como ${obj}`)
+    console.log(`Se quiere iniciar con ${obj}`)
   }
   
     const router = useRouter();
@@ -32,14 +32,25 @@ export default function App() {
         <View style={styles.textInput}>
             <TextInput placeholder='Ingrese su contraseña'/>
         </View>
+        <TouchableOpacity onPress={() => onPress("Usuario")}>
+        <ImageBackground source={fondoBoton} style={styles.botonLogin} imageStyle={styles.botonImagen}>
+            <Text style={styles.botonTexto}>Iniciar Sesion</Text>
+        </ImageBackground>
+        </TouchableOpacity>
       </View>
       <View style={styles.container3}>
       <View style={styles.horizontalLine} />
         <Text style={styles.subtituloLogin}>Iniciar Sesión con:</Text>
       <View style={styles.containerLogos}>
-        <Image source={gmail} style={styles.LogosLogin}/>
-        <Image source={facebook} style={styles.LogosLogin}/>
-        <Image source={linkedin} style={styles.LogosLogin}/>
+        <TouchableOpacity onPress={() => onPress("Google")}>
+            <Image source={gmail} style={styles.LogosLogin}/>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => onPress("Facebook")}>
+            <Image source={facebook} style={styles.LogosLogin}/>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => onPress("Linkedin")}>
+            <Image source={linkedin} style={styles.LogosLogin}/>
+        </TouchableOpacity>
       </View>
       </View>
       </ImageBackground>
@@ -85,7 +96,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-start',
-    marginTop: '40%',
+    marginTop: '30%',
     margin: '10%',
     marginBottom: '15%',
   },
@@ -125,6 +136,7 @@ const styles = StyleSheet.create({
   container3: {
     flex: 3,
     marginBottom: '15%',
+    marginTop: '20%',
     alignItems: 'center',
     justifyContent: 'flex-start',
   },
