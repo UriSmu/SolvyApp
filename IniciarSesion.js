@@ -19,10 +19,7 @@ export default function App() {
       <ImageBackground source={fondo} resizeMode="cover" style={styles.backgroundImage}>
       <View style={styles.container}>
         <Image source={logo} style={styles.ImagenLogo}/>
-        <Text style={styles.tituloLogin}>Bienvenido</Text>
-      </View>
-      <View style={styles.container2}>
-    <TouchableOpacity onPress={() => onPress("Solver")}>
+        <TouchableOpacity onPress={() => onPress("Solver")}>
   <ImageBackground source={fondoBoton} style={styles.botonLogin} imageStyle={styles.botonImagen}>
     <Text style={styles.botonTexto}>Iniciar como Solver</Text>
   </ImageBackground>

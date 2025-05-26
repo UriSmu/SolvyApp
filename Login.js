@@ -7,8 +7,8 @@ export default function Login() {
     const logo = require('./assets/Logo.png');
     const fondoBoton = require('./assets/Fondo-boton.png')
   
-    const onPress = () => {
-      console.log("PRESS")
+    const onPress = (obj) => {
+      console.log(`Se quiere ${obj}`)
     }
   
     return (
@@ -20,14 +20,14 @@ export default function Login() {
           <Text style={styles.tituloLogin}>Bienvenido</Text>
         </View>
         <View style={styles.container2}>
-      <TouchableOpacity onPress={onPress}>
+      <TouchableOpacity onPress={() => onPress("Iniciar")}>
     <ImageBackground source={fondoBoton} style={styles.botonLogin} imageStyle={styles.botonImagen}>
       <Text style={styles.botonTexto}>Iniciar Sesion</Text>
     </ImageBackground>
   </TouchableOpacity>
   
           <View style={styles.horizontalLine} />
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => onPress("Registrar")}>
     <ImageBackground source={fondoBoton} style={styles.botonLogin} imageStyle={styles.botonImagen}>
       <Text style={styles.botonTexto}>Registrarme</Text>
     </ImageBackground>
