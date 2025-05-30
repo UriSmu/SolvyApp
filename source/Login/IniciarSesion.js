@@ -9,8 +9,6 @@ export default function App() {
   const fondo = require('./assets/Fondo-de-pantalla.png');
   const logo = require('./assets/Logo.png');
   const fondoBoton = require('./assets/Fondo-boton.png')
-  const facebook = require('./assets/Facebook-login.png')
-  const linkedin = require('./assets/Linkedin-login.png')
 
   const onPress = (obj) => {
     console.log(`Se quiere iniciar con ${obj}`)
