@@ -6,11 +6,10 @@ import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Entypo from '@expo/vector-icons/Entypo';
 
 
-export default function App() {
-  const fondo = require('./assets/Fondo-de-pantalla.png');
-  const logo = require('./assets/Logo.png');
-  const fondoBoton = require('./assets/Fondo-boton.png')
-
+export default function IniciarSesion() {
+  const fondo = require('../../assets/Fondo-de-pantalla.png');
+  const logo = require('../../assets/Logo.png');
+  const fondoBoton = require('../../assets/Fondo-boton.png')
 
   const onPress = (obj) => {
     console.log(`Se quiere iniciar con ${obj}`)

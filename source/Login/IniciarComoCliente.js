@@ -1,11 +1,11 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, ImageBackground, SafeAreaView, Image, Button, TouchableOpacity, Alert } from 'react-native';
 
-export default function Login() {
+export default function IniciarComoCliente() {
 
-    const fondo = require('./assets/Fondo-de-pantalla.png');
-    const logo = require('./assets/Logo.png');
-    const fondoBoton = require('./assets/Fondo-boton.png')
+    const fondo = require('../../assets/Fondo-de-pantalla.png');
+    const logo = require('../../assets/Logo.png');
+    const fondoBoton = require('../../assets/Fondo-boton.png')
   
     const onPress = (obj) => {
       console.log(`Se quiere ${obj}`)
