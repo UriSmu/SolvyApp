@@ -27,10 +27,10 @@ export default function App() {
       </View>
       <View style={styles.container2}>
         <View style={styles.textInput}>
-            <TextInput placeholder='Ingrese su DNI, Username, Mail o Teléfono'/>
+            <TextInput style={styles.textInput .input} placeholder='Ingrese su DNI, Username, Mail o Teléfono'/>
         </View>
         <View style={styles.textInput}>
-            <TextInput placeholder='Ingrese su contraseña'/>
+            <TextInput style={styles.textInput .input} placeholder='Ingrese su contraseña'/>
         </View>
         <TouchableOpacity onPress={() => onPress("Usuario")}>
         <ImageBackground source={fondoBoton} style={styles.botonLogin} imageStyle={styles.botonImagen}>
@@ -160,9 +160,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     marginTop: '5%',
     opacity: 0.9,
-    borderRadius: 10, // valor numérico razonable
+    borderRadius: 8, // valor numérico razonable
     paddingVertical: 5,
     width: '100%',
+    input: {
+      paddingVertical: 8
+    },
   },
   
 });
