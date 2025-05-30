@@ -106,7 +106,6 @@ const styles = StyleSheet.create({
   },
   ImagenLogo: {
     alignItems: 'center',
-   
   },
 
   horizontalLine: {
@@ -168,7 +167,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     width: '100%',
     input: {
-      paddingVertical: 8
+    paddingVertical: 8
     },
   },
   

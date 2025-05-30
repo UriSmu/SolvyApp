@@ -88,9 +88,8 @@ const styles = StyleSheet.create({
     margin: '10%',
     marginBottom: '15%',
   },
-  ImagenLogo: {
+    ImagenLogo: {
     alignItems: 'center',
-   
   },
 
   horizontalLine: {

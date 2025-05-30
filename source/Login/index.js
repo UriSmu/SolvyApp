@@ -12,7 +12,7 @@ export default function Login() {
     console.log(`Se quiere iniciar como ${obj}`)
   }
   
-    const router = useRouter();
+  const router = useRouter();
   return (
     <SafeAreaView style={styles.SafeArea}>
       <StatusBar style="dark" backgroundColor="#eeda9d" />
@@ -29,7 +29,7 @@ export default function Login() {
 </TouchableOpacity>
 
         <View style={styles.horizontalLine} />
-         <TouchableOpacity onPress={() => onPress("Cliente")}> 
+        <TouchableOpacity onPress={() => onPress("Cliente")}> 
   <ImageBackground source={fondoBoton} style={styles.botonLogin} imageStyle={styles.botonImagen}>
     <Text style={styles.botonTexto}>Iniciar como Cliente</Text>
   </ImageBackground>
@@ -80,7 +80,6 @@ const styles = StyleSheet.create({
   },
   ImagenLogo: {
     alignItems: 'center',
-   
   },
 
   horizontalLine: {
