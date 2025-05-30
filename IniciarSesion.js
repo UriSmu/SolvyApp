@@ -1,6 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, ImageBackground, SafeAreaView, Image, Button, TouchableOpacity, Alert, TextInput} from 'react-native';
 import { useRouter } from 'expo-router';
+import AntDesign from '@expo/vector-icons/AntDesign';
 
 
 
@@ -10,7 +11,6 @@ export default function App() {
   const fondoBoton = require('./assets/Fondo-boton.png')
   const facebook = require('./assets/Facebook-login.png')
   const linkedin = require('./assets/Linkedin-login.png')
-  const gmail = require('./assets/Google-login.png')
 
   const onPress = (obj) => {
     console.log(`Se quiere iniciar con ${obj}`)
@@ -43,13 +43,13 @@ export default function App() {
         <Text style={styles.subtituloLogin}>Iniciar Sesión con:</Text>
       <View style={styles.containerLogos}>
         <TouchableOpacity onPress={() => onPress("Google")}>
-            <Image source={gmail} style={styles.LogosLogin}/>
+            <AntDesign name="google" color="white" style={styles.LogosLogin} />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => onPress("Facebook")}>
-            <Image source={facebook} style={styles.LogosLogin}/>
+          <AntDesign name="facebook-square" size={24} color="white" style={styles.LogosLogin} />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => onPress("Linkedin")}>
-            <Image source={linkedin} style={styles.LogosLogin}/>
+          <AntDesign name="linkedin-square" size={24} color="white" style={styles.LogosLogin}/>
         </TouchableOpacity>
       </View>
       </View>
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     marginTop: '5%',
     opacity: 0.9,
-    borderRadius: 8, // valor numérico razonable
+    borderRadius: 8,
     paddingVertical: 5,
     width: '100%',
     input: {
