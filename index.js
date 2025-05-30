@@ -1,12 +1,15 @@
 import { registerRootComponent } from 'expo';
 
-import App from './App';
-import LoginCliente from './LoginCliente';
-import LoginSolver from './LoginSolver';
-import InicioSesionSolver from './InicioSesionSolver';
-import InicioSesionCliente from './InicioSesionCliente';
+import App from './App'
+
+
+import Login from './source/Login';
+import IniciarComoCliente from './source/Login/IniciarComoCliente';
+import IniciarSesion from './source/Login/IniciarSesion';
+import Registrarse from './source/Login/Registrarse'
+import IniciarComoSolver from './source/Login/IniciarComoSolver'
 
 // registerRootComponent calls AppRegistry.registerComponent('main', () => App);
 // It also ensures that whether you load the app in Expo Go or in a native build,
 // the environment is set up appropriately
-registerRootComponent(App)
+registerRootComponent(IniciarSesion);
