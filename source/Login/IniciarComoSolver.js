@@ -4,10 +4,10 @@ import { useRouter } from 'expo-router';
 
 ////////EN ESTA PÁGINA HAY QUE HACER QUE A LA PERSONA SE LA RE-DIRIJA A LA APP PARA SOLVERS
 
-export default function App() {
-  const fondo = require('./assets/Fondo-de-pantalla.png');
-  const logo = require('./assets/Logo.png');
-  const fondoBoton = require('./assets/Fondo-boton.png')
+export default function IniciarComoSolver() {
+  const fondo = require('../../assets/Fondo-de-pantalla.png');
+  const logo = require('../../assets/Logo.png');
+  const fondoBoton = require('../../assets/Fondo-boton.png')
 
   const onPress = (obj) => {
     console.log(`Se quiere iniciar como ${obj}`)

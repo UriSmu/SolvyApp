@@ -3,10 +3,10 @@ import { StyleSheet, Text, View, ImageBackground, SafeAreaView, Image, Button, T
 import { useRouter } from 'expo-router';
 
 
-export default function App() {
-  const fondo = require('./assets/Fondo-de-pantalla.png');
-  const logo = require('./assets/Logo.png');
-  const fondoBoton = require('./assets/Fondo-boton.png')
+export default function Login() {
+  const fondo = require('../../assets/Fondo-de-pantalla.png');
+  const logo = require('../../assets/Logo.png');
+  const fondoBoton = require('../../assets/Fondo-boton.png')
 
   const onPress = (obj) => {
     console.log(`Se quiere iniciar como ${obj}`)
