@@ -75,7 +75,6 @@ export default function IniciarComoCliente() {
     },
     ImagenLogo: {
       alignItems: 'center',
-     
     },
   
     horizontalLine: {

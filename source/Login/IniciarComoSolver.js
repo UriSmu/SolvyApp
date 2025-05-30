@@ -30,7 +30,7 @@ export default function IniciarComoSolver() {
 </TouchableOpacity>
 
         <View style={styles.horizontalLine} />
-         <TouchableOpacity onPress={() => onPress("Cliente")}> 
+        <TouchableOpacity onPress={() => onPress("Cliente")}> 
   <ImageBackground source={fondoBoton} style={styles.botonLogin} imageStyle={styles.botonImagen}>
     <Text style={styles.botonTexto}>Iniciar como Cliente</Text>
   </ImageBackground>
@@ -81,7 +81,6 @@ const styles = StyleSheet.create({
   },
   ImagenLogo: {
     alignItems: 'center',
-   
   },
 
   horizontalLine: {

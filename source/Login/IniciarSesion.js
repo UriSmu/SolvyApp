@@ -101,7 +101,6 @@ const styles = StyleSheet.create({
   },
   ImagenLogo: {
     alignItems: 'center',
-   
   },
 
   horizontalLine: {
