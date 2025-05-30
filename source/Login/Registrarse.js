@@ -2,6 +2,9 @@ import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, ImageBackground, SafeAreaView, Image, Button, TouchableOpacity, Alert, TextInput} from 'react-native';
 import { useRouter } from 'expo-router';
 import AntDesign from '@expo/vector-icons/AntDesign';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import Entypo from '@expo/vector-icons/Entypo';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 
 
@@ -36,10 +39,13 @@ export default function Registrarse() {
         <View style={styles.textInput}>
             <TextInput style={styles.textInput .input} placeholder='Ingrese su Email'/>
         </View>
-        <TouchableOpacity onPress={() => onPress("Usuario")}>
-        <ImageBackground source={fondoBoton} style={styles.botonLogin} imageStyle={styles.botonImagen}>
-            <Text style={styles.botonTexto}>Registrarse</Text>
-        </ImageBackground>
+        <TouchableOpacity onPress={() => onPress("Usuario")} style={styles.botonContenedor}>
+          <ImageBackground source={fondoBoton} style={styles.botonLogin} imageStyle={styles.botonImagen}>
+            <View style={styles.botonContenido}>
+              <Text style={styles.botonTexto}>Siguiente</Text>
+              <MaterialIcons name="forward" size={24} color="white" style={{ marginLeft: 8 }} />
+            </View>
+          </ImageBackground>
         </TouchableOpacity>
       </View>
       <View style={styles.container3}>
@@ -47,13 +53,13 @@ export default function Registrarse() {
           <Text style={styles.subtituloLogin}>Registrarse con:</Text>
         <View style={styles.containerLogos}>
           <TouchableOpacity onPress={() => onPress("Google")}>
-              <AntDesign name="google" color="white" style={styles.LogosLogin} />
+              <AntDesign name="google" size={28} color="white" style={styles.LogosLogin} />
           </TouchableOpacity>
           <TouchableOpacity onPress={() => onPress("Facebook")}>
-            <AntDesign name="facebook-square" size={24} color="white" style={styles.LogosLogin} />
+          <FontAwesome5 name="facebook-f" size={28} color="white" style={styles.LogosLogin} />        
           </TouchableOpacity>
           <TouchableOpacity onPress={() => onPress("Linkedin")}>
-            <AntDesign name="linkedin-square" size={24} color="white" style={styles.LogosLogin}/>
+          <Entypo name="linkedin" size={28} color="white" style={styles.LogosLogin} />
           </TouchableOpacity>
         </View>
       </View>
@@ -87,20 +93,20 @@ const styles = StyleSheet.create({
     fontSize: 40,
     fontWeight: 500,
     color: 'white',
-    marginTop: '2%'
+    marginTop: '5%', 
+    alignItems: 'center'
   },
   subtituloLogin: {
     fontSize: 25,
     fontWeight: 500,
     color: 'white',
-    marginTop: '2%',
-    marginBottom: '2%'
+    paddingHorizontal: 30
   },
   container2: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-start',
-    marginTop: '30%',
+    marginTop: '15%',
     margin: '10%',
     marginBottom: '15%',
   },
@@ -118,17 +124,17 @@ const styles = StyleSheet.create({
   },
   
   botonLogin: {
-    width: 250,
+    width: 200,
     height: 50,
     justifyContent: 'center',
     alignItems: 'center',
     marginVertical: 8,
-    marginTop: 10 
+    marginTop: 10,
+    borderRadius: 30,
   },
   
   botonImagen: {
-    resizeMode: 'stretch',
-    borderRadius: 10,
+    borderRadius: 30,
   },
   
   botonTexto: {
@@ -138,9 +144,9 @@ const styles = StyleSheet.create({
   },
 
   container3: {
-    flex: 3,
+    flex: 1,
     marginBottom: '15%',
-    marginTop: '20%',
+    marginTop: '25%',
     alignItems: 'center',
     justifyContent: 'flex-start',
   },
@@ -159,6 +165,9 @@ const styles = StyleSheet.create({
   LogosLogin:
   {
     marginHorizontal: 5,
+    paddingHorizontal: 10,
+    alignItems:'center',
+    marginTop:15
   },
   textInput: {
     backgroundColor: 'white',
@@ -166,10 +175,19 @@ const styles = StyleSheet.create({
     opacity: 0.9,
     borderRadius: 8,
     paddingVertical: 5,
-    width: '100%',
+    width: '90%',
     input: {
-      paddingVertical: 8
+      paddingVertical: 8,
+      paddingLeft: '3%',
     },
   },
-  
+  botonContenido: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  botonContenedor: {
+    width: '90%',        
+    alignItems: 'flex-end',
+  },
 });

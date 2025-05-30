@@ -2,6 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, ImageBackground, SafeAreaView, Image, Button, TouchableOpacity, Alert, TextInput} from 'react-native';
 import { useRouter } from 'expo-router';
 import AntDesign from '@expo/vector-icons/AntDesign';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 
 
@@ -36,9 +37,10 @@ export default function Registrarse() {
         <View style={styles.textInput}>
             <TextInput style={styles.textInput .input} placeholder='Repita su contraseña'/>
         </View>
+        <MaterialIcons name="arrow-back" size={24} color="black" />
         <TouchableOpacity onPress={() => onPress("Usuario")}>
         <ImageBackground source={fondoBoton} style={styles.botonLogin} imageStyle={styles.botonImagen}>
-            <Text style={styles.botonTexto}>Siguiente</Text>
+            <Text style={styles.botonTexto}>Registrarse</Text>
         </ImageBackground>
         </TouchableOpacity>
       </View>
@@ -82,7 +84,7 @@ const styles = StyleSheet.create({
     marginBottom: '2%'
   },
   container2: {
-    flex: 1,
+    flex: 2,
     alignItems: 'center',
     justifyContent: 'flex-start',
     margin: '10%',
@@ -150,9 +152,10 @@ const styles = StyleSheet.create({
     opacity: 0.9,
     borderRadius: 8,
     paddingVertical: 5,
-    width: '100%',
+    width: '90%',
     input: {
-      paddingVertical: 8
+      paddingVertical: 8,
+      paddingLeft: '3%',
     },
   },
   
