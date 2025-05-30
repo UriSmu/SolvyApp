@@ -21,41 +21,26 @@ export default function Registrarse() {
       <ImageBackground source={fondo} resizeMode="cover" style={styles.backgroundImage}>
       <View style={styles.container}>
         <Image source={logo} style={styles.ImagenLogo}/>
-        <Text style={styles.tituloLogin}>Registrarse</Text>
+        <Text style={styles.tituloLogin}>Bienvenido, *UserName*</Text>
       </View>
       <View style={styles.container2}>
         <View style={styles.textInput}>
-            <TextInput style={styles.textInput .input} placeholder='Ingrese su Nombre'/>
+            <TextInput style={styles.textInput .input} placeholder='Ingrese su DNI'/>
         </View>
         <View style={styles.textInput}>
-            <TextInput style={styles.textInput .input} placeholder='Ingrese su Apellido'/>
+            <TextInput style={styles.textInput .input} placeholder='Ingrese su Teléfono'/>
         </View>
         <View style={styles.textInput}>
-            <TextInput style={styles.textInput .input} placeholder='Ingrese su Nombre de Usuario'/>
+            <TextInput style={styles.textInput .input} placeholder='Ingrese su contraseña'/>
         </View>
         <View style={styles.textInput}>
-            <TextInput style={styles.textInput .input} placeholder='Ingrese su Email'/>
+            <TextInput style={styles.textInput .input} placeholder='Repita su contraseña'/>
         </View>
         <TouchableOpacity onPress={() => onPress("Usuario")}>
         <ImageBackground source={fondoBoton} style={styles.botonLogin} imageStyle={styles.botonImagen}>
-            <Text style={styles.botonTexto}>Registrarse</Text>
+            <Text style={styles.botonTexto}>Siguiente</Text>
         </ImageBackground>
         </TouchableOpacity>
-      </View>
-      <View style={styles.container3}>
-        <View style={styles.horizontalLine} />
-          <Text style={styles.subtituloLogin}>Registrarse con:</Text>
-        <View style={styles.containerLogos}>
-          <TouchableOpacity onPress={() => onPress("Google")}>
-              <AntDesign name="google" color="white" style={styles.LogosLogin} />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => onPress("Facebook")}>
-            <AntDesign name="facebook-square" size={24} color="white" style={styles.LogosLogin} />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => onPress("Linkedin")}>
-            <AntDesign name="linkedin-square" size={24} color="white" style={styles.LogosLogin}/>
-          </TouchableOpacity>
-        </View>
       </View>
       </ImageBackground>
     </SafeAreaView>
@@ -84,7 +69,7 @@ const styles = StyleSheet.create({
     borderColor: 'white',
   },
   tituloLogin: {
-    fontSize: 40,
+    fontSize: 30,
     fontWeight: 500,
     color: 'white',
     marginTop: '2%'
@@ -100,7 +85,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-start',
-    marginTop: '30%',
     margin: '10%',
     marginBottom: '15%',
   },
