@@ -1,10 +1,10 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, ImageBackground, SafeAreaView, Image, Button, TouchableOpacity, Alert, TextInput} from 'react-native';
-import { useRouter } from 'expo-router';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Entypo from '@expo/vector-icons/Entypo';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { useNavigation } from '@react-navigation/native';
 
 
 
@@ -13,11 +13,8 @@ export default function Registrarse() {
   const logo = require('../../assets/Logo.png');
   const fondoBoton = require('../../assets/Fondo-boton.png')
 
-  const onPress = (obj) => {
-    console.log(`Se quiere iniciar con ${obj}`)
-  }
-  
-    const router = useRouter();
+  const navigation = useNavigation()
+
   return (
     <SafeAreaView style={styles.SafeArea}>
       <StatusBar style="dark" backgroundColor="#eeda9d" />
@@ -39,7 +36,7 @@ export default function Registrarse() {
         <View style={styles.textInput}>
             <TextInput style={styles.textInput .input} placeholder='Ingrese su Email'/>
         </View>
-        <TouchableOpacity onPress={() => onPress("Usuario")} style={styles.botonContenedor}>
+        <TouchableOpacity onPress={() => navigation.navigate('Registrarse2')} style={styles.botonContenedor}>
           <ImageBackground source={fondoBoton} style={styles.botonLogin} imageStyle={styles.botonImagen}>
             <View style={styles.botonContenido}>
               <Text style={styles.botonTexto}>Siguiente</Text>
@@ -52,13 +49,13 @@ export default function Registrarse() {
         <View style={styles.horizontalLine} />
           <Text style={styles.subtituloLogin}>Registrarse con:</Text>
         <View style={styles.containerLogos}>
-          <TouchableOpacity onPress={() => onPress("Google")}>
+          <TouchableOpacity onPress={() => console.log('Google')}>
               <AntDesign name="google" size={28} color="white" style={styles.LogosLogin} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => onPress("Facebook")}>
+          <TouchableOpacity onPress={() => console.log("Facebook")}>
           <FontAwesome5 name="facebook-f" size={28} color="white" style={styles.LogosLogin} />        
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => onPress("Linkedin")}>
+          <TouchableOpacity onPress={() => console.log("Linkedin")}>
           <Entypo name="linkedin" size={28} color="white" style={styles.LogosLogin} />
           </TouchableOpacity>
         </View>

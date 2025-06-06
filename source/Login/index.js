@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, ImageBackground, SafeAreaView, Image, Button, TouchableOpacity, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
 
 
 export default function Login() {
@@ -8,11 +8,8 @@ export default function Login() {
   const logo = require('../../assets/Logo.png');
   const fondoBoton = require('../../assets/Fondo-boton.png')
 
-  const onPress = (obj) => {
-    console.log(`Se quiere iniciar como ${obj}`)
-  }
-  
-  const router = useRouter();
+  const navigation = useNavigation()
+
   return (
     <SafeAreaView style={styles.SafeArea}>
       <StatusBar style="dark" backgroundColor="#eeda9d" />
@@ -22,14 +19,14 @@ export default function Login() {
         <Text style={styles.tituloLogin}>Bienvenido</Text>
       </View>
       <View style={styles.container2}>
-    <TouchableOpacity onPress={() => onPress("Solver")}>
+    <TouchableOpacity onPress={() => navigation.navigate('IniciarComoSolver')}>
   <ImageBackground source={fondoBoton} style={styles.botonLogin} imageStyle={styles.botonImagen}>
     <Text style={styles.botonTexto}>Iniciar como Solver</Text>
   </ImageBackground>
 </TouchableOpacity>
 
         <View style={styles.horizontalLine} />
-        <TouchableOpacity onPress={() => onPress("Cliente")}> 
+        <TouchableOpacity onPress={() => navigation.navigate('IniciarComoCliente')}> 
   <ImageBackground source={fondoBoton} style={styles.botonLogin} imageStyle={styles.botonImagen}>
     <Text style={styles.botonTexto}>Iniciar como Cliente</Text>
   </ImageBackground>

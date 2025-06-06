@@ -20,25 +20,9 @@ export default function IniciarComoSolver() {
       <ImageBackground source={fondo} resizeMode="cover" style={styles.backgroundImage}>
       <View style={styles.container}>
         <Image source={logo} style={styles.ImagenLogo}/>
-        <Text style={styles.tituloLogin}>Bienvenido</Text>
+        <Text style={styles.tituloLogin}>PARA INICIAR COMO SOLVER, DESCARGÁ "Solvy Solvers" O ENTRÁ A solvy.com</Text>
       </View>
-      <View style={styles.container2}>
-    <TouchableOpacity onPress={() => onPress("Solver")}>
-  <ImageBackground source={fondoBoton} style={styles.botonLogin} imageStyle={styles.botonImagen}>
-    <Text style={styles.botonTexto}>Iniciar como Solver</Text>
-  </ImageBackground>
-</TouchableOpacity>
-
-        <View style={styles.horizontalLine} />
-        <TouchableOpacity onPress={() => onPress("Cliente")}> 
-  <ImageBackground source={fondoBoton} style={styles.botonLogin} imageStyle={styles.botonImagen}>
-    <Text style={styles.botonTexto}>Iniciar como Cliente</Text>
-  </ImageBackground>
-</TouchableOpacity>
-      </View>
-      <View style={styles.container3}>
-        <Text style={styles.link} href='#'>Explorar Solvy</Text>
-      </View>
+  
       </ImageBackground>
     </SafeAreaView>
   );

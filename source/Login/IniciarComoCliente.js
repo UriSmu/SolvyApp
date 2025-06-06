@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, ImageBackground, SafeAreaView, Image, Button, TouchableOpacity, Alert } from 'react-native';
 
@@ -7,9 +8,7 @@ export default function IniciarComoCliente() {
     const logo = require('../../assets/Logo.png');
     const fondoBoton = require('../../assets/Fondo-boton.png')
   
-    const onPress = (obj) => {
-      console.log(`Se quiere ${obj}`)
-    }
+    const navigation = useNavigation()
   
     return (
       <SafeAreaView style={styles.SafeArea}>
@@ -20,14 +19,14 @@ export default function IniciarComoCliente() {
           <Text style={styles.tituloLogin}>Bienvenido</Text>
         </View>
         <View style={styles.container2}>
-      <TouchableOpacity onPress={() => onPress("Iniciar")}>
+      <TouchableOpacity onPress={() => navigation.navigate('IniciarSesion')}>
     <ImageBackground source={fondoBoton} style={styles.botonLogin} imageStyle={styles.botonImagen}>
       <Text style={styles.botonTexto}>Iniciar Sesion</Text>
     </ImageBackground>
   </TouchableOpacity>
   
           <View style={styles.horizontalLine} />
-          <TouchableOpacity onPress={() => onPress("Registrar")}>
+          <TouchableOpacity onPress={() => navigation.navigate('Registrarse')}>
     <ImageBackground source={fondoBoton} style={styles.botonLogin} imageStyle={styles.botonImagen}>
       <Text style={styles.botonTexto}>Registrarme</Text>
     </ImageBackground>

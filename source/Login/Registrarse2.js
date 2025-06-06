@@ -1,8 +1,8 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, ImageBackground, SafeAreaView, Image, Button, TouchableOpacity, Alert, TextInput} from 'react-native';
-import { useRouter } from 'expo-router';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { useNavigation } from '@react-navigation/native';
 
 
 
@@ -12,11 +12,8 @@ export default function Registrarse() {
   const fondoBoton = require('../../assets/Fondo-boton.png')
   const fondoFlecha = require('../../assets/Fondo-flecha.png')
 
-  const onPress = (obj) => {
-    console.log(`Se quiere iniciar con ${obj}`)
-  }
-  
-    const router = useRouter();
+  const navigation = useNavigation()
+
   return (
     <SafeAreaView style={styles.SafeArea}>
       <StatusBar style="dark" backgroundColor="#eeda9d" />
@@ -39,10 +36,10 @@ export default function Registrarse() {
             <TextInput style={styles.textInput .input} placeholder='Repita su contraseña'/>
         </View>
         <View style={styles.botonRow}>
-          <TouchableOpacity onPress={() => onPress("Return")} style={styles.botonFlecha}>
+          <TouchableOpacity onPress={() => navigation.navigate('Registrarse')} style={styles.botonFlecha}>
               <MaterialIcons name="arrow-back" size={24} color="black" />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => onPress("Usuario")} style={styles.botonLogin}>
+          <TouchableOpacity onPress={() => navigation.navigate('#')} style={styles.botonLogin}>
             <ImageBackground source={fondoBoton} imageStyle={styles.botonImagen}>
               <Text style={styles.botonTexto}>Registrarse</Text>
             </ImageBackground>
