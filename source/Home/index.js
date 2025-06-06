@@ -5,12 +5,16 @@
   import MaterialIcons from '@expo/vector-icons/MaterialIcons';
   import { ImageBackground } from 'react-native-web';
   import { LinearGradient } from 'expo-linear-gradient';
-
+  import Entypo from '@expo/vector-icons/Entypo';
+  import Fontisto from '@expo/vector-icons/Fontisto';
+  import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+  import FontAwesome from '@expo/vector-icons/FontAwesome';
 
 
   export default function Home() {
     //const fondoServicios = require('../../assets/Fondo-servicios.png')
     return (
+      <View style={styles.todo}>
       <SafeAreaView style={styles.container}>
         <StatusBar style="auto" />
         <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -84,72 +88,125 @@
           <Text style={styles.nombreServicio}>Mudancero</Text>
         </View>
       </View>
+      
 
         </ScrollView>
-
-        {/* Menú inferior */}
+        </SafeAreaView>
+      <View style={styles.footerContainer}>
         <View style={styles.menuInferior}>
-          <Text style={styles.menuItem}> Home</Text>
+          <View style={styles.footerImagenes}>
+          <Entypo name="home" size={30} color="white" />
+            <Text style={styles.menuItem}>Home</Text>
+          </View>
+          <View style={styles.footerImagenes}>
+          <Fontisto name="person" size={30} color="white"/>            
           <Text style={styles.menuItem}> Servicios</Text>
-          <Text style={styles.menuItem}> Productos</Text>
-          <Text style={styles.menuItem}> Actividad</Text>
+          </View>
+          <View style={styles.footerImagenes}>
+          <FontAwesome5 name="shopping-cart" size={30} color="white" /> 
+            <Text style={styles.menuItem}>Productos</Text>
+          </View>
+          <View style={styles.footerImagenes}>
+          <FontAwesome name="list-ul" size={30} color="white" />
+
+            <Text style={styles.menuItem}>Actividad</Text>
+            </View>
         </View>
-      </SafeAreaView>
+      </View>
+      </View>
     );
   }
 
   const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#fff',  },
-    scrollContainer: { padding: 20, paddingBottom: 120 },
-    header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-    },
-    logoText: { fontSize: 18, fontWeight: 'bold' },
-    iconoPerfil: { fontSize: 24 },
-    titulo: { fontSize: 26, fontWeight: 'bold', marginVertical: 20 },
-    botonReciente: {
-      backgroundColor: '#007cc0',
-      padding: 12,
-      borderRadius: 10,
-      marginBottom: 20,
-    },
-    textoReciente: { color: '#fff', fontStyle: 'italic', textAlign: 'center' },
-    subtitulo: { fontSize: 30, fontWeight: 'bold', marginTop: 20, marginBottom: 10, marginBottom: 30, textAlign: 'center'},
-    filaServicios: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginBottom: 15,
-      
-    },
-    servicio: {
-      width: '30%',
-      alignItems: 'center',
-      
-    },
-    iconoServicio: {
-      backgroundColor: '#007cc0',
-      width: 95,
-      height: 95, 
-      borderRadius: 12,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginBottom: 5,
-    },
+      container: { 
+        flex: 1, 
+        backgroundColor: '#fff',  
+      },
+      scrollContainer: { 
+        padding: 20, 
+        paddingBottom: 0, 
+      },
+      header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+      },
+      logoText: { 
+        fontSize: 18, 
+        fontWeight: 'bold' 
+      },
+      iconoPerfil: { 
+        fontSize: 30 
+      },
+      titulo: { 
+        fontSize: 26, 
+        fontWeight: 'bold', 
+        marginVertical: 20 
+      },
+      botonReciente: {
+        backgroundColor: '#007cc0',
+        padding: 12,
+        borderRadius: 10,
+        marginBottom: 20,
+      },
+      textoReciente: { 
+        color: '#fff', 
+        fontStyle: 'italic', 
+        textAlign: 'center' 
+      },
+      subtitulo: { 
+        fontSize: 30, 
+        fontWeight: 'bold', 
+        marginTop: 20, 
+        marginBottom: 30, 
+        textAlign: 'center'
+      },
+      filaServicios: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 15,
+      },
+      servicio: {
+        width: '30%',
+        alignItems: 'center',
+      },
+      iconoServicio: {
+        backgroundColor: '#007cc0',
+        width: 95,
+        height: 95, 
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 5,
+      },
+      iconoTexto: { 
+        fontSize: 30, 
+        color: '#fff' 
+      },
+      nombreServicio: { 
+        textAlign: 'center', 
+        fontSize: 12 
+      },
     
-    iconoTexto: { fontSize: 24, color: '#fff' },
-    nombreServicio: { textAlign: 'center', fontSize: 12 },
-    menuInferior: {
-      flexDirection: 'row',
-      justifyContent: 'space-around',
-      paddingVertical: 15,
-      backgroundColor: '#007cc0',
-      borderTopLeftRadius: 15,
-      borderTopRightRadius: 15,
-      position: 'absolute',
-      bottom: 0,
-      width: '100%',
-    },
-    menuItem: { color: '#fff', fontWeight: 'bold' },
-  });
+      footerContainer: {
+        backgroundColor: '#007cc0',
+        paddingBottom: 20, 
+      },
+      menuInferior: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        paddingVertical: 15,
+        borderTopLeftRadius: 15,
+        borderTopRightRadius: 15,
+      },
+      menuItem: { 
+        color: '#fff', 
+        fontWeight: 'bold' 
+      },
+      todo: {
+        flex: 1,
+        flexDirection: 'column'
+      },
+    })
+    
+
