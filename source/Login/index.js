@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginVertical: 8,
-    marginTop: 10 
+    marginTop: 10 ,
   },
   
   botonImagen: {
