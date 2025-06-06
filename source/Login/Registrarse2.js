@@ -10,6 +10,7 @@ export default function Registrarse() {
   const fondo = require('../../assets/Fondo-de-pantalla.png');
   const logo = require('../../assets/Logo.png');
   const fondoBoton = require('../../assets/Fondo-boton.png')
+  const fondoFlecha = require('../../assets/Fondo-flecha.png')
 
   const onPress = (obj) => {
     console.log(`Se quiere iniciar con ${obj}`)
@@ -37,12 +38,16 @@ export default function Registrarse() {
         <View style={styles.textInput}>
             <TextInput style={styles.textInput .input} placeholder='Repita su contraseña'/>
         </View>
-        <MaterialIcons name="arrow-back" size={24} color="black" />
-        <TouchableOpacity onPress={() => onPress("Usuario")}>
-        <ImageBackground source={fondoBoton} style={styles.botonLogin} imageStyle={styles.botonImagen}>
-            <Text style={styles.botonTexto}>Registrarse</Text>
-        </ImageBackground>
-        </TouchableOpacity>
+        <View style={styles.botonRow}>
+          <TouchableOpacity onPress={() => onPress("Return")} style={styles.botonFlecha}>
+              <MaterialIcons name="arrow-back" size={24} color="black" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => onPress("Usuario")} style={styles.botonLogin}>
+            <ImageBackground source={fondoBoton} imageStyle={styles.botonImagen}>
+              <Text style={styles.botonTexto}>Registrarse</Text>
+            </ImageBackground>
+          </TouchableOpacity>
+        </View>
       </View>
       </ImageBackground>
     </SafeAreaView>
@@ -108,7 +113,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginVertical: 8,
-    marginTop: 10 
+    marginTop: 10,
+    paddingHorizontal: 20,
   },
   
   botonImagen: {
@@ -120,6 +126,8 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 20,
     fontWeight: 'bold',
+    marginHorizontal: 50,
+    marginVertical: 10,
   },
 
   container3: {
@@ -156,6 +164,24 @@ const styles = StyleSheet.create({
       paddingVertical: 8,
       paddingLeft: '3%',
     },
+  },
+  botonRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+  },
+  botonFlecha: {
+    backgroundColor: 'white',
+    opacity: 0.9,
+    borderRadius: 25, // la mitad del width/height para que quede círculo
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 33,
+    marginTop: 10,
+    marginBottom: 5,
   },
   
 });
