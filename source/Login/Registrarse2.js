@@ -4,6 +4,8 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
 
+import { useAuth } from '../context/AuthContext';
+
 
 
 export default function Registrarse() {
@@ -13,6 +15,7 @@ export default function Registrarse() {
   const fondoFlecha = require('../../assets/Fondo-flecha.png')
 
   const navigation = useNavigation()
+  const { login } = useAuth();
 
   return (
     <SafeAreaView style={styles.SafeArea}>
@@ -39,7 +42,7 @@ export default function Registrarse() {
           <TouchableOpacity onPress={() => navigation.navigate('Registrarse')} style={styles.botonFlecha}>
               <MaterialIcons name="arrow-back" size={24} color="black" />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate('#')} style={styles.botonLogin}>
+          <TouchableOpacity onPress={() => login()} style={styles.botonLogin}>
             <ImageBackground source={fondoBoton} imageStyle={styles.botonImagen}>
               <Text style={styles.botonTexto}>Registrarse</Text>
             </ImageBackground>
