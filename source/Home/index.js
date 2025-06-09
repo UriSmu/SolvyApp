@@ -173,7 +173,7 @@
         fontSize: 30, 
         fontWeight: 'bold', 
         marginTop: 20, 
-        marginBottom: 30, 
+        marginBottom: 20, 
         textAlign: 'center'
       },
       filaServicios: {
