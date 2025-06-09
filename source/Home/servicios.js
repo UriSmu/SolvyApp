@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, ScrollView, Image } from 'react-native';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -13,18 +13,23 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 
 export default function Home() {
   //const fondoServicios = require('../../assets/Fondo-servicios.png')
+  const logo = require('../../assets/Logo.png');
+
+
   return (
     <View style={styles.todo}>
     <SafeAreaView style={styles.container}>
       <StatusBar style="auto" />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.header}>
-            <Text style={styles.logoText}>LOGO</Text>
+          <Image source={logo} style={styles.imagenLogo}/>
             <Text style={styles.iconoPerfil}>PERFIL</Text>
         </View>
 
+
         {/* Título servicios recomendados */}
         <Text style={styles.subtitulo}>Servicios</Text>
+
 
         {/* Servicios recomendados */}
         <View style={styles.filaServicios}>
@@ -36,10 +41,6 @@ export default function Home() {
           </TouchableOpacity>
           <Text style={styles.nombreServicio}>Gasista</Text>
         </View>
-
-
-       
-
         <View style={styles.servicio}>
         <TouchableOpacity style={styles.botonServicios}>
           <LinearGradient colors={['#007cc0', '#003f5c']} style={styles.iconoServicio}>
@@ -48,7 +49,6 @@ export default function Home() {
           </TouchableOpacity>
           <Text style={styles.nombreServicio}>Cocina</Text>
         </View>
-
         <View style={styles.servicio}>
         <TouchableOpacity style={styles.botonServicios}>
           <LinearGradient colors={['#007cc0', '#003f5c']} style={styles.iconoServicio}>
@@ -58,8 +58,6 @@ export default function Home() {
           <Text style={styles.nombreServicio}>Limpieza</Text>
         </View>
       </View>
-
-
       <View style={styles.filaServicios}>
       <View style={styles.servicio}>
       <TouchableOpacity style={styles.botonServicios}>
@@ -69,7 +67,6 @@ export default function Home() {
         </TouchableOpacity>
         <Text style={styles.nombreServicio}>Lavado de auto</Text>
       </View>
-
       <View style={styles.servicio}>
       <TouchableOpacity style={styles.botonServicios}>
         <LinearGradient colors={['#007cc0', '#003f5c']} style={styles.iconoServicio}>
@@ -78,7 +75,6 @@ export default function Home() {
         </TouchableOpacity>
         <Text style={styles.nombreServicio}>Electricista</Text>
       </View>
-
       <View style={styles.servicio}>
       <TouchableOpacity style={styles.botonServicios}>
         <LinearGradient colors={['#007cc0', '#003f5c']} style={styles.iconoServicio}>
@@ -88,10 +84,66 @@ export default function Home() {
         <Text style={styles.nombreServicio}>Mudancero</Text>
       </View>
     </View>
-    
-
+        <View style={styles.filaServicios}>
+           <View style={styles.servicio}>
+           <TouchableOpacity style={styles.botonServicios}>
+          <LinearGradient colors={['#007cc0', '#003f5c']} style={styles.iconoServicio}>
+            <FontAwesome6 name="bug-slash" size={50} color="white" />
+          </LinearGradient>
+          </TouchableOpacity>
+          <Text style={styles.nombreServicio}>Fumigador</Text>
+        </View>
+        <View style={styles.servicio}>
+        <TouchableOpacity style={styles.botonServicios}>
+          <LinearGradient colors={['#007cc0', '#003f5c']} style={styles.iconoServicio}>
+            <FontAwesome6 name="plant-wilt" size={50} color="white" />
+          </LinearGradient>
+          </TouchableOpacity>
+          <Text style={styles.nombreServicio}>Jardineria</Text>
+        </View>
+        <View style={styles.servicio}>
+        <TouchableOpacity style={styles.botonServicios}>
+          <LinearGradient colors={['#007cc0', '#003f5c']} style={styles.iconoServicio}>
+            <Entypo name="key" size={50} color="white" />
+          </LinearGradient>
+          </TouchableOpacity>
+          <Text style={styles.nombreServicio}>Cerrajeria</Text>
+        </View>
+      </View>
+      <View style={styles.filaServicios}>
+      <View style={styles.servicio}>
+      <TouchableOpacity style={styles.botonServicios}>
+        <LinearGradient colors={['#007cc0', '#003f5c']} style={styles.iconoServicio}>
+          <FontAwesome5 name="wrench" size={50} color="white" />
+        </LinearGradient>
+        </TouchableOpacity>
+        <Text style={styles.nombreServicio}>Instalador</Text>
+      </View>
+      <View style={styles.servicio}>
+      <TouchableOpacity style={styles.botonServicios}>
+        <LinearGradient colors={['#007cc0', '#003f5c']} style={styles.iconoServicio}>
+          <FontAwesome5 name="paint-roller" size={50} color="white" />
+        </LinearGradient>
+        </TouchableOpacity>
+        <Text style={styles.nombreServicio}>Pintor</Text>
+      </View>
+      <View style={styles.servicio}>
+      <TouchableOpacity style={styles.botonServicios}>
+        <LinearGradient colors={['#007cc0', '#003f5c']} style={styles.iconoServicio}>
+         <MaterialIcons name="plumbing" size={50} color="white" />
+        </LinearGradient>
+        </TouchableOpacity>
+        <Text style={styles.nombreServicio}>Plomeria</Text>
+      </View>
+    </View>    
       </ScrollView>
       </SafeAreaView>
+
+
+
+
+
+
     <View style={styles.footerContainer}>
       <View style={styles.menuInferior}>
         <View style={styles.footerImagenes}>
@@ -103,11 +155,12 @@ export default function Home() {
         <Text style={styles.menuItem}> Servicios</Text>
         </View>
         <View style={styles.footerImagenes}>
-        <FontAwesome5 name="shopping-cart" size={30} color="white" /> 
+        <FontAwesome5 name="shopping-cart" size={30} color="white" />
           <Text style={styles.menuItem}>Productos</Text>
         </View>
         <View style={styles.footerImagenes}>
         <FontAwesome name="list-ul" size={30} color="white" />
+
 
           <Text style={styles.menuItem}>Actividad</Text>
           </View>
@@ -117,31 +170,32 @@ export default function Home() {
   );
 }
 
+
     const styles = StyleSheet.create({
-        container: { 
-          flex: 1, 
+        container: {
+          flex: 1,
           backgroundColor: '#fff',  
         },
-        scrollContainer: { 
-          padding: 20, 
-          paddingBottom: 0, 
+        scrollContainer: {
+          padding: 20,
+          paddingBottom: 0,
         },
         header: {
           flexDirection: 'row',
           justifyContent: 'space-between',
           alignItems: 'center',
         },
-        logoText: { 
-          fontSize: 18, 
-          fontWeight: 'bold' 
+        logoText: {
+          fontSize: 18,
+          fontWeight: 'bold'
         },
-        iconoPerfil: { 
-          fontSize: 30 
+        iconoPerfil: {
+          fontSize: 30
         },
-        titulo: { 
-          fontSize: 26, 
-          fontWeight: 'bold', 
-          marginVertical: 20 
+        titulo: {
+          fontSize: 26,
+          fontWeight: 'bold',
+          marginVertical: 20
         },
         botonReciente: {
           backgroundColor: '#007cc0',
@@ -149,17 +203,17 @@ export default function Home() {
           borderRadius: 10,
           marginBottom: 20,
         },
-        textoReciente: { 
-          color: '#fff', 
-          fontStyle: 'italic', 
-          opacity: '75%' 
+        textoReciente: {
+          color: '#fff',
+          fontStyle: 'italic',
+          opacity: '75%'
         },
-        subtitulo: { 
-          fontSize: 30, 
-          fontWeight: 'bold', 
-          marginTop: 20, 
-          marginBottom: 20,
-          marginRight: '60%', 
+        subtitulo: {
+          fontSize: 30,
+          fontWeight: 'bold',
+          marginTop: 20,
+          marginBottom: 30,
+          marginRight: '60%',
           textAlign: 'center'
         },
         filaServicios: {
@@ -174,25 +228,25 @@ export default function Home() {
         iconoServicio: {
           backgroundColor: '#007cc0',
           width: 95,
-          height: 95, 
+          height: 95,
           borderRadius: 12,
           justifyContent: 'center',
           alignItems: 'center',
           marginBottom: 5,
         },
-        iconoTexto: { 
-          fontSize: 30, 
-          color: '#fff' 
+        iconoTexto: {
+          fontSize: 30,
+          color: '#fff'
         },
-        nombreServicio: { 
-          textAlign: 'center', 
+        nombreServicio: {
+          textAlign: 'center',
           fontSize: 13 ,
           fontWeight: '600'
         },
-      
+     
         footerContainer: {
           backgroundColor: '#007cc0',
-          paddingBottom: 20, 
+          paddingBottom: 20,
         },
         menuInferior: {
           flexDirection: 'row',
@@ -201,7 +255,7 @@ export default function Home() {
           borderTopLeftRadius: 15,
           borderTopRightRadius: 15,
         },
-        menuItem: { 
+        menuItem: {
           color: '#fff',
           fontWeight: 'bold',
           marginTop: 5,
@@ -213,11 +267,11 @@ export default function Home() {
           flexDirection: 'column'
         },
         footerImagenes:{
-          flex: 1, 
+          flex: 1,
           alignItems: 'center',
           justifyContent: 'center',
         },
         centrarFooter:{
-          width: 40, height: 30, alignItems: 'center', justifyContent: 'center' 
-        }
+          width: 40, height: 30, alignItems: 'center', justifyContent: 'center'
+        },
       })
