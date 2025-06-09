@@ -5,6 +5,9 @@ import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Entypo from '@expo/vector-icons/Entypo';
 import { useNavigation } from '@react-navigation/native';
 
+import { useAuth } from '../context/AuthContext';
+
+
 
 export default function IniciarSesion() {
   const fondo = require('../../assets/Fondo-de-pantalla.png');
@@ -12,6 +15,7 @@ export default function IniciarSesion() {
   const fondoBoton = require('../../assets/Fondo-boton.png')
 
   const navigation = useNavigation()
+  const { login } = useAuth();
 
   return (
     <SafeAreaView style={styles.SafeArea}>
@@ -28,10 +32,10 @@ export default function IniciarSesion() {
         <View style={styles.textInput}>
             <TextInput style={styles.textInput.input} placeholder='Ingrese su contraseña'/>
         </View>
-        <TouchableOpacity onPress={() => navigation.navigate('HomeStack', { screen: 'Home' })}>
-        <ImageBackground source={fondoBoton} style={styles.botonLogin} imageStyle={styles.botonImagen}>
+        <TouchableOpacity onPress={() => login()}>
+          <ImageBackground source={fondoBoton} style={styles.botonLogin} imageStyle={styles.botonImagen}>
             <Text style={styles.botonTexto}>Iniciar Sesion</Text>
-        </ImageBackground>
+          </ImageBackground>
         </TouchableOpacity>
       </View>
       <View style={styles.container3}>
