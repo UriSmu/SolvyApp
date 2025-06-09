@@ -103,30 +103,36 @@
           <Text style={styles.nombreServicio}>Mudancero</Text>
         </View>
       </View>
-      
+      </ScrollView>
+      </SafeAreaView>
 
-        </ScrollView>
-        </SafeAreaView>
-      <View style={styles.footerContainer}>
-        <View style={styles.menuInferior}>
-          <View style={styles.footerImagenes}>
-          <Entypo name="home" size={30} color="white" />
-            <Text style={styles.menuItem}>Home</Text>
-          </View>
-          <View style={styles.footerImagenes}>
-          <Fontisto name="person" size={30} color="white"/>            
-          <Text style={styles.menuItem}> Servicios</Text>
-          </View>
-          <View style={styles.footerImagenes}>
-          <FontAwesome5 name="shopping-cart" size={30} color="white" /> 
-            <Text style={styles.menuItem}>Productos</Text>
-          </View>
-          <View style={styles.footerImagenes}>
-          <FontAwesome name="list-ul" size={30} color="white" />
-
-            <Text style={styles.menuItem}>Actividad</Text>
-            </View>
-        </View>
+  <View style={styles.footerContainer}>
+  <View style={styles.menuInferior}>
+    <View style={styles.footerImagenes}>  
+    <View style={styles.centrarFooter}>
+      <Entypo name="home" size={30} color="white" />
+    </View>
+      <Text style={styles.menuItem}>Home</Text>
+    </View>
+    <View style={styles.footerImagenes}>
+    <View style={styles.centrarFooter}>
+      <Fontisto name="person" size={30} color="white" />
+    </View>
+      <Text style={styles.menuItem}>Servicios</Text>
+    </View>
+    <View style={styles.footerImagenes}>
+    <View style={styles.centrarFooter}>
+      <FontAwesome5 name="shopping-cart" size={30} color="white" />
+    </View>
+      <Text style={styles.menuItem}>Productos</Text>
+    </View>
+    <View style={styles.footerImagenes}>
+      <View style={styles.centrarFooter}>
+        <FontAwesome name="list-ul" size={30} color="white" />    
+      </View> 
+      <Text style={styles.menuItem}>Actividad</Text>
+    </View>
+      </View>
       </View>
       </View>
     );
@@ -210,19 +216,30 @@
       },
       menuInferior: {
         flexDirection: 'row',
-        justifyContent: 'space-around',
+        justifyContent: 'space-between',
         paddingVertical: 15,
         borderTopLeftRadius: 15,
         borderTopRightRadius: 15,
       },
       menuItem: { 
-        color: '#fff', 
-        fontWeight: 'bold' 
+        color: '#fff',
+        fontWeight: 'bold',
+        marginTop: 5,
+        textAlign: 'center',
+        fontSize: 12,
       },
       todo: {
         flex: 1,
         flexDirection: 'column'
       },
+      footerImagenes:{
+        flex: 1, 
+        alignItems: 'center',
+        justifyContent: 'center',
+      },
+      centrarFooter:{
+        width: 40, height: 30, alignItems: 'center', justifyContent: 'center' 
+      }
     })
     
 
