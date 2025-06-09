@@ -88,67 +88,6 @@ export default function Home() {
         <Text style={styles.nombreServicio}>Mudancero</Text>
       </View>
     </View>
-        <View style={styles.filaServicios}>
-           <View style={styles.servicio}>
-           <TouchableOpacity style={styles.botonServicios}>
-          <LinearGradient colors={['#007cc0', '#003f5c']} style={styles.iconoServicio}>
-            <FontAwesome6 name="fire-burner" size={50} color="white" />
-          </LinearGradient>
-          </TouchableOpacity>
-          <Text style={styles.nombreServicio}>Gasista</Text>
-        </View>
-
-
-       
-
-        <View style={styles.servicio}>
-        <TouchableOpacity style={styles.botonServicios}>
-          <LinearGradient colors={['#007cc0', '#003f5c']} style={styles.iconoServicio}>
-            <MaterialCommunityIcons name="chef-hat" size={50} color="white" />
-          </LinearGradient>
-          </TouchableOpacity>
-          <Text style={styles.nombreServicio}>Cocina</Text>
-        </View>
-
-        <View style={styles.servicio}>
-        <TouchableOpacity style={styles.botonServicios}>
-          <LinearGradient colors={['#007cc0', '#003f5c']} style={styles.iconoServicio}>
-            <FontAwesome6 name="broom" size={50} color="white" />
-          </LinearGradient>
-          </TouchableOpacity>
-          <Text style={styles.nombreServicio}>Limpieza</Text>
-        </View>
-      </View>
-
-
-      <View style={styles.filaServicios}>
-      <View style={styles.servicio}>
-      <TouchableOpacity style={styles.botonServicios}>
-        <LinearGradient colors={['#007cc0', '#003f5c']} style={styles.iconoServicio}>
-          <MaterialIcons name="local-car-wash" size={50} color="white" />
-        </LinearGradient>
-        </TouchableOpacity>
-        <Text style={styles.nombreServicio}>Lavado de auto</Text>
-      </View>
-
-      <View style={styles.servicio}>
-      <TouchableOpacity style={styles.botonServicios}>
-        <LinearGradient colors={['#007cc0', '#003f5c']} style={styles.iconoServicio}>
-          <MaterialIcons name="electrical-services" size={50} color="white" />
-        </LinearGradient>
-        </TouchableOpacity>
-        <Text style={styles.nombreServicio}>Electricista</Text>
-      </View>
-
-      <View style={styles.servicio}>
-      <TouchableOpacity style={styles.botonServicios}>
-        <LinearGradient colors={['#007cc0', '#003f5c']} style={styles.iconoServicio}>
-          <FontAwesome6 name="truck-moving" size={50} color="white" />
-        </LinearGradient>
-        </TouchableOpacity>
-        <Text style={styles.nombreServicio}>Mudancero</Text>
-      </View>
-    </View>
     
 
       </ScrollView>
@@ -219,7 +158,7 @@ export default function Home() {
           fontSize: 30, 
           fontWeight: 'bold', 
           marginTop: 20, 
-          marginBottom: 30,
+          marginBottom: 20,
           marginRight: '60%', 
           textAlign: 'center'
         },

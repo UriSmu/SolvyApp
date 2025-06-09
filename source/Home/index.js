@@ -105,6 +105,9 @@
       </View>
       </ScrollView>
       </SafeAreaView>
+      <TouchableOpacity style={styles.botonMasServicios}>
+            <Text style={styles.textoMasServicios}>Mas servicios</Text>
+      </TouchableOpacity>
 
   <View style={styles.footerContainer}>
   <View style={styles.menuInferior}>
@@ -171,6 +174,19 @@
         marginBottom: 20,
       },
       textoReciente: { 
+        color: '#fff', 
+        fontStyle: 'italic', 
+        opacity: '75%' 
+      },
+      botonMasServicios: {
+        backgroundColor: '#007cc0',
+        padding: 12,
+        borderRadius: 10,
+        marginBottom: 50,
+        marginHorizontal: '37.5%',
+        width: 103,
+      },
+      textoMasServicios: { 
         color: '#fff', 
         fontStyle: 'italic', 
         opacity: '75%' 
