@@ -103,12 +103,14 @@
           <Text style={styles.nombreServicio}>Mudancero</Text>
         </View>
       </View>
-      </ScrollView>
-      </SafeAreaView>
-      <TouchableOpacity style={styles.botonMasServicios}>
-            <Text style={styles.textoMasServicios}>Mas servicios</Text>
-      </TouchableOpacity>
-
+      
+      <View style={styles.filaBoton}>
+    <TouchableOpacity style={styles.botonMasServicios}>
+      <Text style={styles.textoBotonMasServicios}>Más servicios</Text>
+    </TouchableOpacity>
+     </View>
+     </ScrollView>
+     </SafeAreaView>
   <View style={styles.footerContainer}>
   <View style={styles.menuInferior}>
     <View style={styles.footerImagenes}>  
@@ -178,19 +180,6 @@
         fontStyle: 'italic', 
         opacity: '75%' 
       },
-      botonMasServicios: {
-        backgroundColor: '#007cc0',
-        padding: 12,
-        borderRadius: 10,
-        marginBottom: 50,
-        marginHorizontal: '37.5%',
-        width: 103,
-      },
-      textoMasServicios: { 
-        color: '#fff', 
-        fontStyle: 'italic', 
-        opacity: '75%' 
-      },
       subtitulo: { 
         fontSize: 30, 
         fontWeight: 'bold', 
@@ -255,7 +244,48 @@
       },
       centrarFooter:{
         width: 40, height: 30, alignItems: 'center', justifyContent: 'center' 
-      }
+      },
+      contenedorBotonMasServicios: { 
+        marginTop: 30,
+        marginBottom: 100, // Más espacio con el footer
+        alignItems: 'center',
+        justifyContent: 'center',
+      },
+      filaBoton: {
+        marginTop: 30,
+        marginBottom: 100, // separación del footer
+        alignItems: 'center',
+        justifyContent: 'center',
+      },
+      
+      botonMasServicios: {
+        backgroundColor: '#007ACC',
+        paddingVertical: 14,
+        paddingHorizontal: 40,
+        borderRadius: 30,
+      
+        // Sombra para iOS
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+      
+        // Elevación para Android
+        elevation: 6,
+      
+        // Animación visual de profundidad
+        transform: [{ scale: 1 }],
+      },
+      
+      textoBotonMasServicios: {
+        color: 'white',
+        fontSize: 17,
+        fontWeight: 'bold',
+        letterSpacing: 0.5,
+        textAlign: 'center',
+      },
+      
+      
     })
     
 

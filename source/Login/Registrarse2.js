@@ -53,6 +53,7 @@ export default function Registrarse() {
     </SafeAreaView>
   );
 }
+
 const styles = StyleSheet.create({
   SafeArea:{
     flex: 1 
@@ -168,13 +169,12 @@ const styles = StyleSheet.create({
   botonRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 20,
+    justifyContent: 'center'
   },
   botonFlecha: {
     backgroundColor: 'white',
     opacity: 0.9,
-    borderRadius: 25, // la mitad del width/height para que quede círculo
+    borderRadius: 25, 
     width: 40,
     height: 40,
     alignItems: 'center',
