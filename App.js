@@ -11,6 +11,7 @@ import Registrarse from './source/Login/Registrarse';
 import Registrarse2 from './source/Login/Registrarse2';
 
 import Home from './source/Home';
+import Productos from './source/Home/productos'
 
 const Stack = createNativeStackNavigator();
 
@@ -31,6 +32,7 @@ function HomeStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Home" component={Home} />
+      <Stack.Screen name="Productos" component={Productos} />
     </Stack.Navigator>
   );
 }
