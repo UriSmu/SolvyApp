@@ -2,6 +2,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { AuthProvider, useAuth } from './source/context/AuthContext';
+import { RegisterProvider } from './source/context/RegisterContext';
 
 import Login from './source/Login';
 import IniciarComoCliente from './source/Login/IniciarComoCliente';
@@ -11,7 +12,8 @@ import Registrarse from './source/Login/Registrarse';
 import Registrarse2 from './source/Login/Registrarse2';
 
 import Home from './source/Home';
-import Productos from './source/Home/productos'
+import Productos from './source/Home/productos';
+import Servicios from './source/Home/servicios';
 
 const Stack = createNativeStackNavigator();
 
@@ -33,6 +35,7 @@ function HomeStack() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Home" component={Home} />
       <Stack.Screen name="Productos" component={Productos} />
+      <Stack.Screen name="Servicios" component={Servicios} />
     </Stack.Navigator>
   );
 }
@@ -45,9 +48,11 @@ function RootNavigation() {
 export default function App() {
   return (
     <AuthProvider>
-      <NavigationContainer>
-        <RootNavigation />
-      </NavigationContainer>
+      <RegisterProvider>
+        <NavigationContainer>
+          <RootNavigation />
+        </NavigationContainer>
+      </RegisterProvider>
     </AuthProvider>
   );
 }

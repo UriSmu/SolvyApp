@@ -5,6 +5,9 @@ import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Entypo from '@expo/vector-icons/Entypo';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
+import { useRegister } from '../context/RegisterContext';
+import {useState} from 'react';
+
 
 
 
@@ -13,7 +16,25 @@ export default function Registrarse() {
   const logo = require('../../assets/Logo.png');
   const fondoBoton = require('../../assets/Fondo-boton.png')
 
-  const navigation = useNavigation()
+  const { setRegisterData } = useRegister();
+
+  const navigation = useNavigation();
+
+  const [nombre, setNombre] = useState('');
+  const [apellido, setApellido] = useState('');
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+
+  const handleNext = () => {
+    setRegisterData(prev => ({
+      ...prev,
+      nombre,
+      apellido,
+      username,
+      email,
+    }));
+    navigation.navigate('Registrarse2');
+  };
 
   return (
     <SafeAreaView style={styles.SafeArea}>
@@ -25,18 +46,18 @@ export default function Registrarse() {
       </View>
       <View style={styles.container2}>
         <View style={styles.textInput}>
-            <TextInput style={styles.textInput .input} placeholder='Ingrese su Nombre'/>
+            <TextInput style={styles.textInput.input} placeholder='Ingrese su Nombre' value={nombre} onChangeText={setNombre}/>
         </View>
         <View style={styles.textInput}>
-            <TextInput style={styles.textInput .input} placeholder='Ingrese su Apellido'/>
+            <TextInput style={styles.textInput.input} placeholder='Ingrese su Apellido' value={apellido} onChangeText={setApellido}/>
         </View>
         <View style={styles.textInput}>
-            <TextInput style={styles.textInput .input} placeholder='Ingrese su Nombre de Usuario'/>
+            <TextInput style={styles.textInput.input} placeholder='Ingrese su Nombre de Usuario' value={username} onChangeText={setUsername}/>
         </View>
         <View style={styles.textInput}>
-            <TextInput style={styles.textInput .input} placeholder='Ingrese su Email'/>
+            <TextInput style={styles.textInput.input} placeholder='Ingrese su Email' value={email} onChangeText={setEmail}/>
         </View>
-        <TouchableOpacity onPress={() => navigation.navigate('Registrarse2')} style={styles.botonContenedor}>
+        <TouchableOpacity onPress={handleNext} style={styles.botonContenedor}>
           <ImageBackground source={fondoBoton} style={styles.botonLogin} imageStyle={styles.botonImagen}>
             <View style={styles.botonContenido}>
               <Text style={styles.botonTexto}>Siguiente</Text>

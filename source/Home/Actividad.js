@@ -1,10 +1,10 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, FlatList } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, FlatList, ScrollView } from 'react-native';
 import Entypo from '@expo/vector-icons/Entypo';
 import Fontisto from '@expo/vector-icons/Fontisto';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-
+import { StatusBar } from 'expo-status-bar';
 const DATA = [
   {
     id: '1',
@@ -66,23 +66,24 @@ export default function ActividadScreen() {
   return (
     <View style={styles.todo}>
       <SafeAreaView style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.logoText}>SOLV</Text>
-          <TouchableOpacity>
-            <FontAwesome name="user-circle-o" size={30} color="#000" />
-          </TouchableOpacity>
-        </View>
+        <StatusBar style="auto" />
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          {/* Encabezado */}
+          <View style={styles.header}>
+            <Text style={styles.logoText}>SOLV</Text>
+            <Text style={styles.iconoPerfil}>PERFIL</Text>
+          </View>
 
-        <Text style={styles.screenTitle}>Actividad</Text>
+          <Text style={styles.titulo}>Actividad</Text>
 
-        <FlatList
-          data={DATA}
-          renderItem={renderItem}
-          keyExtractor={item => item.id}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-        />
+          <FlatList
+            data={DATA}
+            renderItem={renderItem}
+            keyExtractor={item => item.id}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+          />
+        </ScrollView>
       </SafeAreaView>
 
       {/* Footer Navigation */}
@@ -118,27 +119,28 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
+    paddingBottom: 0,
+  },
+  scrollContainer: {
+    paddingBottom: 100,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 10,
-    marginBottom: 10,
   },
   logoText: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: 'bold',
-    letterSpacing: 1,
   },
-  screenTitle: {
+  iconoPerfil: {
+    fontSize: 30,
+  },
+  titulo: {
     fontSize: 26,
     fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  listContent: {
-    paddingBottom: 100,
+    marginVertical: 20,
   },
   card: {
     flexDirection: 'row',
@@ -204,22 +206,25 @@ const styles = StyleSheet.create({
   },
   footerContainer: {
     backgroundColor: '#007cc0',
-    paddingVertical: 15,
-    paddingHorizontal: 10,
+    paddingBottom: 20,
   },
   menuInferior: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    paddingVertical: 15,
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15,
   },
   footerImagenes: {
     flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   menuItem: {
     color: 'white',
     fontWeight: 'bold',
     marginTop: 5,
-    fontSize: 12,
     textAlign: 'center',
+    fontSize: 12,
   },
 });
