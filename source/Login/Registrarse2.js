@@ -86,7 +86,7 @@ export default function Registrarse() {
         <View style={styles.textInput}>
           <TextInput style={styles.textInput.input} placeholder='Ingrese su Dirección' value={direccion} onChangeText={setDireccion}/>
         </View>
-          <TouchableOpacity onPress={() => navigation.navigate('Registrarse')} style={styles.botonFlecha}>
+          <TouchableOpacity onPress={() => navigation.navigate('IniciarSesion')} style={styles.botonFlecha}>
               <MaterialIcons name="arrow-back" size={24} color="black" />
           </TouchableOpacity>
           <TouchableOpacity onPress={handleRegister} style={styles.botonLogin}>
