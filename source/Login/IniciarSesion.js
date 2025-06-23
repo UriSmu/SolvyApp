@@ -4,6 +4,7 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Entypo from '@expo/vector-icons/Entypo';
 import { useNavigation } from '@react-navigation/native';
+import { useState } from 'react';
 
 import { useAuth } from '../context/AuthContext';
 
@@ -14,45 +15,97 @@ export default function IniciarSesion() {
   const logo = require('../../assets/Logo.png');
   const fondoBoton = require('../../assets/Fondo-boton.png')
 
-  const navigation = useNavigation()
+  const navigation = useNavigation();
   const { login } = useAuth();
+
+  // Estados para usuario y contraseña
+  const [usuario, setUsuario] = useState('');
+  const [contrasena, setContrasena] = useState('');
+
+  // Función para manejar el login
+  const handleLogin = async () => {
+    if (!usuario || !contrasena) {
+      Alert.alert('Error', 'Por favor ingrese usuario y contraseña');
+      return;
+    }
+
+    try {
+      // Llamada a la API con la opción 1: /clientes/:data/:password
+      const response = await fetch(`http://localhost:3000/cli/clientes/${encodeURIComponent(usuario)}/${encodeURIComponent(contrasena)}`);
+
+      if (response.status === 404) {
+        Alert.alert('Error', 'Usuario o contraseña incorrectos');
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error('Error en la conexión con el servidor');
+      }
+
+      const data = await response.json();
+      // Asumo que login guarda los datos del usuario en contexto o lo que tengas
+      login(data);
+
+      // Navegar a la pantalla principal, home o donde sea
+      navigation.navigate('Home'); 
+
+    } catch (error) {
+      Alert.alert('Error', error.message);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.SafeArea}>
       <StatusBar style="dark" backgroundColor="#eeda9d" />
       <ImageBackground source={fondo} resizeMode="cover" style={styles.backgroundImage}>
-      <View style={styles.container}>
-        <Image source={logo} style={styles.ImagenLogo}/>
-        <Text style={styles.tituloLogin}>Iniciar Sesión</Text>
-      </View>
-      <View style={styles.container2}>
-      <View style={styles.textInput}>
-            <TextInput style={styles.textInput.input} placeholder='Ingrese su DNI, Username, Mail o Teléfono'/>
+        <View style={styles.container}>
+          <Image source={logo} style={styles.ImagenLogo}/>
+          <Text style={styles.tituloLogin}>Iniciar Sesión</Text>
         </View>
-        <View style={styles.textInput}>
-            <TextInput style={styles.textInput.input} placeholder='Ingrese su contraseña'/>
+
+        <View style={styles.container2}>
+          <View style={styles.textInput}>
+            <TextInput 
+              style={styles.textInput.input} 
+              placeholder='Ingrese su DNI, Username, Mail o Teléfono'
+              value={usuario}
+              onChangeText={setUsuario}
+              autoCapitalize="none"
+            />
+          </View>
+
+          <View style={styles.textInput}>
+            <TextInput 
+              style={styles.textInput.input} 
+              placeholder='Ingrese su contraseña'
+              secureTextEntry
+              value={contrasena}
+              onChangeText={setContrasena}
+            />
+          </View>
+
+          <TouchableOpacity onPress={handleLogin}>
+            <ImageBackground source={fondoBoton} style={styles.botonLogin} imageStyle={styles.botonImagen}>
+              <Text style={styles.botonTexto}>Iniciar Sesión</Text>
+            </ImageBackground>
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity onPress={() => login()}>
-          <ImageBackground source={fondoBoton} style={styles.botonLogin} imageStyle={styles.botonImagen}>
-            <Text style={styles.botonTexto}>Iniciar Sesion</Text>
-          </ImageBackground>
-        </TouchableOpacity>
-      </View>
-      <View style={styles.container3}>
-      <View style={styles.horizontalLine} />
-        <Text style={styles.subtituloLogin}>Iniciar Sesión con:</Text>
-      <View style={styles.containerLogos}>
-        <TouchableOpacity onPress={() => console.log("Google")}>
-            <AntDesign name="google" size={28} color="white" style={styles.LogosLogin} />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => console.log("Facebook")}>
-        <FontAwesome5 name="facebook-f" size={28} color="white" style={styles.LogosLogin} />        
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => console.log("Linkedin")}>
-        <Entypo name="linkedin" size={28} color="white" style={styles.LogosLogin} />
-        </TouchableOpacity>
-      </View>
-      </View>
+
+        <View style={styles.container3}>
+          <View style={styles.horizontalLine} />
+          <Text style={styles.subtituloLogin}>Iniciar Sesión con:</Text>
+          <View style={styles.containerLogos}>
+            <TouchableOpacity onPress={() => console.log("Google")}>
+                <AntDesign name="google" size={28} color="white" style={styles.LogosLogin} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => console.log("Facebook")}>
+              <FontAwesome5 name="facebook-f" size={28} color="white" style={styles.LogosLogin} />        
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => console.log("Linkedin")}>
+              <Entypo name="linkedin" size={28} color="white" style={styles.LogosLogin} />
+            </TouchableOpacity>
+          </View>
+        </View>
       </ImageBackground>
     </SafeAreaView>
   );
