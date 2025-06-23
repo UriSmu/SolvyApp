@@ -25,6 +25,7 @@ export default function Registrarse() {
   const [telefono, setTelefono] = useState('');
   const [password, setPassword] = useState('');
   const [repeatPassword, setRepeatPassword] = useState('');
+  const [direccion, setDireccion] = useState('');
 
   const handleRegister = async () => {
     if (password !== repeatPassword) {
@@ -33,23 +34,25 @@ export default function Registrarse() {
     }
 
     const finalData = {
-      ...registerData,
-      dni,
+      nombre: registerData.nombre,
+      apellido: registerData.apellido,
+      direccion, // Nuevo campo
+      email: registerData.email,
       telefono,
-      password,
+      nombre_usuario: registerData.username, // Cambia el nombre del campo
+      contraseña: password, // Cambia el nombre del campo
+      dni,
     };
 
     try {
-      // Cambia la URL por la de tu API
-      const response = await fetch('http://localhost:3000/api/clientes/', {
+      const response = await fetch('http://localhost:3000/cli/clientes/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(finalData),
       });
 
       if (response.ok) {
-        // Usuario creado correctamente
-        login(); // O navega a Home, etc.
+        login();
       } else {
         const error = await response.json();
         Alert.alert('Error', error.message || 'No se pudo registrar');
@@ -79,6 +82,9 @@ export default function Registrarse() {
         </View>
         <View style={styles.textInput}>
             <TextInput style={styles.textInput.input} placeholder='Repita su contraseña' value={repeatPassword} onChangeText={setRepeatPassword} secureTextEntry/>
+        </View>
+        <View style={styles.textInput}>
+          <TextInput style={styles.textInput.input} placeholder='Ingrese su Dirección' value={direccion} onChangeText={setDireccion}/>
         </View>
           <TouchableOpacity onPress={() => navigation.navigate('Registrarse')} style={styles.botonFlecha}>
               <MaterialIcons name="arrow-back" size={24} color="black" />
