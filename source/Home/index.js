@@ -11,7 +11,7 @@
   import FontAwesome from '@expo/vector-icons/FontAwesome';
 
 
-  export default function Home() {
+export default function Home({ navigation }) {
     //const fondoServicios = require('../../assets/Fondo-servicios.png')
     return (
       <View style={styles.todo}>
@@ -105,7 +105,7 @@
       </View>
       
       <View style={styles.filaBoton}>
-    <TouchableOpacity style={styles.botonMasServicios}>
+    <TouchableOpacity style={styles.botonMasServicios} onPress={() => navigation.navigate('Servicios')}>
       <Text style={styles.textoBotonMasServicios}>Más servicios</Text>
     </TouchableOpacity>
      </View>
