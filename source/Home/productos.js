@@ -9,37 +9,37 @@ const PRODUCTS = [
         id: '1',
         name: 'Quitamanchas',
         price: 8399.99,
-        image: require('../../assets/Vanish.png'),
+        image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQpHYJhpMJOLA_DTGVAIFAKrLGP8cQGq_m3BQ&s',
     },
     {
         id: '2',
         name: 'Quitamanchas',
         price: 8399.99,
-        image: require('../../assets/Vanish.png'),
+        image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQpHYJhpMJOLA_DTGVAIFAKrLGP8cQGq_m3BQ&s',
     },
     {
         id: '3',
         name: 'Quitamanchas',
         price: 8399.99,
-        image: require('../../assets/Vanish.png'),
+        image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQpHYJhpMJOLA_DTGVAIFAKrLGP8cQGq_m3BQ&s',
     },
     {
         id: '4',
         name: 'Quitamanchas',
         price: 8399.99,
-        image: require('../../assets/Vanish.png'),
+        image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQpHYJhpMJOLA_DTGVAIFAKrLGP8cQGq_m3BQ&s',
     },
     {
         id: '5',
         name: 'Quitamanchas',
         price: 8399.99,
-        image: require('../../assets/Vanish.png'),
+        image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQpHYJhpMJOLA_DTGVAIFAKrLGP8cQGq_m3BQ&s',
     },
     {
         id: '6',
         name: 'Quitamanchas',
         price: 8399.99,
-        image: require('../../assets/Vanish.png'),
+        image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQpHYJhpMJOLA_DTGVAIFAKrLGP8cQGq_m3BQ&s',
     },
 ];
 
@@ -100,7 +100,7 @@ export default function ProductosScreen() {
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.naVItem}>
                     <Ionicons name="people" size={28} color="#009FE3" />
-                    <Text style={styles.naVText}>SerVicios</Text>
+                    <Text style={styles.naVText}>Servicios</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.naVItem}>
                     <Ionicons name="cart" size={28} color="#009FE3" />
@@ -108,7 +108,7 @@ export default function ProductosScreen() {
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.naVItem}>
                     <Ionicons name="stats-chart" size={28} color="#009FE3" />
-                    <Text style={styles.naVText}>ActiVidad</Text>
+                    <Text style={styles.naVText}>Actividad</Text>
                 </TouchableOpacity>
             </View>
         </SafeAreaView>
