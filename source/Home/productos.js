@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, FlatList, StyleSheet, SafeAreaView } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { StatusBar } from 'expo-status-bar';
+import Entypo from '@expo/vector-icons/Entypo';
+import Fontisto from '@expo/vector-icons/Fontisto';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 
 
 const PRODUCTS = [
@@ -63,55 +67,66 @@ export default function ProductosScreen() {
 
 
     return (
-        <SafeAreaView style={styles.container}>
-            {/* Header */}
-            <View style={styles.header}>
-                <Text style={styles.logo}>SOLV<Text style={{fontSize:18}}>Y</Text> <Ionicons name="restaurant-outline" size={16} /></Text>
-                <TouchableOpacity style={styles.profileIcon}>
-                    <FontAwesome name="user-circle-o" size={36} color="#000" />
-                </TouchableOpacity>
-            </View>
-            {/* Search and Cart */}
-            <View style={styles.searchCartRow}>
-                <TextInput
-                    style={styles.searchInput}
-                    placeholder="Buscar..."
-                    Value={search}
-                    onChangeText={setSearch}
+        <View style={styles.todo}>
+            <SafeAreaView style={styles.container}>
+                {/* Header */}
+                <View style={styles.header}>
+                    <Text style={styles.logoText}>LOGO</Text>
+                    <Text style={styles.iconoPerfil}>PERFIL</Text>
+                </View>
+                {/* Search and Cart */}
+                {/* Removed from here to make sticky */}
+                {/* Products Grid */}
+                <FlatList
+                    ListHeaderComponent={
+                        <View style={styles.searchCartRow}>
+                            <TextInput
+                                style={styles.searchInput} placeholder="Buscar..." />
+                            <TouchableOpacity style={styles.cartButton}>
+                                <Text style={styles.cartButtonText}>Mi carrito</Text>
+                            </TouchableOpacity>
+                        </View>
+                    }
+                    stickyHeaderIndices={[0]}
+                    data={PRODUCTS.filter(p => p.name.toLowerCase().includes(search.toLowerCase()))}
+                    renderItem={renderProduct}
+                    keyExtractor={item => item.id}
+                    numColumns={2}
+                    contentContainerStyle={styles.productsList}
+                    showsVerticalScrollIndicator={false}
                 />
-                <TouchableOpacity style={styles.cartButton}>
-                    <Text style={styles.cartButtonText}>Mi carrito</Text>
-                </TouchableOpacity>
+                {/* Bottom NaVigation */}
+                
+            </SafeAreaView>
+            <View style={styles.footerContainer}>
+                <View style={styles.menuInferior}>
+                    <View style={styles.footerImagenes}>  
+                        <View style={styles.centrarFooter}>
+                            <Entypo name="home" size={30} color="white" />
+                        </View>
+                        <Text style={styles.menuItem}>Home</Text>
+                    </View>
+                    <View style={styles.footerImagenes}>
+                        <View style={styles.centrarFooter}>
+                            <Fontisto name="person" size={30} color="white" />
+                        </View>
+                        <Text style={styles.menuItem}>Servicios</Text>
+                    </View>
+                    <View style={styles.footerImagenes}>
+                        <View style={styles.centrarFooter}>
+                            <FontAwesome5 name="shopping-cart" size={30} color="white" />
+                        </View>
+                        <Text style={styles.menuItem}>Productos</Text>
+                    </View>
+                    <View style={styles.footerImagenes}>
+                        <View style={styles.centrarFooter}>
+                            <FontAwesome name="list-ul" size={30} color="white" />    
+                        </View> 
+                        <Text style={styles.menuItem}>Actividad</Text>
+                    </View>
+                </View>
             </View>
-            {/* Products Grid */}
-            <FlatList
-                data={PRODUCTS.filter(p => p.name.toLowerCase().includes(search.toLowerCase()))}
-                renderItem={renderProduct}
-                keyExtractor={item => item.id}
-                numColumns={2}
-                contentContainerStyle={styles.productsList}
-                showsVerticalScrollIndicator={false}
-            />
-            {/* Bottom NaVigation */}
-            <View style={styles.bottomNaV}>
-                <TouchableOpacity style={styles.naVItem}>
-                    <Ionicons name="home" size={28} color="#009FE3" />
-                    <Text style={styles.naVText}>Home</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.naVItem}>
-                    <Ionicons name="people" size={28} color="#009FE3" />
-                    <Text style={styles.naVText}>Servicios</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.naVItem}>
-                    <Ionicons name="cart" size={28} color="#009FE3" />
-                    <Text style={[styles.naVText, styles.actiVeNaVText]}>Productos</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.naVItem}>
-                    <Ionicons name="stats-chart" size={28} color="#009FE3" />
-                    <Text style={styles.naVText}>Actividad</Text>
-                </TouchableOpacity>
-            </View>
-        </SafeAreaView>
+        </View>
     );
 }
 
@@ -120,22 +135,17 @@ const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#fff' },
     header: {
         flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'center',
         marginTop: 10,
         marginHorizontal: 16,
-        justifyContent: 'space-between',
     },
-    logo: {
-        fontSize: 22,
+    logoText: {
+        fontSize: 18,
         fontWeight: 'bold',
-        letterSpacing: 1,
     },
-    profileIcon: {
-        backgroundColor: '#fff',
-        borderRadius: 24,
-        padding: 2,
-        borderWidth: 1,
-        borderColor: '#eee',
+    iconoPerfil: {
+        fontSize: 30,
     },
     searchCartRow: {
         flexDirection: 'row',
@@ -167,7 +177,7 @@ const styles = StyleSheet.create({
     },
     productsList: {
         paddingHorizontal: 8,
-        paddingBottom: 90,
+        paddingBottom: 80,
         marginTop: 10,
     },
     card: {
@@ -244,5 +254,38 @@ const styles = StyleSheet.create({
         color: '#fff',
         opacity: 1,
         textDecorationLine: 'underline',
-    }
+    },
+    footerContainer: {
+        backgroundColor: '#007cc0',
+        paddingBottom: 20,
+    },
+    menuInferior: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingVertical: 15,
+        borderTopLeftRadius: 15,
+        borderTopRightRadius: 15,
+    },
+    menuItem: {
+        color: '#fff',
+        fontWeight: 'bold',
+        marginTop: 5,
+        textAlign: 'center',
+        fontSize: 12,
+    },
+    todo: {
+        flex: 1,
+        flexDirection: 'column',
+    },
+    footerImagenes: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    centrarFooter: {
+        width: 40,
+        height: 30,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
 })
