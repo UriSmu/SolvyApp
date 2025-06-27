@@ -11,22 +11,22 @@
   import FontAwesome from '@expo/vector-icons/FontAwesome';
   import Header from '../Layout/Header';
 
+  import { useUserProfile } from '../context/UserProfileContext';
+
 
 export default function Home({ navigation }) {
     //const fondoServicios = require('../../assets/Fondo-servicios.png')
+    const { profile } = useUserProfile();
     return (
       <View style={styles.todo}>
       <SafeAreaView style={styles.container}>
         <StatusBar style="auto" />
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           {/* Encabezado */}
-          <View style={styles.header}>
-            <Text style={styles.logoText}>LOGO</Text>
-            <Text style={styles.iconoPerfil}>PERFIL</Text>
-          </View>
+          <Header/>
 
           {/* Saludo */}
-          <Text style={styles.titulo}>¡Hola, (NOMBRE)!</Text>
+          <Text style={styles.titulo}>¡Hola, {profile.nombre}!</Text>
 
           {/* Servicios recientes */}
           <TouchableOpacity style={styles.botonReciente}>

@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { AuthProvider, useAuth } from './source/context/AuthContext';
 import { RegisterProvider } from './source/context/RegisterContext';
+import { UserProfileProvider } from './source/context/UserProfileContext';
 
 import Login from './source/Login';
 import IniciarComoCliente from './source/Login/IniciarComoCliente';
@@ -49,9 +50,11 @@ export default function App() {
   return (
     <AuthProvider>
       <RegisterProvider>
-        <NavigationContainer>
-          <RootNavigation />
-        </NavigationContainer>
+        <UserProfileProvider>
+          <NavigationContainer>
+            <RootNavigation />
+          </NavigationContainer>
+        </UserProfileProvider>
       </RegisterProvider>
     </AuthProvider>
   );

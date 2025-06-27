@@ -7,7 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useState } from 'react';
 
 import { useAuth } from '../context/AuthContext';
-
+import { useUserProfile } from '../context/UserProfileContext';
 
 
 export default function IniciarSesion() {
@@ -17,6 +17,7 @@ export default function IniciarSesion() {
 
   const navigation = useNavigation();
   const { login } = useAuth();
+  const { saveProfile } = useUserProfile();
 
   // Estados para usuario y contraseña
   const [usuario, setUsuario] = useState('');
@@ -26,6 +27,7 @@ export default function IniciarSesion() {
   const handleLogin = async () => {
     if (!usuario || !contrasena) {
       Alert.alert('Error', 'Por favor ingrese usuario y contraseña');
+      
       return;
     }
 
@@ -43,10 +45,10 @@ export default function IniciarSesion() {
       }
 
       const data = await response.json();
-      // Asumo que login guarda los datos del usuario en contexto o lo que tengas
-      login(data);
+      login(data); // Esto es del AuthContext, puedes dejarlo si lo necesitas
 
-      // Navegar a la pantalla principal, home o donde sea
+      saveProfile(data); // Guarda toda la info del usuario
+
       navigation.navigate('Home'); 
 
     } catch (error) {
