@@ -9,6 +9,7 @@
   import Fontisto from '@expo/vector-icons/Fontisto';
   import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
   import FontAwesome from '@expo/vector-icons/FontAwesome';
+  import Header from '../Layout/Header';
 
 
 export default function Home({ navigation }) {

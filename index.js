@@ -2,6 +2,8 @@ import { registerRootComponent } from 'expo';
 
 import App from './App'
 
+//npm i --g @expo/ngrok@^4.1.0
+
 
 import Login from './source/Login/index';
 import IniciarComoCliente from './source/Login/IniciarComoCliente';
