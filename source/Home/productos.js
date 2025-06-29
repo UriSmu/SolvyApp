@@ -69,14 +69,6 @@ export default function ProductosScreen() {
     return (
         <View style={styles.todo}>
             <SafeAreaView style={styles.container}>
-                {/* Header */}
-                <View style={styles.header}>
-                    <Text style={styles.logoText}>LOGO</Text>
-                    <Text style={styles.iconoPerfil}>PERFIL</Text>
-                </View>
-                {/* Search and Cart */}
-                {/* Removed from here to make sticky */}
-                {/* Products Grid */}
                 <FlatList
                     ListHeaderComponent={
                         <View style={styles.searchCartRow}>
@@ -98,34 +90,6 @@ export default function ProductosScreen() {
                 {/* Bottom NaVigation */}
                 
             </SafeAreaView>
-            <View style={styles.footerContainer}>
-                <View style={styles.menuInferior}>
-                    <View style={styles.footerImagenes}>  
-                        <View style={styles.centrarFooter}>
-                            <Entypo name="home" size={30} color="white" />
-                        </View>
-                        <Text style={styles.menuItem}>Home</Text>
-                    </View>
-                    <View style={styles.footerImagenes}>
-                        <View style={styles.centrarFooter}>
-                            <Fontisto name="person" size={30} color="white" />
-                        </View>
-                        <Text style={styles.menuItem}>Servicios</Text>
-                    </View>
-                    <View style={styles.footerImagenes}>
-                        <View style={styles.centrarFooter}>
-                            <FontAwesome5 name="shopping-cart" size={30} color="white" />
-                        </View>
-                        <Text style={styles.menuItem}>Productos</Text>
-                    </View>
-                    <View style={styles.footerImagenes}>
-                        <View style={styles.centrarFooter}>
-                            <FontAwesome name="list-ul" size={30} color="white" />    
-                        </View> 
-                        <Text style={styles.menuItem}>Actividad</Text>
-                    </View>
-                </View>
-            </View>
         </View>
     );
 }

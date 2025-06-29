@@ -11,10 +11,14 @@ import IniciarComoSolver from './source/Login/IniciarComoSolver';
 import IniciarSesion from './source/Login/IniciarSesion';
 import Registrarse from './source/Login/Registrarse';
 import Registrarse2 from './source/Login/Registrarse2';
+import OlvideMiContrasenia from './source/Login/OlvideMiContrasenia';
 
 import Home from './source/Home';
 import Productos from './source/Home/productos';
 import Servicios from './source/Home/servicios';
+
+import Header from './source/Layout/Header';
+import Tabbar from './source/Layout/Tabbar';
 
 const Stack = createNativeStackNavigator();
 
@@ -27,17 +31,30 @@ function LoginStack() {
       <Stack.Screen name="IniciarSesion" component={IniciarSesion} />
       <Stack.Screen name="Registrarse" component={Registrarse} />
       <Stack.Screen name="Registrarse2" component={Registrarse2} />
+      <Stack.Screen name="OlvideMiContrasenia" component={OlvideMiContrasenia} />
     </Stack.Navigator>
+  );
+}
+
+function HomeLayout({ children }) {
+  return (
+    <>{/* Fragment */}
+      <Header />
+      <>{children}</>
+      <Tabbar />
+    </>
   );
 }
 
 function HomeStack() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Home" component={Home} />
-      <Stack.Screen name="Productos" component={Productos} />
-      <Stack.Screen name="Servicios" component={Servicios} />
-    </Stack.Navigator>
+    <HomeLayout>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="Home" component={Home} />
+        <Stack.Screen name="Productos" component={Productos} />
+        <Stack.Screen name="Servicios" component={Servicios} />
+      </Stack.Navigator>
+    </HomeLayout>
   );
 }
 

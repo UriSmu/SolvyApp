@@ -22,21 +22,21 @@ export default function IniciarSesion() {
   // Estados para usuario y contraseña
   const [usuario, setUsuario] = useState('');
   const [contrasena, setContrasena] = useState('');
+  const [loginError, setLoginError] = useState(''); // Nuevo estado para el error
 
   // Función para manejar el login
   const handleLogin = async () => {
+    setLoginError(''); // Limpiar error antes de intentar login
     if (!usuario || !contrasena) {
-      Alert.alert('Error', 'Por favor ingrese usuario y contraseña');
-      
+      setLoginError('Por favor ingrese usuario y contraseña');
       return;
     }
 
     try {
-      // Llamada a la API con la opción 1: /clientes/:data/:password
       const response = await fetch(`http://localhost:3000/cli/clientes/${encodeURIComponent(usuario)}/${encodeURIComponent(contrasena)}`);
 
       if (response.status === 404) {
-        Alert.alert('Error', 'Usuario o contraseña incorrectos');
+        setLoginError('Usuario o contraseña incorrectos');
         return;
       }
 
@@ -45,14 +45,11 @@ export default function IniciarSesion() {
       }
 
       const data = await response.json();
-      login(data); // Esto es del AuthContext, puedes dejarlo si lo necesitas
-
-      saveProfile(data); // Guarda toda la info del usuario
-
+      login(data);
+      saveProfile(data);
       navigation.navigate('Home'); 
-
     } catch (error) {
-      Alert.alert('Error', error.message);
+      setLoginError(error.message);
     }
   };
 
@@ -86,10 +83,19 @@ export default function IniciarSesion() {
             />
           </View>
 
+          {loginError ? (
+            <Text style={styles.loginError}>{loginError}</Text>
+          ) : null}
+
           <TouchableOpacity onPress={handleLogin}>
             <ImageBackground source={fondoBoton} style={styles.botonLogin} imageStyle={styles.botonImagen}>
               <Text style={styles.botonTexto}>Iniciar Sesión</Text>
             </ImageBackground>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('OlvideMiContrasenia')}>
+            <Text style={{ color: '#007cc0', marginTop: 10, textAlign: 'center', textDecorationLine: 'underline' }}>
+              Olvidé Mi Contraseña
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -224,5 +230,13 @@ const styles = StyleSheet.create({
       paddingVertical: 8,
       paddingLeft: '3%',
     },
+  },
+  loginError: {
+    color: 'red',
+    marginTop: 8,
+    marginBottom: 0,
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });

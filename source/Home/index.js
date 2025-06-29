@@ -112,34 +112,7 @@ export default function Home({ navigation }) {
      </View>
      </ScrollView>
      </SafeAreaView>
-  <View style={styles.footerContainer}>
-  <View style={styles.menuInferior}>
-    <View style={styles.footerImagenes}>  
-    <View style={styles.centrarFooter}>
-      <Entypo name="home" size={30} color="white" />
-    </View>
-      <Text style={styles.menuItem}>Home</Text>
-    </View>
-    <View style={styles.footerImagenes}>
-    <View style={styles.centrarFooter}>
-      <Fontisto name="person" size={30} color="white" />
-    </View>
-      <Text style={styles.menuItem}>Servicios</Text>
-    </View>
-    <View style={styles.footerImagenes}>
-    <View style={styles.centrarFooter}>
-      <FontAwesome5 name="shopping-cart" size={30} color="white" />
-    </View>
-      <Text style={styles.menuItem}>Productos</Text>
-    </View>
-    <View style={styles.footerImagenes}>
-      <View style={styles.centrarFooter}>
-        <FontAwesome name="list-ul" size={30} color="white" />    
-      </View> 
-      <Text style={styles.menuItem}>Actividad</Text>
-    </View>
-      </View>
-      </View>
+
       </View>
     );
   }

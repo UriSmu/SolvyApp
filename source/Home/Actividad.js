@@ -68,12 +68,6 @@ export default function ActividadScreen() {
       <SafeAreaView style={styles.container}>
         <StatusBar style="auto" />
         <ScrollView contentContainerStyle={styles.scrollContainer}>
-          {/* Encabezado */}
-          <View style={styles.header}>
-            <Text style={styles.logoText}>SOLV</Text>
-            <Text style={styles.iconoPerfil}>PERFIL</Text>
-          </View>
-
           <Text style={styles.titulo}>Actividad</Text>
 
           <FlatList
@@ -85,28 +79,6 @@ export default function ActividadScreen() {
           />
         </ScrollView>
       </SafeAreaView>
-
-      {/* Footer Navigation */}
-      <View style={styles.footerContainer}>
-        <View style={styles.menuInferior}>
-          <View style={styles.footerImagenes}>
-            <Entypo name="home" size={30} color="white" />
-            <Text style={styles.menuItem}>Home</Text>
-          </View>
-          <View style={styles.footerImagenes}>
-            <Fontisto name="person" size={30} color="white" />
-            <Text style={styles.menuItem}>Servicios</Text>
-          </View>
-          <View style={styles.footerImagenes}>
-            <FontAwesome5 name="shopping-cart" size={30} color="white" />
-            <Text style={styles.menuItem}>Productos</Text>
-          </View>
-          <View style={styles.footerImagenes}>
-            <FontAwesome name="list-ul" size={30} color="white" />
-            <Text style={styles.menuItem}>Actividad</Text>
-          </View>
-        </View>
-      </View>
     </View>
   );
 }

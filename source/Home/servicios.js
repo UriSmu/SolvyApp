@@ -21,11 +21,6 @@ export default function Home() {
     <SafeAreaView style={styles.container}>
       <StatusBar style="auto" />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.header}>
-          <Image source={logo} style={styles.imagenLogo}/>
-            <Text style={styles.iconoPerfil}>PERFIL</Text>
-        </View>
-
 
         {/* Título servicios recomendados */}
         <Text style={styles.subtitulo}>Servicios</Text>
@@ -138,34 +133,6 @@ export default function Home() {
     </View>    
       </ScrollView>
       </SafeAreaView>
-
-
-
-
-
-
-    <View style={styles.footerContainer}>
-      <View style={styles.menuInferior}>
-        <View style={styles.footerImagenes}>
-        <Entypo name="home" size={30} color="white" />
-          <Text style={styles.menuItem}>Home</Text>
-        </View>
-        <View style={styles.footerImagenes}>
-        <Fontisto name="person" size={30} color="white"/>            
-        <Text style={styles.menuItem}> Servicios</Text>
-        </View>
-        <View style={styles.footerImagenes}>
-        <FontAwesome5 name="shopping-cart" size={30} color="white" />
-          <Text style={styles.menuItem}>Productos</Text>
-        </View>
-        <View style={styles.footerImagenes}>
-        <FontAwesome name="list-ul" size={30} color="white" />
-
-
-          <Text style={styles.menuItem}>Actividad</Text>
-          </View>
-      </View>
-    </View>
     </View>
   );
 }
