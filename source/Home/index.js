@@ -152,7 +152,7 @@ export default function Home({ navigation }) {
       textoReciente: { 
         color: '#fff', 
         fontStyle: 'italic', 
-        opacity: '75%' 
+        opacity: 75 
       },
       subtitulo: { 
         fontSize: 30, 
@@ -167,7 +167,7 @@ export default function Home({ navigation }) {
         marginBottom: 15,
       },
       servicio: {
-        width: '30%',
+        width: 30,
         alignItems: 'center',
       },
       iconoServicio: {

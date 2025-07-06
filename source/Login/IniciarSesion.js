@@ -47,7 +47,7 @@ export default function IniciarSesion() {
       const data = await response.json();
       login(data);
       saveProfile(data);
-      navigation.navigate('Home'); 
+      //navigation.navigate('Home'); 
     } catch (error) {
       setLoginError(error.message);
     }
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-start',
-    marginTop: '25%',
+    marginTop: '25%', 
   },
   backgroundImage: {
     flex: 1,
