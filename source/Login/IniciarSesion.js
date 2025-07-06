@@ -33,7 +33,7 @@ export default function IniciarSesion() {
     }
 
     try {
-      const response = await fetch(`http://localhost:3000/cli/clientes/${encodeURIComponent(usuario)}/${encodeURIComponent(contrasena)}`);
+      const response = await fetch(`https://solvy-app-api.vercel.app/cli/clientes/${encodeURIComponent(usuario)}/${encodeURIComponent(contrasena)}`);
 
       if (response.status === 404) {
         setLoginError('Usuario o contraseña incorrectos');
