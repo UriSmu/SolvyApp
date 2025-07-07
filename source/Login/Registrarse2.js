@@ -45,7 +45,7 @@ export default function Registrarse() {
     };
 
     try {
-      const response = await fetch('http://localhost:3000/cli/clientes/', {
+      const response = await fetch('https://solvy-app-api.vercel.app/cli/clientes/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(finalData),
@@ -68,7 +68,7 @@ export default function Registrarse() {
       <ImageBackground source={fondo} resizeMode="cover" style={styles.backgroundImage}>
       <View style={styles.container}>
         <Image source={logo} style={styles.ImagenLogo}/>
-        <Text style={styles.tituloLogin}>Bienvenido, *UserName*</Text>
+        <Text style={styles.tituloLogin}>Bienvenido, {registerData.nombre}</Text>
       </View>
       <View style={styles.container2}>
         <View style={styles.textInput}>
