@@ -65,14 +65,16 @@ function RootNavigation() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <RegisterProvider>
-        <UserProfileProvider>
-          <NavigationContainer>
-            <RootNavigation />
-          </NavigationContainer>
-        </UserProfileProvider>
-      </RegisterProvider>
-    </AuthProvider>
+    <UserProfileProvider>
+      <AuthProvider>
+        <RegisterProvider>
+          <UserProfileProvider>
+            <NavigationContainer>
+              <RootNavigation />
+            </NavigationContainer>
+          </UserProfileProvider>
+        </RegisterProvider>
+      </AuthProvider>
+    </UserProfileProvider>
   );
 }

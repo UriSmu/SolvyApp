@@ -1,44 +1,70 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, ImageBackground, SafeAreaView, Image, Button, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, Text, View, ImageBackground, SafeAreaView, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-
+import { useEffect, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
   const fondo = require('../../assets/Fondo-de-pantalla.png');
   const logo = require('../../assets/Logo.png');
-  const fondoBoton = require('../../assets/Fondo-boton.png')
+  const fondoBoton = require('../../assets/Fondo-boton.png');
 
-  const navigation = useNavigation()
+  const navigation = useNavigation();
+  const { autoLoginIntent, estaLogeado } = useAuth(); // Debes exponer autoLoginIntent y estaLogeado en tu contexto
+  const [cargando, setCargando] = useState(true);
+
+  useEffect(() => {
+    const intentarAutoLogin = async () => {
+      const ok = await autoLoginIntent();
+      setCargando(false);
+      if (ok) {
+        navigation.navigate('Home');
+      }
+    };
+    intentarAutoLogin();
+  }, []);
+
+  if (cargando) {
+    return (
+      <SafeAreaView style={styles.SafeArea}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color="#007cc0" />
+          <Text style={{ marginTop: 10 }}>Verificando sesión...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
 
   return (
     <SafeAreaView style={styles.SafeArea}>
       <StatusBar style="dark" backgroundColor="#eeda9d" />
       <ImageBackground source={fondo} resizeMode="cover" style={styles.backgroundImage}>
-      <View style={styles.container}>
-        <Image source={logo} style={styles.ImagenLogo}/>
-        <Text style={styles.tituloLogin}>Bienvenido</Text>
-      </View>
-      <View style={styles.container2}>
-    <TouchableOpacity onPress={() => navigation.navigate('IniciarComoSolver')}>
-  <ImageBackground source={fondoBoton} style={styles.botonLogin} imageStyle={styles.botonImagen}>
-    <Text style={styles.botonTexto}>Iniciar como Solver</Text>
-  </ImageBackground>
-</TouchableOpacity>
-
-        <View style={styles.horizontalLine} />
-        <TouchableOpacity onPress={() => navigation.navigate('IniciarComoCliente')}> 
-  <ImageBackground source={fondoBoton} style={styles.botonLogin} imageStyle={styles.botonImagen}>
-    <Text style={styles.botonTexto}>Iniciar como Cliente</Text>
-  </ImageBackground>
-</TouchableOpacity>
-      </View>
-      <View style={styles.container3}>
-        <Text style={styles.link} href='#'>Explorar Solvy</Text>
-      </View>
+        <View style={styles.container}>
+          <Image source={logo} style={styles.ImagenLogo}/>
+          <Text style={styles.tituloLogin}>Bienvenido</Text>
+        </View>
+        <View style={styles.container2}>
+          <TouchableOpacity onPress={() => navigation.navigate('IniciarComoSolver')}>
+            <ImageBackground source={fondoBoton} style={styles.botonLogin} imageStyle={styles.botonImagen}>
+              <Text style={styles.botonTexto}>Iniciar como Solver</Text>
+            </ImageBackground>
+          </TouchableOpacity>
+          <View style={styles.horizontalLine} />
+          <TouchableOpacity onPress={() => navigation.navigate('IniciarComoCliente')}> 
+            <ImageBackground source={fondoBoton} style={styles.botonLogin} imageStyle={styles.botonImagen}>
+              <Text style={styles.botonTexto}>Iniciar como Cliente</Text>
+            </ImageBackground>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.container3}>
+          <Text style={styles.link} href='#'>Explorar Solvy</Text>
+        </View>
       </ImageBackground>
     </SafeAreaView>
   );
 }
+
 const styles = StyleSheet.create({
   SafeArea:{
     flex: 1 

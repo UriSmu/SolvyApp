@@ -45,7 +45,7 @@ export default function IniciarSesion() {
       }
 
       const data = await response.json();
-      login(data);
+      login(data, { usuario, contrasena }); // <-- Usa los nombres correctos
       saveProfile(data);
       //navigation.navigate('Home'); 
     } catch (error) {

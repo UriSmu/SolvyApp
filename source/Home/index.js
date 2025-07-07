@@ -26,7 +26,9 @@ export default function Home({ navigation }) {
           <Header/>
 
           {/* Saludo */}
-          <Text style={styles.titulo}>¡Hola, {profile.nombre}!</Text>
+          <Text style={styles.titulo}>
+            ¡Hola, {profile && profile.nombre ? profile.nombre : 'Usuario'}!
+          </Text>
 
           {/* Servicios recientes */}
           <TouchableOpacity style={styles.botonReciente}>
