@@ -12,17 +12,14 @@ export default function ActividadScreen() {
   const [nombresSubservicio, setNombresSubservicio] = useState({});
 
   // Obtener nombres de subservicio para cada actividad
-  console.log("Render ActividadScreen", usuario);
   useEffect(() => {
-  console.log("useEffect ActividadScreen", usuario);
   const fetchActividades = async () => {
     try {
-      if (!usuario || !usuario.idcliente) { // <--- CAMBIA ESTO
+      if (!usuario || !usuario.idcliente) {
         setActividades([]);
         setLoading(false);
         return;
       }
-      console.log(usuario.idcliente); // <--- CAMBIA ESTO
       const response = await fetch(`https://solvy-app-api.vercel.app/cli/actividades/${usuario.idcliente}`);
       if (response.ok) {
         const data = await response.json();

@@ -12,8 +12,8 @@ import Registrarse from './source/Login/Registrarse'
 import IniciarComoSolver from './source/Login/IniciarComoSolver'
 import Registrarse2 from './source/Login/Registrarse2'
 import Home from './source/Home/index';
-import Servicios from './source/Home/servicios'
-import ProductosScreen from './source/Home/productos';
+import Servicios from './source/Home/Servicios'
+import ProductosScreen from './source/Home/Productos';
 import ActividadScreen from './source/Home/Actividad';
 // registerRootComponent calls AppRegistry.registerComponent('main', () => App);
 // It also ensures that whether you load the app in Expo Go or in a native build,
