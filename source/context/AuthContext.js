@@ -22,6 +22,7 @@ export function AuthProvider({ children }) {
           );
           if (response.ok) {
             const data = await response.json();
+            console.log(data)
             setUsuario(data);
             setEstaLogeado(true);
             saveProfile(data); // <--- AGREGA ESTO

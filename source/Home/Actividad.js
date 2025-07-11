@@ -1,60 +1,92 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, FlatList, ScrollView } from 'react-native';
-import Entypo from '@expo/vector-icons/Entypo';
-import Fontisto from '@expo/vector-icons/Fontisto';
+import { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, FlatList, ScrollView, ActivityIndicator } from 'react-native';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { StatusBar } from 'expo-status-bar';
-const DATA = [
-  {
-    id: '1',
-    title: 'Cocina',
-    address: 'Avenida Diaz Velez 1290',
-    date: '4 Mar',
-    time: '18.23hs',
-    price: '$9.460',
-  },
-  {
-    id: '2',
-    title: 'Cocina',
-    address: 'Avenida Diaz Velez 1290',
-    date: '4 Mar',
-    time: '18.23hs',
-    price: '$9.460',
-  },
-  {
-    id: '3',
-    title: 'Cocina',
-    address: 'Avenida Diaz Velez 1290',
-    date: '4 Mar',
-    time: '18.23hs',
-    price: '$9.460',
-  },
-  {
-    id: '4',
-    title: 'Cocina',
-    address: 'Avenida Diaz Velez 1290',
-    date: '4 Mar',
-    time: '18.23hs',
-    price: '$9.460',
-  },
-];
+import { useAuth } from '../context/AuthContext';
 
 export default function ActividadScreen() {
+  const { usuario } = useAuth();
+  const [actividades, setActividades] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [nombresSubservicio, setNombresSubservicio] = useState({});
+
+  // Obtener nombres de subservicio para cada actividad
+  console.log("Render ActividadScreen", usuario);
+  useEffect(() => {
+  console.log("useEffect ActividadScreen", usuario);
+  const fetchActividades = async () => {
+    try {
+      if (!usuario || !usuario.idcliente) { // <--- CAMBIA ESTO
+        setActividades([]);
+        setLoading(false);
+        return;
+      }
+      console.log(usuario.idcliente); // <--- CAMBIA ESTO
+      const response = await fetch(`https://solvy-app-api.vercel.app/cli/actividades/${usuario.idcliente}`);
+      if (response.ok) {
+        const data = await response.json();
+        setActividades(data);
+
+          // Obtener nombres de subservicio para cada actividad
+          const nombres = {};
+          await Promise.all(
+            data.map(async (item) => {
+              if (item.idsubservicio) {
+                try {
+                  const res = await fetch(`https://solvy-app-api.vercel.app/ser/nombresubservicio/${item.idsubservicio}`);
+                  if (res.ok) {
+                    const nombreData = await res.json();
+                    nombres[item.idsubservicio] = nombreData.nombre || nombreData.nombresubservicio || '';
+                  }
+                } catch (e) {
+                  nombres[item.idsubservicio] = '';
+                }
+              }
+            })
+          );
+          setNombresSubservicio(nombres);
+      } else {
+        setActividades([]);
+      }
+    } catch (e) {
+      setActividades([]);
+    }
+    setLoading(false);
+  };
+  fetchActividades();
+}, [usuario]);
+
+  // Función para extraer solo la hora y minutos de un timestamp
+  const getHoraMinutos = (timestamp) => {
+    if (!timestamp) return '';
+    // Si viene como "2024-07-11T15:30:00.000Z" o similar
+    const date = new Date(timestamp);
+    if (isNaN(date.getTime())) {
+      // Si no es un formato válido, intenta cortar manualmente
+      const match = timestamp.match(/T(\d{2}:\d{2})/);
+      return match ? match[1] : '';
+    }
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
   const renderItem = ({ item }) => (
     <View style={styles.card}>
       <View style={styles.cardImageContainer}>
-        {/* Replace with actual image or icon */}
         <FontAwesome5 name="chef-hat" size={40} color="#003f5c" />
       </View>
       <View style={styles.cardContent}>
-        <Text style={styles.title}>{item.title}</Text>
-        <Text style={styles.address}>{item.address}</Text>
+        {/* Mostrar el nombre del subservicio obtenido de la API */}
+        <Text style={styles.title}>
+          {nombresSubservicio[item.idsubservicio] || 'Servicio'}
+        </Text>
+        <Text style={styles.address}>{item.direccion_servicio}</Text>
         <View style={styles.dateTimeRow}>
-          <Text style={styles.date}>{item.date}</Text>
-          <Text style={styles.time}>{item.time}</Text>
+          <Text style={styles.date}>{item.fechaservicio}</Text>
+          {/* Mostrar solo hora y minutos */}
+          <Text style={styles.time}>{getHoraMinutos(item.horainicial)}</Text>
         </View>
-        <Text style={styles.price}>{item.price}</Text>
+        <Text style={styles.price}>{item.monto}</Text>
       </View>
       <TouchableOpacity style={styles.repeatButton}>
         <FontAwesome name="repeat" size={24} color="#003f5c" />
@@ -65,20 +97,24 @@ export default function ActividadScreen() {
 
   return (
     <View style={styles.todo}>
-      <SafeAreaView style={styles.container}>
-        <StatusBar style="auto" />
+      <StatusBar style="auto" />
+      <View style={styles.container}>
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <Text style={styles.titulo}>Actividad</Text>
-
-          <FlatList
-            data={DATA}
-            renderItem={renderItem}
-            keyExtractor={item => item.id}
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={false}
-          />
+          {loading ? (
+            <ActivityIndicator size="large" color="#007cc0" />
+          ) : (
+            <FlatList
+              data={actividades}
+              renderItem={renderItem}
+              keyExtractor={item => item.id?.toString() || Math.random().toString()}
+              contentContainerStyle={styles.listContent}
+              showsVerticalScrollIndicator={false}
+              ListEmptyComponent={<Text style={{ textAlign: 'center', marginTop: 30 }}>No hay actividades.</Text>}
+            />
+          )}
         </ScrollView>
-      </SafeAreaView>
+      </View>
     </View>
   );
 }

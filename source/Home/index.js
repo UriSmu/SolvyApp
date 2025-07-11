@@ -9,7 +9,6 @@
   import Fontisto from '@expo/vector-icons/Fontisto';
   import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
   import FontAwesome from '@expo/vector-icons/FontAwesome';
-  import Header from '../Layout/Header';
 
   import { useUserProfile } from '../context/UserProfileContext';
 
@@ -19,11 +18,10 @@ export default function Home({ navigation }) {
     const { profile } = useUserProfile();
     return (
       <View style={styles.todo}>
-      <SafeAreaView style={styles.container}>
         <StatusBar style="auto" />
+        <View style={styles.container}>
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           {/* Encabezado */}
-          <Header/>
 
           {/* Saludo */}
           <Text style={styles.titulo}>
@@ -113,8 +111,7 @@ export default function Home({ navigation }) {
     </TouchableOpacity>
      </View>
      </ScrollView>
-     </SafeAreaView>
-
+     </View>
       </View>
     );
   }

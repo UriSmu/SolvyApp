@@ -18,8 +18,8 @@ export default function Home() {
 
   return (
     <View style={styles.todo}>
-    <SafeAreaView style={styles.container}>
       <StatusBar style="auto" />
+      <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
 
         {/* Título servicios recomendados */}
@@ -132,16 +132,16 @@ export default function Home() {
       </View>
     </View>    
       </ScrollView>
-      </SafeAreaView>
+    </View>
     </View>
   );
 }
 
 
     const styles = StyleSheet.create({
-        container: {
-          flex: 1,
-          backgroundColor: '#fff',  
+      container: {
+        flex: 1,
+        backgroundColor: '#fff',  
         },
         scrollContainer: {
           padding: 20,

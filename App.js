@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AuthProvider, useAuth } from './source/context/AuthContext';
 import { RegisterProvider } from './source/context/RegisterContext';
 import { UserProfileProvider } from './source/context/UserProfileContext';
+import { StyleSheet, View, SafeAreaView } from 'react-native';
 
 import Login from './source/Login';
 import IniciarComoCliente from './source/Login/IniciarComoCliente';
@@ -14,11 +15,13 @@ import Registrarse2 from './source/Login/Registrarse2';
 import OlvideMiContrasenia from './source/Login/OlvideMiContrasenia';
 
 import Home from './source/Home';
-import Productos from './source/Home/productos';
-import Servicios from './source/Home/servicios';
+import Productos from './source/Home/Productos';
+import Servicios from './source/Home/Servicios';
+import Actividad from './source/Home/Actividad';
 
 import Header from './source/Layout/Header';
 import Tabbar from './source/Layout/Tabbar';
+
 
 const Stack = createNativeStackNavigator();
 
@@ -38,13 +41,30 @@ function LoginStack() {
 
 function HomeLayout({ children }) {
   return (
-    <>{/* Fragment */}
-      <Header />
-      <>{children}</>
-      <Tabbar />
-    </>
+    <View style={{ flex: 1 }}>
+      <SafeAreaView style={{ flex: 1 }}>
+        <Header style={styles.header}/>
+        <View style={{ flex: 1 }}>
+          {children}
+        </View>
+        <Tabbar style={styles.footer}/>
+      </SafeAreaView>
+    </View>
   );
 }
+const styles = StyleSheet.create({
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    padding: 10,
+    backgroundColor: '#007cc0',
+  },
+});
 
 function HomeStack() {
   return (
@@ -53,6 +73,7 @@ function HomeStack() {
         <Stack.Screen name="Home" component={Home} />
         <Stack.Screen name="Productos" component={Productos} />
         <Stack.Screen name="Servicios" component={Servicios} />
+        <Stack.Screen name="Actividad" component={Actividad} />
       </Stack.Navigator>
     </HomeLayout>
   );
@@ -68,11 +89,9 @@ export default function App() {
     <UserProfileProvider>
       <AuthProvider>
         <RegisterProvider>
-          <UserProfileProvider>
             <NavigationContainer>
               <RootNavigation />
             </NavigationContainer>
-          </UserProfileProvider>
         </RegisterProvider>
       </AuthProvider>
     </UserProfileProvider>

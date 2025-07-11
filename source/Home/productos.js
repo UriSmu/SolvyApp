@@ -68,7 +68,7 @@ export default function ProductosScreen() {
 
     return (
         <View style={styles.todo}>
-            <SafeAreaView style={styles.container}>
+            <View style={styles.container}>
                 <FlatList
                     ListHeaderComponent={
                         <View style={styles.searchCartRow}>
@@ -86,10 +86,9 @@ export default function ProductosScreen() {
                     numColumns={2}
                     contentContainerStyle={styles.productsList}
                     showsVerticalScrollIndicator={false}
-                />
+                    />
                 {/* Bottom NaVigation */}
-                
-            </SafeAreaView>
+                    </View>
         </View>
     );
 }

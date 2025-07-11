@@ -1,45 +1,46 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView } from 'react-native';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import Logo from '../../assets/Logo.png';
-import { useUserProfile } from '../context/UserProfileContext';
+import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import Entypo from '@expo/vector-icons/Entypo';
 import Fontisto from '@expo/vector-icons/Fontisto';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { useNavigation } from '@react-navigation/native';
 
 export default function Tabbar() {
+      const navigation = useNavigation();
+
     return (
         <View style={styles.footerContainer}>
             <View style={styles.menuInferior}>
-                <View style={styles.footerImagenes}>
+                <TouchableOpacity style={styles.footerImagenes} onPress={() => navigation.navigate('Home')}>
                     <View style={styles.centrarFooter}>
                         <Entypo name="home" size={30} color="white" />
                     </View>
                     <Text style={styles.menuItem}>Home</Text>
-                </View>
-                <View style={styles.footerImagenes}>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.footerImagenes} onPress={() => navigation.navigate('Servicios')}>
                     <View style={styles.centrarFooter}>
                         <Fontisto name="person" size={30} color="white" />
                     </View>
                     <Text style={styles.menuItem}>Servicios</Text>
-                </View>
-                <View style={styles.footerImagenes}>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.footerImagenes} onPress={() => navigation.navigate('Productos')}>
                     <View style={styles.centrarFooter}>
                         <FontAwesome5 name="shopping-cart" size={30} color="white" />
                     </View>
                     <Text style={styles.menuItem}>Productos</Text>
-                </View>
-                <View style={styles.footerImagenes}>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.footerImagenes} onPress={() => navigation.navigate('Actividad')}>
                     <View style={styles.centrarFooter}>
                         <FontAwesome name="list-ul" size={30} color="white" />
                     </View>
                     <Text style={styles.menuItem}>Actividad</Text>
-                </View>
+                </TouchableOpacity>
             </View>
         </View>
     )
-    
 }
+
+
 const styles = StyleSheet.create({
       container: { 
         flex: 1, 
