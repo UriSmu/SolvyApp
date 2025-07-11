@@ -66,7 +66,7 @@ export default function Home({ navigation }) {
           </View>
 
           <View style={styles.servicio}>
-          <TouchableOpacity style={styles.botonServicios}>
+          <TouchableOpacity style={styles.botonServicios} onPress={() => navigation.navigate('LimpiezaServEstatico')}>
             <LinearGradient colors={['#007cc0', '#003f5c']} style={styles.iconoServicio}>
               <FontAwesome6 name="broom" size={50} color="white" />
             </LinearGradient>
