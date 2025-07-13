@@ -5,7 +5,7 @@ import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 // ID del servicio de limpieza (ajusta según tu base de datos)
 const LIMPIEZA_SERVICE_ID = 1; // Cambia este valor si tu ID de limpieza es otro
 
-export default function LimpiezaServEstatico() {
+export default function LimpiezaServEstatico({ navigation }) {
   const [solver, setSolver] = useState(null);
   const [loading, setLoading] = useState(true);
   const [mensaje, setMensaje] = useState("");
@@ -21,11 +21,13 @@ export default function LimpiezaServEstatico() {
           return;
         }
         // 2. Elegir uno al azar
-        const randomId = solversIds[Math.floor(Math.random() * solversIds.length)];
+        const randomSolver = solversIds[Math.floor(Math.random() * solversIds.length)];
+        const randomId = randomSolver.idsolver; // o el campo correcto
         // 3. Traer info del solver elegido
         const solverRes = await fetch(`https://solvy-app-api.vercel.app/sol/solver/${randomId}`);
         const solverData = await solverRes.json();
-        setSolver(solverData);
+        console.log("solverData", solverData); // <-- AGREGÁ ESTO PARA VER LA ESTRUCTURA
+        setSolver(Array.isArray(solverData) ? solverData[0] : solverData);
       } catch (e) {
         setSolver(null);
       }
@@ -35,8 +37,9 @@ export default function LimpiezaServEstatico() {
   }, []);
 
   const handleFinalizar = () => {
-    Alert.alert("Servicio finalizado", "¡Gracias por usar Solvy!");
-    // Aquí podrías navegar o hacer otra acción
+    navigation.navigate("ReseniaSolv", {
+      solver,
+    });
   };
 
   if (loading) {
@@ -80,7 +83,7 @@ export default function LimpiezaServEstatico() {
           <Image
             source={
               solver.fotopersonal
-                ? { uri: solver.fotopersonal }
+                ? { uri: `https://solvy-app-api.vercel.app/uploads/${solver.fotopersonal}` }
                 : require("../../assets/chef-hat.png")
             }
             style={styles.solverImg}

@@ -19,6 +19,7 @@ import Productos from './source/Home/Productos';
 import Servicios from './source/Home/Servicios';
 import Actividad from './source/Home/Actividad';
 import LimpiezaServEstatico from './source/Home/LimpiezaServEstatico';
+import ReseniaSolv from './source/Home/ReseniaSolv';
 
 import Header from './source/Layout/Header';
 import Tabbar from './source/Layout/Tabbar';
@@ -76,6 +77,7 @@ function HomeStack() {
         <Stack.Screen name="Servicios" component={Servicios} />
         <Stack.Screen name="Actividad" component={Actividad} />
         <Stack.Screen name="LimpiezaServEstatico" component={LimpiezaServEstatico}/>
+        <Stack.Screen name="ReseniaSolv" component={ReseniaSolv}/>
       </Stack.Navigator>
     </HomeLayout>
   );
