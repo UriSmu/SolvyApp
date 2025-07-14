@@ -4,6 +4,8 @@ import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { StatusBar } from 'expo-status-bar';
 import { useAuth } from '../context/AuthContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 export default function ActividadScreen() {
   const { usuario } = useAuth();
@@ -20,7 +22,15 @@ export default function ActividadScreen() {
         setLoading(false);
         return;
       }
-      const response = await fetch(`https://solvy-app-api.vercel.app/cli/actividades/${usuario.idcliente}`);
+      const token = await AsyncStorage.getItem('token');
+
+      const response = await fetch(`https://solvy-app-api.vercel.app/cli/actividades/${usuario.idcliente}`, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      }
+    });
       if (response.ok) {
         const data = await response.json();
         setActividades(data);

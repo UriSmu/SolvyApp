@@ -5,6 +5,7 @@ import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Entypo from '@expo/vector-icons/Entypo';
 import { useNavigation } from '@react-navigation/native';
 import { useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { useAuth } from '../context/AuthContext';
 import { useUserProfile } from '../context/UserProfileContext';
@@ -26,32 +27,35 @@ export default function IniciarSesion() {
 
   // Función para manejar el login
   const handleLogin = async () => {
-    setLoginError(''); // Limpiar error antes de intentar login
-    if (!usuario || !contrasena) {
-      setLoginError('Por favor ingrese usuario y contraseña');
+  setLoginError('');
+  if (!usuario || !contrasena) {
+    setLoginError('Por favor ingrese usuario y contraseña');
+    return;
+  }
+
+  try {
+    const response = await fetch(`https://solvy-app-api.vercel.app/cli/clientes/${encodeURIComponent(usuario)}/${encodeURIComponent(contrasena)}`);
+    if (response.status === 404) {
+      setLoginError('Usuario o contraseña incorrectos');
       return;
     }
-
-    try {
-      const response = await fetch(`https://solvy-app-api.vercel.app/cli/clientes/${encodeURIComponent(usuario)}/${encodeURIComponent(contrasena)}`);
-
-      if (response.status === 404) {
-        setLoginError('Usuario o contraseña incorrectos');
-        return;
-      }
-
-      if (!response.ok) {
-        throw new Error('Error en la conexión con el servidor');
-      }
-
-      const data = await response.json();
-      login(data, { usuario, contrasena }); // <-- Usa los nombres correctos
-      saveProfile(data);
-      //navigation.navigate('Home'); 
-    } catch (error) {
-      setLoginError(error.message);
+    if (!response.ok) {
+      throw new Error('Error en la conexión con el servidor');
     }
-  };
+    const data = await response.json();
+
+    // Guarda el token en AsyncStorage
+    if (data.token) {
+      await AsyncStorage.setItem('token', data.token);
+    }
+
+    login(data, { usuario, contrasena });
+    saveProfile(data);
+    // navigation.navigate('Home');
+  } catch (error) {
+    setLoginError(error.message);
+  }
+};
 
   return (
     <SafeAreaView style={styles.SafeArea}>
