@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Image, TextInput, ActivityIndicator, Alert } from "react-native";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // ID del servicio de limpieza (ajusta según tu base de datos)
 const LIMPIEZA_SERVICE_ID = 1; // Cambia este valor si tu ID de limpieza es otro
@@ -12,9 +13,16 @@ export default function LimpiezaServEstatico({ navigation }) {
 
   useEffect(() => {
     const fetchRandomSolver = async () => {
+      const token = await AsyncStorage.getItem('token');
       try {
         // 1. Traer IDs de solvers que pueden hacer limpieza
-        const res = await fetch(`https://solvy-app-api.vercel.app/ser/solvers/${LIMPIEZA_SERVICE_ID}`);
+        const res = await fetch(`https://solvy-app-api.vercel.app/ser/solvers/${LIMPIEZA_SERVICE_ID}`, {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        });
         const solversIds = await res.json();
         if (!Array.isArray(solversIds) || solversIds.length === 0) {
           setLoading(false);
@@ -24,7 +32,13 @@ export default function LimpiezaServEstatico({ navigation }) {
         const randomSolver = solversIds[Math.floor(Math.random() * solversIds.length)];
         const randomId = randomSolver.idsolver; // o el campo correcto
         // 3. Traer info del solver elegido
-        const solverRes = await fetch(`https://solvy-app-api.vercel.app/sol/solver/${randomId}`);
+        const solverRes = await fetch(`https://solvy-app-api.vercel.app/sol/solver/${randomId}`, {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        });
         const solverData = await solverRes.json();
         console.log("solverData", solverData); // <-- AGREGÁ ESTO PARA VER LA ESTRUCTURA
         setSolver(Array.isArray(solverData) ? solverData[0] : solverData);

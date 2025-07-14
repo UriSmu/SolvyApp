@@ -50,7 +50,7 @@ export default function IniciarSesion() {
     }
 
     login(data, { usuario, contrasena });
-    saveProfile(data);
+    //saveProfile(data);
     // navigation.navigate('Home');
   } catch (error) {
     setLoginError(error.message);

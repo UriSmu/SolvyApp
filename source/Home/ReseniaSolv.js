@@ -1,16 +1,14 @@
 import { useState } from "react";
-import { View, Text, StyleSheet, Image, TextInput, TouchableOpacity, Alert } from "react-native";
+import { View, Text, StyleSheet, Image, TextInput, TouchableOpacity, Alert, Platform } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRoute } from "@react-navigation/native";
-import { useUserProfile } from "../context/UserProfileContext"; // Asegúrate de tener este hook
-import { Platform } from "react-native";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function ReseniaSolv({ navigation }) {
   const route = useRoute();
   const { solver } = route.params;
   const [puntuacion, setPuntuacion] = useState(0);
   const [comentario, setComentario] = useState("");
-  const { profile } = useUserProfile(); // Para obtener idcliente
 
   // Renderiza estrellas con medias
   const renderStars = () => {
@@ -47,47 +45,67 @@ export default function ReseniaSolv({ navigation }) {
   };
 
   const handleEnviar = async () => {
-  if (!puntuacion || !comentario.trim()) {
-    Alert.alert("Completa la reseña", "Debes puntuar y dejar un comentario.");
-    return;
-  }
-  try {
-    const res = await fetch("https://solvy-app-api.vercel.app/ressol/resenia", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        // idsolicitud: OMITIDO,
-        idsolver: solver.idsolver,
-        puntuacion,
-        idcliente: profile?.idcliente,
-        comentario,
-      }),
-    });
-    if (res.ok) {
-      if (Platform.OS === "web") {
-        window.alert("¡Gracias! Tu reseña fue enviada.");
-        navigation.reset({
-          index: 0,
-          routes: [{ name: "Home" }],
-        });
-      } else {
-        Alert.alert("¡Gracias!", "Tu reseña fue enviada.", [
-          {
-            text: "OK",
-            onPress: () =>
-              navigation.reset({
-                index: 0,
-                routes: [{ name: "Home" }],
-              }),
-          },
-        ]);
+    const token = await AsyncStorage.getItem('token');
+    const usuarioStr = await AsyncStorage.getItem('usuario');
+    let idcliente = null;
+    if (usuarioStr) {
+      try {
+        const usuarioObj = JSON.parse(usuarioStr);
+        idcliente = usuarioObj?.profile?.user?.idcliente;
+      } catch (e) {
+        idcliente = null;
       }
     }
-  } catch (e) {
-    Alert.alert("Error", "No se pudo enviar la reseña.");
-  }
-};
 
+    if (!puntuacion || !comentario.trim()) {
+      Alert.alert("Completa la reseña", "Debes puntuar y dejar un comentario.");
+      return;
+    }
+    if (!idcliente) {
+      Alert.alert("Error", "No se pudo obtener tu usuario. Intenta cerrar sesión y volver a ingresar.");
+      return;
+    }
+    try {
+      const res = await fetch("https://solvy-app-api.vercel.app/ressol/resenia", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          idsolver: solver.idsolver,
+          puntuacion,
+          idcliente,
+          comentario,
+        }),
+      });
+      if (res.ok) {
+        if (Platform.OS === "web") {
+          window.alert("¡Gracias! Tu reseña fue enviada.");
+          navigation.reset({
+            index: 0,
+            routes: [{ name: "Home" }],
+          });
+        } else {
+          Alert.alert("¡Gracias!", "Tu reseña fue enviada.", [
+            {
+              text: "OK",
+              onPress: () =>
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: "Home" }],
+                }),
+            },
+          ]);
+        }
+      } else {
+        const error = await res.json();
+        Alert.alert("Error", error?.message || "No se pudo enviar la reseña.");
+      }
+    } catch (e) {
+      Alert.alert("Error", "No se pudo enviar la reseña.");
+    }
+  };
 
   return (
     <View style={styles.container}>

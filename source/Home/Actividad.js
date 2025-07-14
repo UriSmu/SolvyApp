@@ -3,37 +3,54 @@ import { View, Text, TouchableOpacity, StyleSheet, FlatList, ScrollView, Activit
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { StatusBar } from 'expo-status-bar';
-import { useAuth } from '../context/AuthContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-
 export default function ActividadScreen() {
-  const { usuario } = useAuth();
   const [actividades, setActividades] = useState([]);
   const [loading, setLoading] = useState(true);
   const [nombresSubservicio, setNombresSubservicio] = useState({});
+  const [idCliente, setIdCliente] = useState(null);
 
-  // Obtener nombres de subservicio para cada actividad
+  // Cargar idcliente desde AsyncStorage
   useEffect(() => {
-  const fetchActividades = async () => {
-    try {
-      if (!usuario || !usuario.idcliente) {
-        setActividades([]);
-        setLoading(false);
-        return;
+    const cargarIdCliente = async () => {
+      try {
+        const usuarioStr = await AsyncStorage.getItem('usuario');
+        if (usuarioStr) {
+          const usuarioObj = JSON.parse(usuarioStr);
+          const id = usuarioObj?.profile?.user?.idcliente;
+          setIdCliente(id);
+        } else {
+          setIdCliente(null);
+        }
+      } catch (e) {
+        setIdCliente(null);
       }
-      const token = await AsyncStorage.getItem('token');
+    };
+    cargarIdCliente();
+  }, []);
 
-      const response = await fetch(`https://solvy-app-api.vercel.app/cli/actividades/${usuario.idcliente}`, {
-      method: "GET",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json"
-      }
-    });
-      if (response.ok) {
-        const data = await response.json();
-        setActividades(data);
+  // Obtener actividades y nombres de subservicio
+  useEffect(() => {
+    const fetchActividades = async () => {
+      setLoading(true);
+      try {
+        if (!idCliente) {
+          setActividades([]);
+          setLoading(false);
+          return;
+        }
+        const token = await AsyncStorage.getItem('token');
+        const response = await fetch(`https://solvy-app-api.vercel.app/cli/actividades/${idCliente}`, {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setActividades(data);
 
           // Obtener nombres de subservicio para cada actividad
           const nombres = {};
@@ -41,7 +58,13 @@ export default function ActividadScreen() {
             data.map(async (item) => {
               if (item.idsubservicio) {
                 try {
-                  const res = await fetch(`https://solvy-app-api.vercel.app/ser/nombresubservicio/${item.idsubservicio}`);
+                  const res = await fetch(`https://solvy-app-api.vercel.app/ser/nombresubservicio/${item.idsubservicio}`, {
+                    method: "GET",
+                    headers: {
+                      "Authorization": `Bearer ${token}`,
+                      "Content-Type": "application/json"
+                    }
+                  });
                   if (res.ok) {
                     const nombreData = await res.json();
                     nombres[item.idsubservicio] = nombreData.nombre || nombreData.nombresubservicio || '';
@@ -53,24 +76,22 @@ export default function ActividadScreen() {
             })
           );
           setNombresSubservicio(nombres);
-      } else {
+        } else {
+          setActividades([]);
+        }
+      } catch (e) {
         setActividades([]);
       }
-    } catch (e) {
-      setActividades([]);
-    }
-    setLoading(false);
-  };
-  fetchActividades();
-}, [usuario]);
+      setLoading(false);
+    };
+    if (idCliente) fetchActividades();
+  }, [idCliente]);
 
   // Función para extraer solo la hora y minutos de un timestamp
   const getHoraMinutos = (timestamp) => {
     if (!timestamp) return '';
-    // Si viene como "2024-07-11T15:30:00.000Z" o similar
     const date = new Date(timestamp);
     if (isNaN(date.getTime())) {
-      // Si no es un formato válido, intenta cortar manualmente
       const match = timestamp.match(/T(\d{2}:\d{2})/);
       return match ? match[1] : '';
     }
@@ -83,14 +104,12 @@ export default function ActividadScreen() {
         <FontAwesome5 name="chef-hat" size={40} color="#003f5c" />
       </View>
       <View style={styles.cardContent}>
-        {/* Mostrar el nombre del subservicio obtenido de la API */}
         <Text style={styles.title}>
           {nombresSubservicio[item.idsubservicio] || 'Servicio'}
         </Text>
         <Text style={styles.address}>{item.direccion_servicio}</Text>
         <View style={styles.dateTimeRow}>
           <Text style={styles.date}>{item.fechaservicio}</Text>
-          {/* Mostrar solo hora y minutos */}
           <Text style={styles.time}>{getHoraMinutos(item.horainicial)}</Text>
         </View>
         <Text style={styles.price}>{item.monto}</Text>

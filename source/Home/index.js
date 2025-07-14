@@ -1,31 +1,46 @@
-  import { StatusBar } from 'expo-status-bar';
-  import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
-  import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
-  import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-  import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-  import { ImageBackground } from 'react-native-web';
-  import { LinearGradient } from 'expo-linear-gradient';
-  import Entypo from '@expo/vector-icons/Entypo';
-  import Fontisto from '@expo/vector-icons/Fontisto';
-  import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
-  import FontAwesome from '@expo/vector-icons/FontAwesome';
-
-  import { useUserProfile } from '../context/UserProfileContext';
-
+import { StatusBar } from 'expo-status-bar';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
+import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useEffect, useState } from 'react';
 
 export default function Home({ navigation }) {
-    //const fondoServicios = require('../../assets/Fondo-servicios.png')
-    const { profile } = useUserProfile();
-    return (
-      <View style={styles.todo}>
-        <StatusBar style="auto" />
-        <View style={styles.container}>
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
-          {/* Encabezado */}
+  const [nombre, setNombre] = useState(null);
 
+  useEffect(() => {
+    const cargarNombre = async () => {
+      try {
+        const usuarioStr = await AsyncStorage.getItem('usuario');
+        if (usuarioStr) {
+          const usuarioObj = JSON.parse(usuarioStr);
+          // El nombre está en usuarioObj.profile.user.nombre
+          setNombre(
+            usuarioObj?.profile?.user?.nombre ||
+            usuarioObj?.profile?.user?.nombre_usuario ||
+            usuarioObj?.profile?.user?.email ||
+            'Usuario'
+          );
+        } else {
+          setNombre('Usuario');
+        }
+      } catch (e) {
+        setNombre('Usuario');
+      }
+    };
+    cargarNombre();
+  }, []);
+
+  return (
+    <View style={styles.todo}>
+      <StatusBar style="auto" />
+      <View style={styles.container}>
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
           {/* Saludo */}
           <Text style={styles.titulo}>
-            ¡Hola, {profile && profile.nombre ? profile.nombre : 'Usuario'}!
+            ¡Hola, {nombre ? nombre : 'Usuario'}!
           </Text>
 
           {/* Servicios recientes */}

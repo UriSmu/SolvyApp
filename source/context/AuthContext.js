@@ -24,11 +24,15 @@ export function AuthProvider({ children }) {
             const data = await response.json();
             setUsuario(data);
             setEstaLogeado(true);
-            saveProfile(data); // <--- AGREGA ESTO
+            saveProfile(data);
+            // Guarda el token si existe
+            if (data.token) {
+              await AsyncStorage.setItem('token', data.token);
+            }
           } else {
             await AsyncStorage.removeItem('usuario');
             setEstaLogeado(false);
-            clearProfile(); // <--- LIMPIA PERFIL
+            clearProfile();
           }
         }
       } catch (e) {
@@ -69,11 +73,18 @@ export function AuthProvider({ children }) {
   const login = async (data, loginCredentials) => {
     setUsuario(data);
     setEstaLogeado(true);
-    saveProfile(data); // <--- YA LO HACES EN IniciarSesion, pero puedes dejarlo aquí para centralizar
+    saveProfile(data);
+
+    // Guarda el token si existe
+    if (data.token) {
+      await AsyncStorage.setItem('token', data.token);
+    }
+
+    // Guarda el usuario y contraseña, y el perfil completo
     await AsyncStorage.setItem('usuario', JSON.stringify({
       usuario: loginCredentials.usuario,
       contrasena: loginCredentials.contrasena,
-      perfil: data
+      profile: data // <-- usa 'profile' en vez de 'perfil'
     }));
   };
 
