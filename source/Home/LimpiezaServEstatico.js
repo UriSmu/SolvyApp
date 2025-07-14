@@ -1,21 +1,21 @@
 import { useEffect, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Image, TextInput, ActivityIndicator, Alert } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Image, TextInput, ActivityIndicator } from "react-native";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import MapSelector from "../solvy-map-app/src/components/MapSelector"; // Adjust the path if needed
 
-// ID del servicio de limpieza (ajusta según tu base de datos)
-const LIMPIEZA_SERVICE_ID = 1; // Cambia este valor si tu ID de limpieza es otro
+const LIMPIEZA_SERVICE_ID = 1;
 
 export default function LimpiezaServEstatico({ navigation }) {
   const [solver, setSolver] = useState(null);
   const [loading, setLoading] = useState(true);
   const [mensaje, setMensaje] = useState("");
+  const [selectedLocation, setSelectedLocation] = useState(null);
 
   useEffect(() => {
     const fetchRandomSolver = async () => {
       const token = await AsyncStorage.getItem('token');
       try {
-        // 1. Traer IDs de solvers que pueden hacer limpieza
         const res = await fetch(`https://solvy-app-api.vercel.app/ser/solvers/${LIMPIEZA_SERVICE_ID}`, {
           method: "GET",
           headers: {
@@ -28,10 +28,8 @@ export default function LimpiezaServEstatico({ navigation }) {
           setLoading(false);
           return;
         }
-        // 2. Elegir uno al azar
         const randomSolver = solversIds[Math.floor(Math.random() * solversIds.length)];
-        const randomId = randomSolver.idsolver; // o el campo correcto
-        // 3. Traer info del solver elegido
+        const randomId = randomSolver.idsolver;
         const solverRes = await fetch(`https://solvy-app-api.vercel.app/sol/solver/${randomId}`, {
           method: "GET",
           headers: {
@@ -40,7 +38,6 @@ export default function LimpiezaServEstatico({ navigation }) {
           }
         });
         const solverData = await solverRes.json();
-        console.log("solverData", solverData); // <-- AGREGÁ ESTO PARA VER LA ESTRUCTURA
         setSolver(Array.isArray(solverData) ? solverData[0] : solverData);
       } catch (e) {
         setSolver(null);
@@ -53,6 +50,7 @@ export default function LimpiezaServEstatico({ navigation }) {
   const handleFinalizar = () => {
     navigation.navigate("ReseniaSolv", {
       solver,
+      location: selectedLocation,
     });
   };
 
@@ -74,19 +72,13 @@ export default function LimpiezaServEstatico({ navigation }) {
 
   return (
     <View style={styles.mainContainer}>
-      {/* Mapa simulado */}
-      <View style={styles.mapaFalso}>
-        <Text style={styles.logoSolvy}>SOLVY</Text>
-        <View style={styles.avatarContainer}>
-          <Image
-            source={
-              solver.fotopersonal
-                ? { uri: solver.fotopersonal }
-                : require("../../assets/chef-hat.png")
-            }
-            style={styles.avatar}
-          />
-        </View>
+      {/* MapSelector for location selection */}
+      <View style={styles.mapContainer}>
+        <MapSelector
+          onLocationSelect={setSelectedLocation}
+          markerTitle="Tu ubicación"
+          initialLocation={selectedLocation}
+        />
       </View>
       {/* Card principal */}
       <View style={styles.card}>
@@ -139,7 +131,11 @@ export default function LimpiezaServEstatico({ navigation }) {
             <Text style={styles.visaText}>Visa terminada en XX92</Text>
           </Text>
         </View>
-        <TouchableOpacity style={styles.finalizarBtn} onPress={handleFinalizar}>
+        <TouchableOpacity
+          style={[styles.finalizarBtn, !selectedLocation && { opacity: 0.5 }]}
+          onPress={handleFinalizar}
+          disabled={!selectedLocation}
+        >
           <Text style={styles.finalizarBtnText}>FINALIZAR SERVICIO</Text>
         </TouchableOpacity>
       </View>
@@ -152,36 +148,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f5f5f5",
   },
-  mapaFalso: {
+  mapContainer: {
     flex: 1.2,
-    backgroundColor: "#e6e6e6",
     borderBottomLeftRadius: 40,
     borderBottomRightRadius: 40,
     overflow: "hidden",
-    justifyContent: "flex-start",
-    alignItems: "flex-start",
-    paddingTop: 20,
-    paddingHorizontal: 20,
-  },
-  logoSolvy: {
-    color: "#007cc0",
-    fontWeight: "bold",
-    fontSize: 18,
-    marginBottom: 10,
-  },
-  avatarContainer: {
-    position: "absolute",
-    top: 20,
-    right: 20,
-    borderRadius: 30,
-    borderWidth: 2,
-    borderColor: "#fff",
-    overflow: "hidden",
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
   },
   card: {
     position: "absolute",
