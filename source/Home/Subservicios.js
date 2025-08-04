@@ -12,50 +12,48 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
-export default function Home({ navigation }) {
-  const [servicios, setServicios] = useState([]);
+export default function Subservicios({ route, navigation }) {
+  const { idservicio, nombre } = route.params;
+  const [subservicios, setSubservicios] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchServicios = async () => {
+    const fetchSubservicios = async () => {
       setLoading(true);
       try {
         const token = await AsyncStorage.getItem('token');
-        const res = await fetch('https://solvy-app-api.vercel.app/ser/servicios', {
+        const res = await fetch(`https://solvy-app-api.vercel.app/ser/${idservicio}/subservicios`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
           const data = await res.json();
-          setServicios(data);
+          setSubservicios(data);
         } else {
-          setServicios([]);
+          setSubservicios([]);
         }
       } catch (e) {
-        setServicios([]);
+        setSubservicios([]);
       }
       setLoading(false);
     };
-    fetchServicios();
-  }, []);
+    fetchSubservicios();
+  }, [idservicio]);
 
-  const renderServicios = () => {
+  const renderSubservicios = () => {
     const filas = [];
-    for (let i = 0; i < servicios.length; i += 3) {
-      filas.push(servicios.slice(i, i + 3));
+    for (let i = 0; i < subservicios.length; i += 3) {
+      filas.push(subservicios.slice(i, i + 3));
     }
     return filas.map((fila, idx) => (
       <View style={styles.filaServicios} key={idx}>
-        {fila.map(servicio => (
-          <View style={styles.servicio} key={servicio.idservicio}>
-            <TouchableOpacity
-              style={styles.botonServicios}
-              onPress={() => navigation.navigate('Subservicios', { idservicio: servicio.idservicio, nombre: servicio.nombre })}
-            >
+        {fila.map(sub => (
+          <View style={styles.servicio} key={sub.idsubservicio}>
+            <TouchableOpacity style={styles.botonServicios} onPress={() => {}}>
               <LinearGradient colors={['#007cc0', '#003f5c']} style={styles.iconoServicio}>
-                <ServicioLogo idlogoapp={servicio.idlogoapp} />
+                <ServicioLogo idlogoapp={sub.idlogoapp} />
               </LinearGradient>
             </TouchableOpacity>
-            <Text style={styles.nombreServicio} numberOfLines={2}>{servicio.nombre}</Text>
+            <Text style={styles.nombreServicio} numberOfLines={2}>{sub.nombre}</Text>
           </View>
         ))}
         {fila.length < 3 &&
@@ -71,11 +69,11 @@ export default function Home({ navigation }) {
       <StatusBar style="auto" />
       <View style={styles.container}>
         <ScrollView contentContainerStyle={styles.scrollContainer}>
-          <Text style={styles.subtitulo}>Servicios</Text>
+          <Text style={styles.subtitulo}>Subservicios de {nombre}</Text>
           {loading ? (
             <ActivityIndicator size="large" color="#007cc0" style={{ marginTop: 40 }} />
           ) : (
-            renderServicios()
+            renderSubservicios()
           )}
         </ScrollView>
       </View>
