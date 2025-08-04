@@ -177,21 +177,21 @@ export default function Home({ navigation }) {
       },
       filaServicios: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 15,
+        justifyContent: 'space-around',
+        marginBottom: 8,
       },
       servicio: {
-        width: 30,
+        width: '30%',
         alignItems: 'center',
       },
       iconoServicio: {
         backgroundColor: '#007cc0',
-        width: 95,
-        height: 95, 
+        width: 85,
+        height: 85, 
         borderRadius: 12,
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 5,
+        marginBottom: 3,
       },
       iconoTexto: { 
         fontSize: 30, 
