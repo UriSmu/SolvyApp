@@ -50,7 +50,7 @@ export default function Subservicios({ route, navigation }) {
           <View style={styles.servicio} key={sub.idsubservicio}>
             <TouchableOpacity style={styles.botonServicios} onPress={() => {}}>
               <LinearGradient colors={['#007cc0', '#003f5c']} style={styles.iconoServicio}>
-                <ServicioLogo idlogoapp={sub.idlogoapp} />
+                <ServicioLogo idlogoapp={sub.idlogo} />
               </LinearGradient>
             </TouchableOpacity>
             <Text style={styles.nombreServicio} numberOfLines={2}>{sub.nombre}</Text>
