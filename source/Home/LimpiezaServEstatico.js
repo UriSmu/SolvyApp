@@ -2,13 +2,16 @@ import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect, useRef } from 'react';
 import {
   StyleSheet, Text, View, TextInput, ActivityIndicator,
-  TouchableOpacity, Dimensions, Animated, KeyboardAvoidingView, Platform, Keyboard
+  TouchableOpacity, Dimensions, Animated, Platform, Keyboard
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 
 const { width, height } = Dimensions.get('window');
+
+// Ajustá este valor si tu Tabbar tiene otro alto
+const TABBAR_HEIGHT = 70;
 
 export default function HomeTab() {
   const [address, setAddress] = useState('');
@@ -23,18 +26,18 @@ export default function HomeTab() {
   // Panel animation
   const [panelExpanded, setPanelExpanded] = useState(false);
   const panelHeight = useRef(new Animated.Value(220)).current;
-  const [keyboardOffset, setKeyboardOffset] = useState(0);
+  const [userExpanded, setUserExpanded] = useState(false);
 
   // Simulación de favoritos y recientes
   const favoritos = [
     { id: 1, label: 'Destino favorito 1', icon: 'location' },
     { id: 2, label: 'Destino favorito 2', icon: 'location' }
   ];
+  // Solo 3 recientes
   const recientes = [
     { id: 1, label: 'Destino reciente 1', icon: 'time-outline' },
     { id: 2, label: 'Destino reciente 2', icon: 'time-outline' },
-    { id: 3, label: 'Destino reciente 3', icon: 'time-outline' },
-    { id: 4, label: 'Destino reciente 4', icon: 'time-outline' }
+    { id: 3, label: 'Destino reciente 3', icon: 'time-outline' }
   ];
 
   useEffect(() => {
@@ -54,13 +57,18 @@ export default function HomeTab() {
     })();
   }, []);
 
-  // Keyboard listeners para mover el panel arriba
+  // Keyboard listeners SOLO para abrir/cerrar el panel, NO para moverlo
   useEffect(() => {
-    const showSub = Keyboard.addListener('keyboardDidShow', (e) => {
-      setKeyboardOffset(e.endCoordinates.height);
+    const showSub = Keyboard.addListener('keyboardDidShow', () => {
+      Animated.timing(panelHeight, {
+        toValue: 500,
+        duration: 200,
+        useNativeDriver: false,
+      }).start();
+      setPanelExpanded(true);
     });
     const hideSub = Keyboard.addListener('keyboardDidHide', () => {
-      setKeyboardOffset(0);
+      // No mover el panel ni cambiar offset
     });
     return () => {
       showSub.remove();
@@ -125,9 +133,10 @@ export default function HomeTab() {
       useNativeDriver: false,
     }).start();
     setPanelExpanded(!panelExpanded);
+    setUserExpanded(!panelExpanded); // Guardar si el usuario expandió o no
   };
 
-  // Cuando se empieza a escribir, el panel SIEMPRE debe estar abierto
+  // Cuando se empieza a escribir, el panel SIEMPRE debe estar abierto (pero no guardar como userExpanded)
   useEffect(() => {
     if (address.length > 0) {
       Animated.timing(panelHeight, {
@@ -136,8 +145,17 @@ export default function HomeTab() {
         useNativeDriver: false,
       }).start();
       setPanelExpanded(true);
+      // NO modificar userExpanded aquí
+    } else if (!userExpanded) {
+      // Si el usuario no lo dejó abierto, volver a colapsar
+      Animated.timing(panelHeight, {
+        toValue: 220,
+        duration: 200,
+        useNativeDriver: false,
+      }).start();
+      setPanelExpanded(false);
     }
-  }, [address]);
+  }, [address, userExpanded]);
 
   const showAutocomplete = address.length > 0 && suggestions.length > 0;
 
@@ -207,7 +225,7 @@ export default function HomeTab() {
       {/* Panel azul DESPLEGABLE */}
       <Animated.View style={[
         styles.panel,
-        { height: panelHeight, bottom: keyboardOffset }
+        { bottom: 0, height: panelHeight }
       ]}>
         {/* Línea superior como handle */}
         <TouchableOpacity
@@ -217,10 +235,7 @@ export default function HomeTab() {
         >
           {/* Solo la línea, sin flecha */}
         </TouchableOpacity>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={{ flex: 1 }}
-        >
+        <View style={{ flex: 1 }}>
           <View style={styles.inputRow}>
             <Ionicons name="search" size={22} color="#222" style={{ marginRight: 8 }} />
             <TextInput
@@ -236,6 +251,7 @@ export default function HomeTab() {
                   useNativeDriver: false,
                 }).start();
                 setPanelExpanded(true);
+                // NO modificar userExpanded aquí
               }}
             />
           </View>
@@ -276,7 +292,7 @@ export default function HomeTab() {
             </View>
           ) : (
             // Mostrar favoritos y recientes SOLO si no hay texto
-            <View style={{ flex: 1 }}>
+            <View style={{ flex: 1, justifyContent: 'flex-start' }}>
               <TouchableOpacity style={styles.favItem} onPress={handleTuUbicacion}>
                 <Ionicons name="person" size={20} color="#fff" style={{ marginRight: 8 }} />
                 <Text style={styles.favText}>Tu ubicación</Text>
@@ -291,7 +307,7 @@ export default function HomeTab() {
                     <Ionicons name="location" size={20} color="#fff" style={{ marginRight: 8 }} />
                     <Text style={styles.favText}>{favoritos[1].label}</Text>
                   </TouchableOpacity>
-                  {recientes.map((r) => (
+                  {recientes.length > 0 && recientes.map((r) => (
                     <TouchableOpacity style={styles.favItem} key={r.id}>
                       <Ionicons name={r.icon} size={20} color="#fff" style={{ marginRight: 8 }} />
                       <Text style={styles.favText}>{r.label}</Text>
@@ -301,7 +317,7 @@ export default function HomeTab() {
               )}
             </View>
           )}
-        </KeyboardAvoidingView>
+        </View>
       </Animated.View>
     </View>
   );
@@ -321,6 +337,7 @@ const styles = StyleSheet.create({
     paddingTop: 18,
     elevation: 10,
     zIndex: 10,
+    // bottom se setea dinámicamente para pegarlo al Tabbar
   },
   panelHandle: {
     alignSelf: 'center',
