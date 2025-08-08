@@ -8,9 +8,11 @@ import { Ionicons } from '@expo/vector-icons';
 import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 
+// Importa useNavigation para navegar
+import { useNavigation } from '@react-navigation/native';
+
 const { width, height } = Dimensions.get('window');
 
-// Ajustá este valor si tu Tabbar tiene otro alto
 const TABBAR_HEIGHT = 70;
 
 export default function HomeTab() {
@@ -27,6 +29,9 @@ export default function HomeTab() {
   const [panelExpanded, setPanelExpanded] = useState(false);
   const panelHeight = useRef(new Animated.Value(200)).current;
   const [userExpanded, setUserExpanded] = useState(false);
+
+  // Para navegación
+  const navigation = useNavigation();
 
   // Simulación de favoritos y recientes
   const favoritos = [
@@ -199,6 +204,16 @@ export default function HomeTab() {
     setSuggestions([]);
   };
 
+  // --- NUEVO: Botón "Pedir Solver" ---
+  const handlePedirSolver = () => {
+    // Navega a la pantalla ConectarConSolver, pasando la ubicación seleccionada
+    navigation.navigate('ConectarSolver', {
+      coord: selectedCoord,
+      address: address,
+      suggestion: selectedSuggestion,
+    });
+  };
+
   return (
     <View style={styles.main}>
       <StatusBar style="auto" />
@@ -227,6 +242,17 @@ export default function HomeTab() {
         styles.panel,
         { bottom: 0, height: panelHeight }
       ]}>
+        {/* --- BOTÓN PEDIR SOLVER --- */}
+        {selectedCoord && (
+          <TouchableOpacity
+            style={styles.pedirSolverBtn}
+            onPress={handlePedirSolver}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.pedirSolverText}>Pedir Solver</Text>
+          </TouchableOpacity>
+        )}
+
         {/* Línea superior como handle */}
         <TouchableOpacity
           style={styles.panelHandle}
@@ -338,6 +364,29 @@ const styles = StyleSheet.create({
     elevation: 10,
     zIndex: 10,
     // bottom se setea dinámicamente para pegarlo al Tabbar
+  },
+  pedirSolverBtn: {
+    backgroundColor: '#007cc0',
+    paddingVertical: 14,
+    paddingHorizontal: 40,
+    borderRadius: 30,
+    alignSelf: 'center',
+    marginBottom: 18,
+    marginTop: 0,
+    // Sombra para iOS
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    // Elevación para Android
+    elevation: 6,
+  },
+  pedirSolverText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
+    textAlign: 'center',
   },
   panelHandle: {
     alignSelf: 'center',
