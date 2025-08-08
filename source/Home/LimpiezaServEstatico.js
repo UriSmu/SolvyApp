@@ -25,7 +25,7 @@ export default function HomeTab() {
 
   // Panel animation
   const [panelExpanded, setPanelExpanded] = useState(false);
-  const panelHeight = useRef(new Animated.Value(220)).current;
+  const panelHeight = useRef(new Animated.Value(200)).current;
   const [userExpanded, setUserExpanded] = useState(false);
 
   // Simulación de favoritos y recientes
