@@ -4,10 +4,8 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 
-const LIMPIEZA_SERVICE_ID = 1;
-
 export default function ConectarSolver({ route, navigation }) {
-  const { coord, address, suggestion } = route.params || {};
+  const { coord, address, suggestion, subservicio } = route.params || {};
   const [loading, setLoading] = useState(true);
   const [solver, setSolver] = useState(null);
   const [error, setError] = useState(null);
@@ -25,8 +23,14 @@ export default function ConectarSolver({ route, navigation }) {
           setLoading(false);
           return;
         }
+        if (!subservicio || !subservicio.idsubservicio) {
+          setError('No se especificó el subservicio.');
+          setLoading(false);
+          return;
+        }
+        // Buscar solvers del subservicio recibido
         const res = await fetch(
-          `https://solvy-app-api.vercel.app/ser/solvers/${LIMPIEZA_SERVICE_ID}`,
+          `https://solvy-app-api.vercel.app/ser/solversubservicio/${subservicio.idsubservicio}`,
           {
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -36,7 +40,7 @@ export default function ConectarSolver({ route, navigation }) {
         );
         const solversIds = await res.json();
         if (!Array.isArray(solversIds) || solversIds.length === 0) {
-          setError('No hay solvers disponibles para este servicio.');
+          setError('No hay solvers disponibles para este subservicio.');
           setLoading(false);
           return;
         }
@@ -120,7 +124,7 @@ export default function ConectarSolver({ route, navigation }) {
           <Ionicons name="arrow-back" size={26} color="#fff" />
         </TouchableOpacity>
         <Ionicons name="sparkles" size={28} color="#fff" style={{ marginBottom: 6 }} />
-        <Text style={styles.topCardTitle}>Buscando tu Solver de Limpieza</Text>
+        <Text style={styles.topCardTitle}>Buscando tu Solver</Text>
         <Text style={styles.topCardDesc}>Estamos buscando el mejor Solver para tu pedido...</Text>
       </View>
 

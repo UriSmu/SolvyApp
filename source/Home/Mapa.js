@@ -8,14 +8,15 @@ import { Ionicons } from '@expo/vector-icons';
 import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 
-// Importa useNavigation para navegar
 import { useNavigation } from '@react-navigation/native';
 
 const { width, height } = Dimensions.get('window');
 
 const TABBAR_HEIGHT = 70;
 
-export default function HomeTab() {
+export default function Mapa({ route, navigation }) {
+  // Recibe el subservicio por parámetro si existe
+  const subservicio = route?.params?.subservicio;
   const [address, setAddress] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [selectedSuggestion, setSelectedSuggestion] = useState(null);
@@ -30,15 +31,14 @@ export default function HomeTab() {
   const panelHeight = useRef(new Animated.Value(200)).current;
   const [userExpanded, setUserExpanded] = useState(false);
 
-  // Para navegación
-  const navigation = useNavigation();
+  // Si navigation no viene por props, usar hook
+  navigation = navigation || useNavigation();
 
   // Simulación de favoritos y recientes
   const favoritos = [
     { id: 1, label: 'Destino favorito 1', icon: 'location' },
     { id: 2, label: 'Destino favorito 2', icon: 'location' }
   ];
-  // Solo 3 recientes
   const recientes = [
     { id: 1, label: 'Destino reciente 1', icon: 'time-outline' },
     { id: 2, label: 'Destino reciente 2', icon: 'time-outline' },
@@ -204,13 +204,13 @@ export default function HomeTab() {
     setSuggestions([]);
   };
 
-  // --- NUEVO: Botón "Pedir Solver" ---
+
   const handlePedirSolver = () => {
-    // Navega a la pantalla ConectarConSolver, pasando la ubicación seleccionada
     navigation.navigate('ConectarSolver', {
       coord: selectedCoord,
       address: address,
       suggestion: selectedSuggestion,
+      subservicio: subservicio,
     });
   };
 
@@ -242,7 +242,7 @@ export default function HomeTab() {
         styles.panel,
         { bottom: 0, height: panelHeight }
       ]}>
-        {/* --- BOTÓN PEDIR SOLVER --- */}
+        {/* BOTÓN PEDIR SOLVER */}
         {selectedCoord && (
           <TouchableOpacity
             style={styles.pedirSolverBtn}

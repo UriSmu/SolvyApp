@@ -48,12 +48,17 @@ export default function Subservicios({ route, navigation }) {
       <View style={styles.filaServicios} key={idx}>
         {fila.map(sub => (
           <View style={styles.servicio} key={sub.idsubservicio}>
-            <TouchableOpacity style={styles.botonServicios} onPress={() => {}}>
+            <TouchableOpacity
+              style={styles.botonServicios}
+              onPress={() => {
+                navigation.navigate('Mapa', { subservicio: sub });
+              }}
+            >
               <LinearGradient colors={['#007cc0', '#003f5c']} style={styles.iconoServicio}>
                 <ServicioLogo idlogoapp={sub.idlogo} />
               </LinearGradient>
             </TouchableOpacity>
-            <Text style={styles.nombreServicio} numberOfLines={2}>{sub.nombre}</Text>
+            <Text style={styles.nombreServicio}>{sub.nombre}</Text>
           </View>
         ))}
         {fila.length < 3 &&
@@ -181,6 +186,7 @@ const styles = StyleSheet.create({
     width: '100%',
     minHeight: 40,
     marginTop: 2,
+    flexWrap: 'wrap',
   },
   todo: {
     flex: 1,

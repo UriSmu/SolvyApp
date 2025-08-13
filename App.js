@@ -18,7 +18,7 @@ import Home from './source/Home';
 import Productos from './source/Home/Productos';
 import Servicios from './source/Home/Servicios';
 import Actividad from './source/Home/Actividad';
-import LimpiezaServEstatico from './source/Home/LimpiezaServEstatico';
+import Mapa from './source/Home/Mapa';
 import ReseniaSolv from './source/Home/ReseniaSolv';
 import Subservicios from './source/Home/Subservicios';
 import ConectarSolver from './source/Home/ConectarSolver';
@@ -78,7 +78,7 @@ function HomeStack() {
         <Stack.Screen name="Productos" component={Productos} />
         <Stack.Screen name="Servicios" component={Servicios} />
         <Stack.Screen name="Actividad" component={Actividad} />
-        <Stack.Screen name="LimpiezaServEstatico" component={LimpiezaServEstatico}/>
+        <Stack.Screen name="Mapa" component={Mapa}/>
         <Stack.Screen name="ReseniaSolv" component={ReseniaSolv}/>
         <Stack.Screen name="Subservicios" component={Subservicios}/>
         <Stack.Screen name="ConectarSolver" component={ConectarSolver} />

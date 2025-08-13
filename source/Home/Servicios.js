@@ -55,7 +55,7 @@ export default function Home({ navigation }) {
                 <ServicioLogo idlogoapp={servicio.idlogoapp} />
               </LinearGradient>
             </TouchableOpacity>
-            <Text style={styles.nombreServicio} numberOfLines={2}>{servicio.nombre}</Text>
+            <Text style={styles.nombreServicio}>{servicio.nombre}</Text>
           </View>
         ))}
         {fila.length < 3 &&
@@ -183,6 +183,7 @@ const styles = StyleSheet.create({
     width: '100%',
     minHeight: 40,
     marginTop: 2,
+    flexWrap: 'wrap', // permite que el texto se ajuste en varias líneas
   },
   todo: {
     flex: 1,
