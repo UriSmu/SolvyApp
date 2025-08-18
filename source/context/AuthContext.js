@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useUserProfile } from './UserProfileContext'; // <--- IMPORTA
+import { useUserProfile } from './UserProfileContext';
 
 const AuthContext = createContext();
 
@@ -9,7 +9,7 @@ export function AuthProvider({ children }) {
   const [usuario, setUsuario] = useState(null);
   const [cargando, setCargando] = useState(true);
 
-  const { saveProfile, clearProfile } = useUserProfile(); // <--- USA
+  const { saveProfile, clearProfile } = useUserProfile();
 
   useEffect(() => {
     const checkStoredUser = async () => {
@@ -25,7 +25,6 @@ export function AuthProvider({ children }) {
             setUsuario(data);
             setEstaLogeado(true);
             saveProfile(data);
-            // Guarda el token si existe
             if (data.token) {
               await AsyncStorage.setItem('token', data.token);
             }
@@ -56,7 +55,7 @@ export function AuthProvider({ children }) {
           const data = await response.json();
           setUsuario(data);
           setEstaLogeado(true);
-          saveProfile(data); // <--- AGREGA ESTO
+          saveProfile(data);
           return true;
         } else {
           await AsyncStorage.removeItem('usuario');
@@ -75,16 +74,14 @@ export function AuthProvider({ children }) {
     setEstaLogeado(true);
     saveProfile(data);
 
-    // Guarda el token si existe
     if (data.token) {
       await AsyncStorage.setItem('token', data.token);
     }
 
-    // Guarda el usuario y contraseña, y el perfil completo
     await AsyncStorage.setItem('usuario', JSON.stringify({
       usuario: loginCredentials.usuario,
       contrasena: loginCredentials.contrasena,
-      profile: data // <-- usa 'profile' en vez de 'perfil'
+      profile: data
     }));
   };
 
@@ -95,8 +92,46 @@ export function AuthProvider({ children }) {
     clearProfile();
   };
 
+  // --- NUEVA FUNCIÓN PARA RECUPERAR CONTRASEÑA ---
+  const resetPassword = async (email, newPassword) => {
+    try {
+      // Llama a tu API para actualizar la contraseña
+      const response = await fetch(
+        `https://solvy-app-api.vercel.app/cli/clientes/reset-password`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, newPassword })
+        }
+      );
+      if (response.ok) {
+        // Si el usuario estaba logueado y cambia su propia contraseña, actualiza AsyncStorage
+        const storedUser = await AsyncStorage.getItem('usuario');
+        if (storedUser) {
+          const userData = JSON.parse(storedUser);
+          if (userData.usuario === email) {
+            userData.contrasena = newPassword;
+            await AsyncStorage.setItem('usuario', JSON.stringify(userData));
+          }
+        }
+        return true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ estaLogeado, usuario, login, logout, cargando, autoLoginIntent }}>
+    <AuthContext.Provider value={{
+      estaLogeado,
+      usuario,
+      login,
+      logout,
+      cargando,
+      autoLoginIntent,
+      resetPassword // <-- AGREGA AQUÍ
+    }}>
       {children}
     </AuthContext.Provider>
   );
