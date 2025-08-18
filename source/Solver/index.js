@@ -23,10 +23,17 @@ export default function SolverHome({ navigation }) {
         const usuarioStr = await AsyncStorage.getItem('usuario');
         if (usuarioStr) {
           const usuarioObj = JSON.parse(usuarioStr);
+          // Para solver, el nombre puede estar en diferentes lugares
           setNombre(
             usuarioObj?.profile?.user?.nombre ||
             usuarioObj?.profile?.user?.nombre_usuario ||
             usuarioObj?.profile?.user?.email ||
+            usuarioObj?.profile?.nombre ||
+            usuarioObj?.profile?.nombre_usuario ||
+            usuarioObj?.profile?.email ||
+            usuarioObj?.nombre ||
+            usuarioObj?.nombre_usuario ||
+            usuarioObj?.email ||
             'Solver'
           );
         } else {
@@ -43,9 +50,10 @@ export default function SolverHome({ navigation }) {
     const fetchServicios = async () => {
       setLoadingServicios(true);
       try {
+        // Siempre obtener el token actualizado
         const token = await AsyncStorage.getItem('token');
         const res = await fetch('https://solvy-app-api.vercel.app/ser/servicios', {
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
         });
         if (res.ok) {
           const data = await res.json();

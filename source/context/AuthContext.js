@@ -37,13 +37,14 @@ export function AuthProvider({ children }) {
               await AsyncStorage.setItem('token', data.token);
             }
           } else {
-            await AsyncStorage.removeItem('usuario');
+            await AsyncStorage.clear(); // Borra todo el local storage
             setEstaLogeado(false);
             setEsSolver(false);
             clearProfile();
           }
         }
       } catch (e) {
+        await AsyncStorage.clear();
         setEstaLogeado(false);
         setEsSolver(false);
         clearProfile();
@@ -71,15 +72,20 @@ export function AuthProvider({ children }) {
           const data = await response.json();
           setUsuario(data);
           setEstaLogeado(true);
+          setEsSolver(solverFlag);
           saveProfile(data);
+          if (data.token) {
+            await AsyncStorage.setItem('token', data.token);
+          }
           return true;
         } else {
-          await AsyncStorage.removeItem('usuario');
+          await AsyncStorage.clear();
           setEsSolver(false);
           clearProfile();
         }
       }
     } catch (e) {
+      await AsyncStorage.clear();
       setEsSolver(false);
       clearProfile();
     }
@@ -101,6 +107,7 @@ export function AuthProvider({ children }) {
     await AsyncStorage.setItem('usuario', JSON.stringify({
       usuario: loginCredentials.usuario,
       contrasena: loginCredentials.contrasena,
+      esSolver: !!loginCredentials.esSolver,
       profile: data
     }));
   };
@@ -109,13 +116,9 @@ export function AuthProvider({ children }) {
     setUsuario(null);
     setEstaLogeado(false);
     setEsSolver(false);
-    await AsyncStorage.removeItem('usuario');
-    await AsyncStorage.removeItem('token');
+    await AsyncStorage.clear(); // Borra todo el local storage
     clearProfile();
   };
-
-  // --- NUEVA FUNCIÓN PARA RECUPERAR CONTRASEÑA ---
-
 
   return (
     <AuthContext.Provider value={{ estaLogeado, usuario, login, logout, cargando, autoLoginIntent, esSolver }}>
