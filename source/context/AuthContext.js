@@ -7,6 +7,7 @@ const AuthContext = createContext();
 export function AuthProvider({ children }) {
   const [estaLogeado, setEstaLogeado] = useState(false);
   const [usuario, setUsuario] = useState(null);
+  const [esSolver, setEsSolver] = useState(false);
   const [cargando, setCargando] = useState(true);
 
   const { saveProfile, clearProfile } = useUserProfile();
@@ -17,13 +18,20 @@ export function AuthProvider({ children }) {
         const storedUser = await AsyncStorage.getItem('usuario');
         if (storedUser) {
           const userData = JSON.parse(storedUser);
-          const response = await fetch(
-            `https://solvy-app-api.vercel.app/cli/clientes/${encodeURIComponent(userData.usuario)}/${encodeURIComponent(userData.contrasena)}`
-          );
+          let url;
+          let solverFlag = false;
+          if (userData.esSolver) {
+            url = `https://solvy-app-api.vercel.app/sol/solvers/${encodeURIComponent(userData.usuario)}/${encodeURIComponent(userData.contrasena)}`;
+            solverFlag = true;
+          } else {
+            url = `https://solvy-app-api.vercel.app/cli/clientes/${encodeURIComponent(userData.usuario)}/${encodeURIComponent(userData.contrasena)}`;
+          }
+          const response = await fetch(url);
           if (response.ok) {
             const data = await response.json();
             setUsuario(data);
             setEstaLogeado(true);
+            setEsSolver(solverFlag);
             saveProfile(data);
             if (data.token) {
               await AsyncStorage.setItem('token', data.token);
@@ -31,11 +39,13 @@ export function AuthProvider({ children }) {
           } else {
             await AsyncStorage.removeItem('usuario');
             setEstaLogeado(false);
+            setEsSolver(false);
             clearProfile();
           }
         }
       } catch (e) {
         setEstaLogeado(false);
+        setEsSolver(false);
         clearProfile();
       }
       setCargando(false);
@@ -48,9 +58,15 @@ export function AuthProvider({ children }) {
       const storedUser = await AsyncStorage.getItem('usuario');
       if (storedUser) {
         const userData = JSON.parse(storedUser);
-        const response = await fetch(
-          `https://solvy-app-api.vercel.app/cli/clientes/${encodeURIComponent(userData.usuario)}/${encodeURIComponent(userData.contrasena)}`
-        );
+        let url;
+        let solverFlag = false;
+        if (userData.esSolver) {
+          url = `https://solvy-app-api.vercel.app/sol/solvers/${encodeURIComponent(userData.usuario)}/${encodeURIComponent(userData.contrasena)}`;
+          solverFlag = true;
+        } else {
+          url = `https://solvy-app-api.vercel.app/cli/clientes/${encodeURIComponent(userData.usuario)}/${encodeURIComponent(userData.contrasena)}`;
+        }
+        const response = await fetch(url);
         if (response.ok) {
           const data = await response.json();
           setUsuario(data);
@@ -59,19 +75,23 @@ export function AuthProvider({ children }) {
           return true;
         } else {
           await AsyncStorage.removeItem('usuario');
+          setEsSolver(false);
           clearProfile();
         }
       }
     } catch (e) {
+      setEsSolver(false);
       clearProfile();
     }
     setEstaLogeado(false);
+    setEsSolver(false);
     return false;
   };
 
   const login = async (data, loginCredentials) => {
     setUsuario(data);
     setEstaLogeado(true);
+    setEsSolver(!!loginCredentials.esSolver);
     saveProfile(data);
 
     if (data.token) {
@@ -88,50 +108,17 @@ export function AuthProvider({ children }) {
   const logout = async () => {
     setUsuario(null);
     setEstaLogeado(false);
+    setEsSolver(false);
     await AsyncStorage.removeItem('usuario');
+    await AsyncStorage.removeItem('token');
     clearProfile();
   };
 
   // --- NUEVA FUNCIÓN PARA RECUPERAR CONTRASEÑA ---
-  const resetPassword = async (email, newPassword) => {
-    try {
-      // Llama a tu API para actualizar la contraseña
-      const response = await fetch(
-        `https://solvy-app-api.vercel.app/cli/clientes/reset-password`,
-        {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, newPassword })
-        }
-      );
-      if (response.ok) {
-        // Si el usuario estaba logueado y cambia su propia contraseña, actualiza AsyncStorage
-        const storedUser = await AsyncStorage.getItem('usuario');
-        if (storedUser) {
-          const userData = JSON.parse(storedUser);
-          if (userData.usuario === email) {
-            userData.contrasena = newPassword;
-            await AsyncStorage.setItem('usuario', JSON.stringify(userData));
-          }
-        }
-        return true;
-      }
-      return false;
-    } catch (e) {
-      return false;
-    }
-  };
+
 
   return (
-    <AuthContext.Provider value={{
-      estaLogeado,
-      usuario,
-      login,
-      logout,
-      cargando,
-      autoLoginIntent,
-      resetPassword // <-- AGREGA AQUÍ
-    }}>
+    <AuthContext.Provider value={{ estaLogeado, usuario, login, logout, cargando, autoLoginIntent, esSolver }}>
       {children}
     </AuthContext.Provider>
   );

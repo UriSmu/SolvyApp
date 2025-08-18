@@ -1,36 +1,53 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
-import { useAuth } from "../context/AuthContext";
 
 const OlvideMiContrasenia = ({ navigation }) => {
-  const [email, setEmail] = useState("");
+  const [identificador, setIdentificador] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const { resetPassword } = useAuth();
+  const [loading, setLoading] = useState(false);
 
   const handleReset = async () => {
-    if (!email || !newPassword) {
+    if (!identificador || !newPassword) {
       Alert.alert("Error", "Completa todos los campos.");
       return;
     }
-    // Normaliza el email: quita espacios y lo pone en minúsculas
-    const cleanEmail = email.trim().toLowerCase();
-    const success = await resetPassword(cleanEmail, newPassword);
-    if (success) {
-      Alert.alert("Éxito", "Contraseña actualizada correctamente.");
-      navigation.navigate("IniciarSesion");
-    } else {
-      Alert.alert("Error", "El correo no existe o hubo un problema. Verifica que esté bien escrito.");
+    setLoading(true);
+    try {
+      const response = await fetch(
+        "https://solvy-app-api.vercel.app/cli/reset-password",
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            data: identificador.trim(),
+            newPassword: newPassword,
+          }),
+        }
+      );
+      if (response.ok) {
+        Alert.alert("Éxito", "Contraseña actualizada correctamente.");
+        navigation.navigate("IniciarSesion");
+      } else {
+        const error = await response.json();
+        Alert.alert(
+          "Error",
+          error?.message ||
+            "El usuario no existe o hubo un problema. Verifica que esté bien escrito."
+        );
+      }
+    } catch (e) {
+      Alert.alert("Error", "No se pudo conectar con el servidor.");
     }
+    setLoading(false);
   };
 
   return (
     <View style={{ flex: 1, justifyContent: "center", padding: 20 }}>
       <Text style={{ fontSize: 24, marginBottom: 20 }}>Recuperar contraseña</Text>
       <TextInput
-        placeholder="Correo electrónico"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
+        placeholder="Email, usuario, teléfono o DNI"
+        value={identificador}
+        onChangeText={setIdentificador}
         autoCapitalize="none"
         style={{
           borderWidth: 1,
@@ -55,14 +72,17 @@ const OlvideMiContrasenia = ({ navigation }) => {
       />
       <TouchableOpacity
         onPress={handleReset}
+        disabled={loading}
         style={{
-          backgroundColor: "#007bff",
+          backgroundColor: loading ? "#aaa" : "#007bff",
           padding: 15,
           borderRadius: 5,
           alignItems: "center",
         }}
       >
-        <Text style={{ color: "#fff", fontWeight: "bold" }}>Restablecer contraseña</Text>
+        <Text style={{ color: "#fff", fontWeight: "bold" }}>
+          {loading ? "Procesando..." : "Restablecer contraseña"}
+        </Text>
       </TouchableOpacity>
     </View>
   );

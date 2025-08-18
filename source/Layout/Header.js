@@ -3,14 +3,19 @@ import { StyleSheet, Text, View, TouchableOpacity, Image } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Logo from '../../assets/Logo.png';
 import { useUserProfile } from '../context/UserProfileContext';
+import { useNavigation } from '@react-navigation/native';
 
-export default function Header() {
+export default function Header({ perfilScreen = "Perfil" }) {
     const { profile } = useUserProfile();
+    const navigation = useNavigation();
 
     return (
         <View style={styles.header}>
             <Image source={Logo} style={styles.logoImage} />
-            <View style={styles.profileContainer}>
+            <TouchableOpacity
+                style={styles.profileContainer}
+                onPress={() => navigation.navigate(perfilScreen)}
+            >
                 {profile && profile.fotopersonal ? (
                     <Image
                         source={{ uri: profile.fotopersonal }}
@@ -19,7 +24,7 @@ export default function Header() {
                 ) : (
                     <FontAwesome name="user-circle-o" size={40} color="#003f5c" />
                 )}
-            </View>
+            </TouchableOpacity>
         </View>
     );
 }
