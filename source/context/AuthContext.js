@@ -71,7 +71,6 @@ export function AuthProvider({ children }) {
           const data = await response.json();
           setUsuario(data);
           setEstaLogeado(true);
-          setEsSolver(solverFlag);
           saveProfile(data);
           return true;
         } else {
@@ -102,7 +101,6 @@ export function AuthProvider({ children }) {
     await AsyncStorage.setItem('usuario', JSON.stringify({
       usuario: loginCredentials.usuario,
       contrasena: loginCredentials.contrasena,
-      esSolver: !!loginCredentials.esSolver,
       profile: data
     }));
   };
@@ -116,8 +114,11 @@ export function AuthProvider({ children }) {
     clearProfile();
   };
 
+  // --- NUEVA FUNCIÓN PARA RECUPERAR CONTRASEÑA ---
+
+
   return (
-    <AuthContext.Provider value={{ estaLogeado, usuario, esSolver, login, logout, cargando, autoLoginIntent }}>
+    <AuthContext.Provider value={{ estaLogeado, usuario, login, logout, cargando, autoLoginIntent, esSolver }}>
       {children}
     </AuthContext.Provider>
   );
