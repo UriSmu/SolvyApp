@@ -35,7 +35,7 @@ export default function IniciarSesionSolv() {
       if (data.token) {
         await AsyncStorage.setItem('token', data.token);
       }
-      login(data, { usuario, password, esSolver: true });
+      login(data, { usuario, contrasena: password, esSolver: true }); // <--- CAMBIO AQUÍ
       navigation.reset({
         index: 0,
         routes: [{ name: 'SolverHome' }]
