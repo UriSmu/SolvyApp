@@ -22,30 +22,48 @@ export default function IniciarSesionSolv() {
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    setLoginError('');
-    setLoading(true);
-    try {
-      const res = await fetch(`https://solvy-app-api.vercel.app/sol/solvers/${usuario}/${password}`);
-      if (!res.ok) {
-        setLoginError('Usuario o contraseña incorrectos');
-        setLoading(false);
-        return;
-      }
-      const data = await res.json();
-      if (data.token) {
-        await AsyncStorage.setItem('token', data.token);
-      }
-      login(data, { usuario, contrasena: password, esSolver: true }); // <--- CAMBIO AQUÍ
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'SolverHome' }]
-      });
+  setLoginError('');
+  setLoading(true);
+  try {
+    const res = await fetch(`https://solvy-app-api.vercel.app/sol/solvers/${usuario}/${password}`);
+    if (!res.ok) {
+      setLoginError('Usuario o contraseña incorrectos');
       setLoading(false);
-    } catch (err) {
-      setLoginError('Error de conexión');
-      setLoading(false);
+      return;
     }
-  };
+    const data = await res.json();
+
+    // Busca el token en todos los lugares posibles
+    let token = null;
+    if (data.token) token = data.token;
+    else if (data.profile?.token) token = data.profile.token;
+    else if (data.profile?.user?.token) token = data.profile.user.token;
+    else if (data?.user?.token) token = data.user.token;
+
+    if (token) {
+      await AsyncStorage.setItem('token', token);
+    } else {
+      await AsyncStorage.removeItem('token');
+    }
+
+    await AsyncStorage.setItem('usuario', JSON.stringify({
+      usuario,
+      contrasena: password,
+      esSolver: true,
+      profile: data
+    }));
+
+    login(data, { usuario, contrasena: password, esSolver: true });
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'SolverHome' }]
+    });
+    setLoading(false);
+  } catch (err) {
+    setLoginError('Error de conexión');
+    setLoading(false);
+  }
+};
 
   return (
     <SafeAreaView style={styles.SafeArea}>

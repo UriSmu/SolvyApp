@@ -31,6 +31,7 @@ import SolverProductos from './source/Solver/Productos';
 import SolverServicios from './source/Solver/Servicios';
 import SolverActividad from './source/Solver/Actividad';
 import SolverPerfil from './source/Solver/Perfil';
+import SolverSubservicio from './source/Solver/Subservicio';
 
 // NUEVAS PANTALLAS DEL STACK SOLVER
 import MisServicios from './source/Solver/MisServicios';
@@ -134,6 +135,7 @@ function SolverStack() {
         <Stack.Screen name="AgregarMasServicios" component={AgregarMasServicios} />
         <Stack.Screen name="MapaSolverOnline" component={MapaSolverOnline} />
         <Stack.Screen name="Subservicios" component={Subservicios} />
+        <Stack.Screen name="Subservicio" component={SolverSubservicio} />
       </Stack.Navigator>
     </SolverLayout>
   );

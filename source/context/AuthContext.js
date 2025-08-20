@@ -94,23 +94,32 @@ export function AuthProvider({ children }) {
     return false;
   };
 
-  const login = async (data, loginCredentials) => {
-    setUsuario(data);
-    setEstaLogeado(true);
-    setEsSolver(!!loginCredentials.esSolver);
-    saveProfile(data);
+const login = async (data, loginCredentials) => {
+  setUsuario(data);
+  setEstaLogeado(true);
+  setEsSolver(!!loginCredentials.esSolver);
+  saveProfile(data);
 
-    if (data.token) {
-      await AsyncStorage.setItem('token', data.token);
-    }
+  // Busca el token en todos los lugares posibles
+  let token = null;
+  if (data.token) token = data.token;
+  else if (data.profile?.token) token = data.profile.token;
+  else if (data.profile?.user?.token) token = data.profile.user.token;
+  else if (data?.user?.token) token = data.user.token;
 
-    await AsyncStorage.setItem('usuario', JSON.stringify({
-      usuario: loginCredentials.usuario,
-      contrasena: loginCredentials.contrasena,
-      esSolver: !!loginCredentials.esSolver,
-      profile: data
-    }));
-  };
+  if (token) {
+    await AsyncStorage.setItem('token', token);
+  } else {
+    await AsyncStorage.removeItem('token');
+  }
+
+  await AsyncStorage.setItem('usuario', JSON.stringify({
+    usuario: loginCredentials.usuario,
+    contrasena: loginCredentials.contrasena,
+    esSolver: !!loginCredentials.esSolver,
+    profile: data
+  }));
+};
 
   const logout = async () => {
     setUsuario(null);
