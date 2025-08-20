@@ -25,6 +25,7 @@ import ReseniaSolv from './source/Home/ReseniaSolv';
 import Subservicios from './source/Home/Subservicios';
 import ConectarSolver from './source/Home/ConectarSolver';
 import Perfil from './source/Home/Perfil';
+import ConfirmarServicio from './source/Home/ConfirmarServicio';
 
 import SolverHome from './source/Solver/index';
 import SolverProductos from './source/Solver/Productos';
@@ -115,6 +116,7 @@ function HomeStack() {
         <Stack.Screen name="Subservicios" component={Subservicios}/>
         <Stack.Screen name="ConectarSolver" component={ConectarSolver} />
         <Stack.Screen name="Perfil" component={Perfil} />
+        <Stack.Screen name="ConfirmarServicio" component={ConfirmarServicio} />
       </Stack.Navigator>
     </HomeLayout>
   );

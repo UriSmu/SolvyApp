@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image, ActivityIndicator } from 'react-native';
-import LinearGradient from 'expo-linear-gradient';
+import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Entypo from '@expo/vector-icons/Entypo';
 import Fontisto from '@expo/vector-icons/Fontisto';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
@@ -20,7 +21,8 @@ export default function AgregarMasServicios({ route, navigation }) {
       setLoading(true);
       try {
         const token = await AsyncStorage.getItem('token');
-        const res = await fetch(`https://solvy-app-api.vercel.app/ser/${servicio.idservicio}/subservicios`, {
+        const url = `https://solvy-app-api.vercel.app/ser/${servicio?.idservicio}/subservicios`;
+        const res = await fetch(url, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
@@ -104,7 +106,7 @@ export default function AgregarMasServicios({ route, navigation }) {
           renderItem={({ item }) => (
             <TouchableOpacity style={styles.servicioItem} onPress={() => handleSubservicioPress(item)}>
               <LinearGradient colors={['#007cc0', '#003f5c']} style={styles.iconoServicio}>
-                <ServicioLogo idlogo={item.idlogo} />
+                <ServicioLogo idlogo={item.idlogosapp} />
               </LinearGradient>
               <Text style={styles.servicioText}>{item.nombre}</Text>
             </TouchableOpacity>

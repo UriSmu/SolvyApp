@@ -206,13 +206,13 @@ export default function Mapa({ route, navigation }) {
 
 
   const handlePedirSolver = () => {
-    navigation.navigate('ConectarSolver', {
-      coord: selectedCoord,
-      address: address,
-      suggestion: selectedSuggestion,
-      subservicio: subservicio,
-    });
-  };
+  navigation.navigate('ConfirmarServicio', {
+    coord: selectedCoord,
+    address: address,
+    suggestion: selectedSuggestion,
+    subservicio: subservicio,
+  });
+};
 
   return (
     <View style={styles.main}>

@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, TouchableOpacity, StyleSheet, Alert, Dimensions, Animated } from 'react-native';
+import { View, Text, ActivityIndicator, TouchableOpacity, StyleSheet, Alert, Dimensions, Animated, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 
 export default function ConectarSolver({ route, navigation }) {
-  const { coord, address, suggestion, subservicio } = route.params || {};
+  const { coord, address, suggestion, subservicio, duracion, precio } = route.params || {};
   const [loading, setLoading] = useState(true);
   const [solver, setSolver] = useState(null);
   const [error, setError] = useState(null);
@@ -13,7 +13,7 @@ export default function ConectarSolver({ route, navigation }) {
   const { width, height } = Dimensions.get('window');
 
   useEffect(() => {
-    const fetchRandomSolver = async () => {
+    const fetchAvailableSolver = async () => {
       setLoading(true);
       setError(null);
       try {
@@ -39,15 +39,16 @@ export default function ConectarSolver({ route, navigation }) {
           }
         );
         const solversIds = await res.json();
-        if (!Array.isArray(solversIds) || solversIds.length === 0) {
+        // Filtrar solvers disponibles
+        const availableSolvers = solversIds.filter(s => s.esta_disponible);
+        if (!Array.isArray(availableSolvers) || availableSolvers.length === 0) {
           setError('No hay solvers disponibles para este subservicio.');
           setLoading(false);
           return;
         }
-        const randomSolver = solversIds[Math.floor(Math.random() * solversIds.length)];
-        const randomId = randomSolver.idsolver || randomSolver.id || randomSolver._id;
+        const solverId = availableSolvers[0].idsolver || availableSolvers[0].id || availableSolvers[0]._id;
         const solverRes = await fetch(
-          `https://solvy-app-api.vercel.app/sol/solver/${randomId}`,
+          `https://solvy-app-api.vercel.app/sol/solver/${solverId}`,
           {
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -58,21 +59,18 @@ export default function ConectarSolver({ route, navigation }) {
         const solverData = await solverRes.json();
         setSolver(Array.isArray(solverData) ? solverData[0] : solverData);
 
-        // Animar panel al aparecer solver
-        if (!loading) {
-          Animated.timing(panelAnim, {
-            toValue: 320,
-            duration: 350,
-            useNativeDriver: false,
-          }).start();
-        }
+        Animated.timing(panelAnim, {
+          toValue: 320,
+          duration: 350,
+          useNativeDriver: false,
+        }).start();
       } catch (e) {
         setError('Error al conectar con un solver.');
         setSolver(null);
       }
       setLoading(false);
     };
-    fetchRandomSolver();
+    fetchAvailableSolver();
   }, []);
 
   const handleVolver = () => {
@@ -95,7 +93,7 @@ export default function ConectarSolver({ route, navigation }) {
       };
 
   // Altura del panel para que entre todo sin scrollear
-  const panelHeight = 270;
+  const panelHeight = 320;
 
   return (
     <View style={styles.main}>
@@ -124,8 +122,8 @@ export default function ConectarSolver({ route, navigation }) {
           <Ionicons name="arrow-back" size={26} color="#fff" />
         </TouchableOpacity>
         <Ionicons name="sparkles" size={28} color="#fff" style={{ marginBottom: 6 }} />
-        <Text style={styles.topCardTitle}>Buscando tu Solver</Text>
-        <Text style={styles.topCardDesc}>Estamos buscando el mejor Solver para tu pedido...</Text>
+        <Text style={styles.topCardTitle}>Conexión con Solver</Text>
+        <Text style={styles.topCardDesc}>Aquí verás toda la información de tu servicio.</Text>
       </View>
 
       {/* Panel inferior tipo "desplegable" */}
@@ -141,18 +139,27 @@ export default function ConectarSolver({ route, navigation }) {
         )}
         {!loading && solver && (
           <View style={styles.solverCard}>
-            <Ionicons name="person-circle-outline" size={70} color="#fff" style={{ alignSelf: 'center' }} />
-            <Text style={styles.solverName}>{solver.nombre || solver.name || 'Solver'}</Text>
-            <Text style={styles.solverInfo}>Tel: <Text style={styles.solverInfoBold}>{solver.telefono || solver.phone || 'No disponible'}</Text></Text>
+            {solver.foto_perfil && (
+              <Image
+                source={{ uri: solver.foto_perfil }}
+                style={{ width: 70, height: 70, borderRadius: 35, marginBottom: 8 }}
+              />
+            )}
+            <Text style={styles.solverName}>
+              {solver.nombre} {solver.apellido}
+            </Text>
+            <Text style={styles.solverInfo}>Tel: <Text style={styles.solverInfoBold}>{solver.telefono || 'No disponible'}</Text></Text>
             <Text style={styles.solverInfo}>Email: <Text style={styles.solverInfoBold}>{solver.email || 'No disponible'}</Text></Text>
             <Text style={styles.solverInfo}>Dirección del pedido:</Text>
             <Text style={[styles.solverInfoBold, { marginBottom: 8 }]}>{address || 'No especificada'}</Text>
+            <Text style={styles.solverInfo}>Duración: <Text style={styles.solverInfoBold}>{duracion || 'No especificada'} min</Text></Text>
+            <Text style={styles.solverInfo}>Precio: <Text style={styles.solverInfoBold}>${precio?.toFixed(2) || 'No especificado'}</Text></Text>
             <TouchableOpacity
               style={styles.btn}
-              onPress={() => Alert.alert('¡Próximamente!', 'Aquí se podrá contactar con el solver.')}
+              onPress={() => Alert.alert('Código de finalización', 'Tu código es: 123456')}
             >
-              <Ionicons name="chatbubble-ellipses-outline" size={22} color="#007cc0" style={{ marginRight: 8 }} />
-              <Text style={styles.btnText}>Contactar Solver</Text>
+              <Ionicons name="key-outline" size={22} color="#007cc0" style={{ marginRight: 8 }} />
+              <Text style={styles.btnText}>VER CÓDIGO DE FINALIZACION</Text>
             </TouchableOpacity>
           </View>
         )}

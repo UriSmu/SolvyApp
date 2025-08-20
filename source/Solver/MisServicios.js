@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, FlatList, Image } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import LinearGradient from 'expo-linear-gradient';
+import { LinearGradient } from 'expo-linear-gradient';
 import Entypo from '@expo/vector-icons/Entypo';
 import Fontisto from '@expo/vector-icons/Fontisto';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
@@ -92,15 +92,15 @@ export default function MisServicios({ navigation }) {
       return <Image source={require('../../assets/Logo.png')} style={{ width: 60, height: 60 }} resizeMode="contain" />;
     }
 
-    const family = iconData.icon_family ? iconData.icon_family.trim() : 'FontAwesome';
-    let IconComponent = FontAwesome;
-    if (family === 'MaterialIcons') IconComponent = MaterialIcons;
-    else if (family === 'Ionicons') IconComponent = Ionicons;
-    else if (family === 'Entypo') IconComponent = Entypo;
-    else if (family === 'Fontisto') IconComponent = Fontisto;
-    else if (family === 'FontAwesome5') IconComponent = FontAwesome5;
-    else if (family === 'MaterialCommunityIcons') IconComponent = MaterialCommunityIcons;
-    else if (family === 'FontAwesome6') IconComponent = FontAwesome6;
+  const family = iconData.icon_family ? iconData.icon_family.trim() : 'FontAwesome';
+  let IconComponent = FontAwesome;
+  if (family === 'MaterialIcons') IconComponent = MaterialIcons;
+  if (family === 'Ionicons') IconComponent = Ionicons;
+  if (family === 'Entypo') IconComponent = Entypo;
+  if (family === 'Fontisto') IconComponent = Fontisto;
+  if (family === 'FontAwesome5') IconComponent = FontAwesome5;
+  if (family === 'MaterialCommunityIcons') IconComponent = MaterialCommunityIcons;
+  if (family === 'FontAwesome6') IconComponent = FontAwesome6;
 
     if (!IconComponent) {
       return <Image source={require('../../assets/Logo.png')} style={{ width: 60, height: 60 }} resizeMode="contain" />;

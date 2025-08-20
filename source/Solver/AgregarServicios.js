@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, FlatList, Image } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import LinearGradient from 'expo-linear-gradient';
+import { LinearGradient } from 'expo-linear-gradient';
 import Entypo from '@expo/vector-icons/Entypo';
 import Fontisto from '@expo/vector-icons/Fontisto';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
