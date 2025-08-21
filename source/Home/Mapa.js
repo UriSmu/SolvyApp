@@ -166,52 +166,55 @@ export default function Mapa({ route, navigation }) {
 
   // Acción al tocar "Tu ubicación"
   const handleTuUbicacion = async () => {
-    if (!location) {
-      setLoading(true);
-      try {
-        const loc = await Location.getCurrentPositionAsync({});
-        setLocation({ latitude: loc.coords.latitude, longitude: loc.coords.longitude });
-        setAddress('Tu ubicación actual');
-        setSelectedCoord({
-          latitude: loc.coords.latitude,
-          longitude: loc.coords.longitude,
-          title: 'Tu ubicación actual'
-        });
-        setRegion({
-          latitude: loc.coords.latitude,
-          longitude: loc.coords.longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01
-        });
-      } catch (e) {
-        // Manejo de error
-      }
-      setLoading(false);
-    } else {
-      setAddress('Tu ubicación actual');
+  if (!location) {
+    setLoading(true);
+    try {
+      const loc = await Location.getCurrentPositionAsync({});
+      setLocation({ latitude: loc.coords.latitude, longitude: loc.coords.longitude });
+      setAddress(`${loc.coords.latitude},${loc.coords.longitude}`); // <-- CAMBIO
       setSelectedCoord({
-        latitude: location.latitude,
-        longitude: location.longitude,
+        latitude: loc.coords.latitude,
+        longitude: loc.coords.longitude,
         title: 'Tu ubicación actual'
       });
       setRegion({
-        latitude: location.latitude,
-        longitude: location.longitude,
+        latitude: loc.coords.latitude,
+        longitude: loc.coords.longitude,
         latitudeDelta: 0.01,
         longitudeDelta: 0.01
       });
+    } catch (e) {
+      // Manejo de error
     }
-    setSuggestions([]);
-  };
+    setLoading(false);
+  } else {
+    setAddress(`${location.latitude},${location.longitude}`); // <-- CAMBIO
+    setSelectedCoord({
+      latitude: location.latitude,
+      longitude: location.longitude,
+      title: 'Tu ubicación actual'
+    });
+    setRegion({
+      latitude: location.latitude,
+      longitude: location.longitude,
+      latitudeDelta: 0.01,
+      longitudeDelta: 0.01
+    });
+  }
+  setSuggestions([]);
+};
 
 
   const handlePedirSolver = () => {
   navigation.navigate('ConfirmarServicio', {
-    coord: selectedCoord,
-    address: address,
-    suggestion: selectedSuggestion,
-    subservicio: subservicio,
-  });
+  coord: selectedCoord,
+  address,
+  suggestion: selectedSuggestion,
+  subservicio: {
+    ...subservicio,
+    idservicio: subservicio.idservicio // asegúrate que este campo exista
+  }
+});
 };
 
   return (
