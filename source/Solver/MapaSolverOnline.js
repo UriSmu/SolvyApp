@@ -18,6 +18,7 @@ export default function MapaSolverOnline({ navigation }) {
   const [servicioActivo, setServicioActivo] = useState(false);
   const [codigoInput, setCodigoInput] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
+  const [subservicioNombre, setSubservicioNombre] = useState('');
   const panelHeight = useRef(new Animated.Value(220)).current;
   const mapRef = useRef(null);
 
@@ -39,6 +40,31 @@ export default function MapaSolverOnline({ navigation }) {
     })();
   }, []);
 
+  // Traer nombre del subservicio
+  useEffect(() => {
+    const fetchSubservicio = async () => {
+      if (solicitudActual?.idsubservicio) {
+        try {
+          const token = await AsyncStorage.getItem('token');
+          const res = await fetch(`https://solvy-app-api.vercel.app/ser/nombresubservicio/${solicitudActual.idsubservicio}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setSubservicioNombre(data.nombre || '');
+          } else {
+            setSubservicioNombre('');
+          }
+        } catch {
+          setSubservicioNombre('');
+        }
+      } else {
+        setSubservicioNombre('');
+      }
+    };
+    fetchSubservicio();
+  }, [solicitudActual?.idsubservicio]);
+
   // Suscripción realtime a la tabla solicitudes (INSERT y UPDATE)
   useEffect(() => {
     const channel = supabase
@@ -47,7 +73,6 @@ export default function MapaSolverOnline({ navigation }) {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'solicitudes' },
         (payload) => {
-          console.log('Realtime payload:', payload);
           // Si es la solicitud actual, actualiza el estado local
           if (
             payload.new &&
@@ -106,16 +131,13 @@ export default function MapaSolverOnline({ navigation }) {
     try {
       const usuarioStr = await AsyncStorage.getItem('usuario');
       const usuarioObj = usuarioStr ? JSON.parse(usuarioStr) : null;
-      console.log('DEBUG usuarioObj:', usuarioObj); // LOG para ver la estructura
       const idsolver =
         usuarioObj?.profile?.user?.idsolver ||
         usuarioObj?.profile?.idsolver ||
         usuarioObj?.idsolver ||
         null;
-      console.log('DEBUG idsolver:', idsolver);
       return idsolver;
     } catch (e) {
-      console.log('DEBUG error getSolverId:', e);
       return null;
     }
   };
@@ -134,25 +156,16 @@ export default function MapaSolverOnline({ navigation }) {
     if (solicitudActual?.idsolicitud) {
       const idsolver = await getSolverId();
       const codigo = generarCodigo();
-      console.log('DEBUG handleAceptar:', {
-        idsolicitud: solicitudActual.idsolicitud,
-        idsolver,
-        codigo
-      });
-      const { data, error } = await supabase
+      await supabase
         .from('solicitudes')
         .update({
-          estado: 'aceptada', // Cambia a tu nombre real de columna si es distinto
+          estado: 'aceptada',
           hay_solver: true,
           idsolver: idsolver,
           codigo_confirmacion: codigo,
         })
         .eq('idsolicitud', solicitudActual.idsolicitud)
         .select();
-      console.log('DEBUG supabase update (aceptar):', { data, error });
-      if (error) {
-        Alert.alert('Error', 'No se pudo aceptar el servicio: ' + error.message);
-      }
     }
   };
 
@@ -167,19 +180,15 @@ export default function MapaSolverOnline({ navigation }) {
       useNativeDriver: false,
     }).start();
     if (solicitudActual?.idsolicitud) {
-      const { data, error } = await supabase
+      await supabase
         .from('solicitudes')
         .update({
-          estado: 'rechazada', // Cambia a tu nombre real de columna si es distinto
+          estado: 'rechazada',
           hay_solver: false,
           idsolver: null,
         })
         .eq('idsolicitud', solicitudActual.idsolicitud)
         .select();
-      console.log('DEBUG supabase update (rechazar):', { data, error });
-      if (error) {
-        Alert.alert('Error', 'No se pudo rechazar el servicio: ' + error.message);
-      }
     }
   };
 
@@ -192,22 +201,17 @@ export default function MapaSolverOnline({ navigation }) {
   // Chequear código y finalizar
   const confirmarFinalizacion = async () => {
     const codigoReal = solicitudActual?.codigo_confirmacion;
-    console.log('DEBUG confirmarFinalizacion:', { codigoInput, codigoReal });
     if (parseInt(codigoInput) === codigoReal) {
       const fecha = new Date();
       const horafinal = fecha.toTimeString().slice(0,8);
-      const { data, error } = await supabase
+      await supabase
         .from('solicitudes')
         .update({
-          estado: 'finalizada', // Cambia a tu nombre real de columna si es distinto
+          estado: 'finalizada',
           horafinal: horafinal,
         })
         .eq('idsolicitud', solicitudActual.idsolicitud)
         .select();
-      console.log('DEBUG supabase update (finalizar):', { data, error });
-      if (error) {
-        Alert.alert('Error', 'No se pudo finalizar el servicio: ' + error.message);
-      }
     } else {
       Alert.alert('Error', 'El código ingresado es incorrecto.');
     }
@@ -217,9 +221,6 @@ export default function MapaSolverOnline({ navigation }) {
   const direccionObj = typeof solicitudActual?.direccion_servicio === 'string'
     ? JSON.parse(solicitudActual.direccion_servicio)
     : solicitudActual?.direccion_servicio;
-
-  console.log('DEBUG solicitudActual:', solicitudActual);
-  console.log('DEBUG direccionObj:', direccionObj);
 
   return (
     <View style={styles.main}>
@@ -255,6 +256,8 @@ export default function MapaSolverOnline({ navigation }) {
             <>
               <Text style={styles.tituloPanel}>Nueva Solicitud</Text>
               <View style={styles.infoSolicitud}>
+                <Text style={styles.label}>Subservicio:</Text>
+                <Text style={styles.valor}>{subservicioNombre || 'Sin nombre'}</Text>
                 <Text style={styles.label}>Dirección:</Text>
                 <Text style={styles.valor}>
                   {direccionObj?.title || 'Sin dirección'}
@@ -277,6 +280,8 @@ export default function MapaSolverOnline({ navigation }) {
             <>
               <Text style={styles.tituloPanel}>Servicio en curso</Text>
               <View style={styles.infoSolicitud}>
+                <Text style={styles.label}>Subservicio:</Text>
+                <Text style={styles.valor}>{subservicioNombre || 'Sin nombre'}</Text>
                 <Text style={styles.label}>Dirección:</Text>
                 <Text style={styles.valor}>
                   {direccionObj?.title || 'Sin dirección'}

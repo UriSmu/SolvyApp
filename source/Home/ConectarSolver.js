@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, TouchableOpacity, StyleSheet, Alert, Dimensions, Animated, Image } from 'react-native';
+import { View, Text, ActivityIndicator, TouchableOpacity, StyleSheet, Dimensions, Animated, Image, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
@@ -14,12 +14,9 @@ export default function ConectarSolver({ route, navigation }) {
   const { width, height } = Dimensions.get('window');
   const [solicitudId, setSolicitudId] = useState(null);
   const [solicitudDataActualizada, setSolicitudDataActualizada] = useState(null);
-
-  // Extraer datos desde solicitudData
-  const coord = solicitudData?.coord;
-  const address = solicitudData?.direccion_servicio;
-  const duracion = solicitudData?.duracion_servicio;
-  const precio = solicitudData?.monto;
+  const [subservicioNombre, setSubservicioNombre] = useState('');
+  const [showTopCard, setShowTopCard] = useState(true);
+  const [modalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
     let channel;
@@ -53,11 +50,20 @@ export default function ConectarSolver({ route, navigation }) {
               filter: `idsolicitud=eq.${id}`,
             },
             async (payload) => {
+              setSolicitudDataActualizada(payload.new);
+              // Loading solo se va cuando hay_solver y idsolver existen
               if (payload.new.hay_solver && payload.new.idsolver) {
-                // Obtener datos del solver
                 await obtenerDatosSolver(payload.new.idsolver);
-                // Mostrar datos de la solicitud actualizada
-                setSolicitudDataActualizada(payload.new);
+                setShowTopCard(false);
+                setLoading(false);
+              }
+              // Solo se sale cuando el estado es finalizada
+              if (payload.new.estado === 'finalizada') {
+                setModalVisible(false);
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: 'Home' }],
+                });
               }
             }
           )
@@ -71,7 +77,6 @@ export default function ConectarSolver({ route, navigation }) {
       } catch (e) {
         setError('Error al crear la solicitud.');
       }
-      setLoading(false);
     };
 
     const obtenerDatosSolver = async (idsolver) => {
@@ -88,7 +93,6 @@ export default function ConectarSolver({ route, navigation }) {
         );
         const solverData = await solverRes.json();
         setSolver(Array.isArray(solverData) ? solverData[0] : solverData);
-        setLoading(false);
       } catch {
         setError('No se pudo obtener el solver.');
       }
@@ -100,6 +104,32 @@ export default function ConectarSolver({ route, navigation }) {
       if (channel) supabase.removeChannel(channel);
     };
   }, []);
+
+  // Traer nombre del subservicio
+  useEffect(() => {
+    const fetchSubservicio = async () => {
+      const datosSolicitud = solicitudDataActualizada || solicitudData;
+      if (datosSolicitud?.idsubservicio) {
+        try {
+          const token = await AsyncStorage.getItem('token');
+          const res = await fetch(`https://solvy-app-api.vercel.app/ser/nombresubservicio/${datosSolicitud.idsubservicio}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setSubservicioNombre(data.nombre || '');
+          } else {
+            setSubservicioNombre('');
+          }
+        } catch {
+          setSubservicioNombre('');
+        }
+      } else {
+        setSubservicioNombre('');
+      }
+    };
+    fetchSubservicio();
+  }, [solicitudDataActualizada, solver]);
 
   const handleVolver = () => {
     navigation.goBack();
@@ -148,14 +178,16 @@ export default function ConectarSolver({ route, navigation }) {
         )}
       </MapView>
 
-      <View style={styles.topCard}>
-        <TouchableOpacity style={styles.backBtn} onPress={handleVolver}>
-          <Ionicons name="arrow-back" size={26} color="#fff" />
-        </TouchableOpacity>
-        <Ionicons name="sparkles" size={28} color="#fff" style={{ marginBottom: 6 }} />
-        <Text style={styles.topCardTitle}>Conexión con Solver</Text>
-        <Text style={styles.topCardDesc}>Aquí verás toda la información de tu servicio.</Text>
-      </View>
+      {showTopCard && (
+        <View style={styles.topCard}>
+          <TouchableOpacity style={styles.backBtn} onPress={handleVolver}>
+            <Ionicons name="arrow-back" size={26} color="#fff" />
+          </TouchableOpacity>
+          <Ionicons name="sparkles" size={28} color="#fff" style={{ marginBottom: 6 }} />
+          <Text style={styles.topCardTitle}>Conexión con Solver</Text>
+          <Text style={styles.topCardDesc}>Aquí verás toda la información de tu servicio.</Text>
+        </View>
+      )}
 
       <Animated.View style={[styles.panel, { height: panelHeight }]}>
         {loading && (
@@ -180,15 +212,47 @@ export default function ConectarSolver({ route, navigation }) {
             </Text>
             <Text style={styles.solverInfo}>Tel: <Text style={styles.solverInfoBold}>{solver.telefono || 'No disponible'}</Text></Text>
             <Text style={styles.solverInfo}>Email: <Text style={styles.solverInfoBold}>{solver.email || 'No disponible'}</Text></Text>
+            <Text style={styles.solverInfo}>Subservicio:</Text>
+            <Text style={[styles.solverInfoBold, { marginBottom: 8 }]}>{subservicioNombre || 'No especificado'}</Text>
             <Text style={styles.solverInfo}>Dirección del pedido:</Text>
             <Text style={[styles.solverInfoBold, { marginBottom: 8 }]}>{datosDireccion?.title || 'No especificada'}</Text>
             <Text style={styles.solverInfo}>Duración: <Text style={styles.solverInfoBold}>{datosSolicitud?.duracion_servicio || 'No especificada'} min</Text></Text>
             <Text style={styles.solverInfo}>Precio: <Text style={styles.solverInfoBold}>${datosSolicitud?.monto?.toFixed(2) || 'No especificado'}</Text></Text>
-            {/* Si querés mostrar el código de finalización, descomenta la siguiente línea */}
-            {/* <Text style={styles.solverInfo}>Código de finalización: <Text style={styles.solverInfoBold}>{datosSolicitud?.codigo_confirmacion}</Text></Text> */}
+            <TouchableOpacity
+              style={[styles.finalizarBtn, { width: 220, paddingVertical: 10, paddingHorizontal: 0 }]}
+              onPress={() => setModalVisible(true)}
+            >
+              <Text style={[styles.btnText, { color: '#fff', fontSize: 16 }]}>Mostrar código de finalización</Text>
+            </TouchableOpacity>
           </View>
         )}
       </Animated.View>
+
+      {/* Modal para mostrar código de confirmación */}
+      <Modal
+        visible={modalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.overlay}>
+          <View style={styles.modalContent}>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 12 }}>Código de confirmación</Text>
+            <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#007cc0', marginBottom: 18 }}>
+              {datosSolicitud?.codigo_confirmacion || '----'}
+            </Text>
+            <Text style={{ fontSize: 16, marginBottom: 18, textAlign: 'center' }}>
+              El solver debe ingresar este código para finalizar el servicio.
+            </Text>
+            <TouchableOpacity
+              style={[styles.finalizarBtn, { backgroundColor: '#d32f2f', width: 120, paddingVertical: 10, paddingHorizontal: 0, marginTop: 8 }]}
+              onPress={() => setModalVisible(false)}
+            >
+              <Text style={[styles.btnText, { color: '#fff', fontSize: 16 }]}>Cerrar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -280,5 +344,31 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 6,
   },
-  btnText: { color: '#007cc0', fontSize: 18, fontWeight: 'bold', letterSpacing: 0.5, textAlign: 'center', marginLeft: 8 },
+  btnText: { color: '#fff', fontSize: 16, fontWeight: 'bold', letterSpacing: 0.5, textAlign: 'center', marginLeft: 0 },
+  finalizarBtn: {
+    backgroundColor: '#007cc0',
+    paddingVertical: 14,
+    paddingHorizontal: 40,
+    borderRadius: 30,
+    alignSelf: 'center',
+    marginTop: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 6,
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 18,
+    padding: 24,
+    alignItems: 'center',
+    width: 300,
+  },
 });
