@@ -1,9 +1,8 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  StyleSheet, Text, View, TouchableOpacity, Dimensions, Animated
+  StyleSheet, Text, View, TouchableOpacity, Dimensions, Animated, Modal, TextInput, Alert
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { supabase } from '../context/supabaseClient';
@@ -11,12 +10,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');
 
-export default function MapaSolverOnline() {
+export default function MapaSolverOnline({ navigation }) {
   const [location, setLocation] = useState(null);
   const [region, setRegion] = useState(null);
   const [panelVisible, setPanelVisible] = useState(false);
   const [solicitudActual, setSolicitudActual] = useState(null);
   const [servicioActivo, setServicioActivo] = useState(false);
+  const [codigoInput, setCodigoInput] = useState('');
+  const [modalVisible, setModalVisible] = useState(false);
   const panelHeight = useRef(new Animated.Value(220)).current;
   const mapRef = useRef(null);
 
@@ -38,33 +39,89 @@ export default function MapaSolverOnline() {
     })();
   }, []);
 
-  // Suscripción realtime a la tabla solicitudes
+  // Suscripción realtime a la tabla solicitudes (INSERT y UPDATE)
   useEffect(() => {
     const channel = supabase
-    .channel('solicitudes-realtime')
-    .on(
-      'postgres_changes',
-      { event: 'INSERT', schema: 'public', table: 'solicitudes' },
-      (payload) => {
-        console.log('Realtime payload:', payload);
-      }
-    )
-    .subscribe((status) => {
-      console.log('Supabase channel status:', status);
-    });
+      .channel('solicitudes-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'solicitudes' },
+        (payload) => {
+          console.log('Realtime payload:', payload);
+          // Si es la solicitud actual, actualiza el estado local
+          if (
+            payload.new &&
+            solicitudActual &&
+            payload.new.idsolicitud === solicitudActual.idsolicitud
+          ) {
+            setSolicitudActual(payload.new);
+            if (payload.new.estado === 'finalizada') {
+              setPanelVisible(false);
+              setServicioActivo(false);
+              setModalVisible(false);
+              setSolicitudActual(null);
+              navigation.navigate('Home');
+            }
+          }
+          // Si es una nueva solicitud pendiente
+          if (
+            payload.new &&
+            payload.new.hay_solver === false &&
+            !payload.new.idsolver
+          ) {
+            setSolicitudActual(payload.new);
+            setPanelVisible(true);
+            let direccionObj = payload.new.direccion_servicio;
+            if (typeof direccionObj === 'string') {
+              try {
+                direccionObj = JSON.parse(direccionObj);
+              } catch (e) {
+                direccionObj = null;
+              }
+            }
+            if (
+              direccionObj &&
+              typeof direccionObj.latitude === 'number' &&
+              typeof direccionObj.longitude === 'number'
+            ) {
+              setRegion({
+                latitude: direccionObj.latitude,
+                longitude: direccionObj.longitude,
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.01,
+              });
+            }
+          }
+        }
+      )
+      .subscribe();
 
-  return () => {
-    supabase.removeChannel(channel);
-  };
-}, []);
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [solicitudActual]);
 
-  // Obtener el idsolver del solver logueado
+  // Obtener el idsolver del solver logueado desde AsyncStorage
   const getSolverId = async () => {
-    // Aquí deberías obtener el idsolver del solver logueado (por ejemplo desde AsyncStorage)
-    // Ejemplo:
-    const solverId = await AsyncStorage.getItem('idsolver');
-    return solverId;
+    try {
+      const usuarioStr = await AsyncStorage.getItem('usuario');
+      const usuarioObj = usuarioStr ? JSON.parse(usuarioStr) : null;
+      console.log('DEBUG usuarioObj:', usuarioObj); // LOG para ver la estructura
+      const idsolver =
+        usuarioObj?.profile?.user?.idsolver ||
+        usuarioObj?.profile?.idsolver ||
+        usuarioObj?.idsolver ||
+        null;
+      console.log('DEBUG idsolver:', idsolver);
+      return idsolver;
+    } catch (e) {
+      console.log('DEBUG error getSolverId:', e);
+      return null;
+    }
   };
+
+  // Generar código de confirmación de 4 dígitos
+  const generarCodigo = () => Math.floor(1000 + Math.random() * 9000);
 
   // Aceptar solicitud
   const handleAceptar = async () => {
@@ -74,16 +131,28 @@ export default function MapaSolverOnline() {
       duration: 200,
       useNativeDriver: false,
     }).start();
-    if (solicitudActual?.id) {
+    if (solicitudActual?.idsolicitud) {
       const idsolver = await getSolverId();
-      await supabase
+      const codigo = generarCodigo();
+      console.log('DEBUG handleAceptar:', {
+        idsolicitud: solicitudActual.idsolicitud,
+        idsolver,
+        codigo
+      });
+      const { data, error } = await supabase
         .from('solicitudes')
         .update({
-          estado: 'aceptada',
+          estado: 'aceptada', // Cambia a tu nombre real de columna si es distinto
           hay_solver: true,
           idsolver: idsolver,
+          codigo_confirmacion: codigo,
         })
-        .eq('id', solicitudActual.id);
+        .eq('idsolicitud', solicitudActual.idsolicitud)
+        .select();
+      console.log('DEBUG supabase update (aceptar):', { data, error });
+      if (error) {
+        Alert.alert('Error', 'No se pudo aceptar el servicio: ' + error.message);
+      }
     }
   };
 
@@ -97,37 +166,60 @@ export default function MapaSolverOnline() {
       duration: 200,
       useNativeDriver: false,
     }).start();
-    if (solicitudActual?.id) {
-      await supabase
+    if (solicitudActual?.idsolicitud) {
+      const { data, error } = await supabase
         .from('solicitudes')
         .update({
-          estado: 'rechazada',
+          estado: 'rechazada', // Cambia a tu nombre real de columna si es distinto
           hay_solver: false,
           idsolver: null,
         })
-        .eq('id', solicitudActual.id);
+        .eq('idsolicitud', solicitudActual.idsolicitud)
+        .select();
+      console.log('DEBUG supabase update (rechazar):', { data, error });
+      if (error) {
+        Alert.alert('Error', 'No se pudo rechazar el servicio: ' + error.message);
+      }
     }
   };
 
-  // Finalizar servicio
-  const handleFinalizar = async () => {
-    setPanelVisible(false);
-    setSolicitudActual(null);
-    setServicioActivo(false);
-    Animated.timing(panelHeight, {
-      toValue: 220,
-      duration: 200,
-      useNativeDriver: false,
-    }).start();
-    if (solicitudActual?.id) {
-      await supabase
+  // Abrir modal para finalizar servicio
+  const handleFinalizar = () => {
+    setModalVisible(true);
+    setCodigoInput('');
+  };
+
+  // Chequear código y finalizar
+  const confirmarFinalizacion = async () => {
+    const codigoReal = solicitudActual?.codigo_confirmacion;
+    console.log('DEBUG confirmarFinalizacion:', { codigoInput, codigoReal });
+    if (parseInt(codigoInput) === codigoReal) {
+      const fecha = new Date();
+      const horafinal = fecha.toTimeString().slice(0,8);
+      const { data, error } = await supabase
         .from('solicitudes')
         .update({
-          estado: 'finalizada',
+          estado: 'finalizada', // Cambia a tu nombre real de columna si es distinto
+          horafinal: horafinal,
         })
-        .eq('id', solicitudActual.id);
+        .eq('idsolicitud', solicitudActual.idsolicitud)
+        .select();
+      console.log('DEBUG supabase update (finalizar):', { data, error });
+      if (error) {
+        Alert.alert('Error', 'No se pudo finalizar el servicio: ' + error.message);
+      }
+    } else {
+      Alert.alert('Error', 'El código ingresado es incorrecto.');
     }
   };
+
+  // Parsear direccion_servicio si viene como string
+  const direccionObj = typeof solicitudActual?.direccion_servicio === 'string'
+    ? JSON.parse(solicitudActual.direccion_servicio)
+    : solicitudActual?.direccion_servicio;
+
+  console.log('DEBUG solicitudActual:', solicitudActual);
+  console.log('DEBUG direccionObj:', direccionObj);
 
   return (
     <View style={styles.main}>
@@ -141,36 +233,36 @@ export default function MapaSolverOnline() {
         showsMyLocationButton
         showsPointsOfInterest
       >
-        {solicitudActual && solicitudActual.coord && (
-          <Marker
-            coordinate={{
-              latitude: solicitudActual.coord.latitude,
-              longitude: solicitudActual.coord.longitude
-            }}
-            title={solicitudActual.direccion}
-          />
+        {direccionObj &&
+          typeof direccionObj.latitude === 'number' &&
+          typeof direccionObj.longitude === 'number' && (
+            <Marker
+              coordinate={{
+                latitude: direccionObj.latitude,
+                longitude: direccionObj.longitude,
+              }}
+              title={direccionObj.title || 'Dirección'}
+            />
         )}
       </MapView>
 
-      {panelVisible && (
+      {panelVisible && solicitudActual && (
         <Animated.View style={[
           styles.panel,
           { bottom: 0, height: panelHeight }
         ]}>
           {!servicioActivo ? (
             <>
-              <Text style={styles.tituloPanel}>Conectando con Clientes</Text>
+              <Text style={styles.tituloPanel}>Nueva Solicitud</Text>
               <View style={styles.infoSolicitud}>
                 <Text style={styles.label}>Dirección:</Text>
-                <Text style={styles.valor}>{solicitudActual?.direccion}</Text>
-                <Text style={styles.label}>Subservicio:</Text>
-                <Text style={styles.valor}>{solicitudActual?.subservicio}</Text>
-                <Text style={styles.label}>Cliente:</Text>
-                <Text style={styles.valor}>{solicitudActual?.cliente}</Text>
+                <Text style={styles.valor}>
+                  {direccionObj?.title || 'Sin dirección'}
+                </Text>
                 <Text style={styles.label}>Duración:</Text>
-                <Text style={styles.valor}>{solicitudActual?.duracion}</Text>
+                <Text style={styles.valor}>{solicitudActual?.duracion_servicio} min</Text>
                 <Text style={styles.label}>Monto:</Text>
-                <Text style={styles.valor}>{solicitudActual?.monto}</Text>
+                <Text style={styles.valor}>${solicitudActual?.monto}</Text>
               </View>
               <View style={styles.botonesRow}>
                 <TouchableOpacity style={styles.aceptarBtn} onPress={handleAceptar}>
@@ -186,15 +278,13 @@ export default function MapaSolverOnline() {
               <Text style={styles.tituloPanel}>Servicio en curso</Text>
               <View style={styles.infoSolicitud}>
                 <Text style={styles.label}>Dirección:</Text>
-                <Text style={styles.valor}>{solicitudActual?.direccion}</Text>
-                <Text style={styles.label}>Subservicio:</Text>
-                <Text style={styles.valor}>{solicitudActual?.subservicio}</Text>
-                <Text style={styles.label}>Cliente:</Text>
-                <Text style={styles.valor}>{solicitudActual?.cliente}</Text>
+                <Text style={styles.valor}>
+                  {direccionObj?.title || 'Sin dirección'}
+                </Text>
                 <Text style={styles.label}>Duración:</Text>
-                <Text style={styles.valor}>{solicitudActual?.duracion}</Text>
+                <Text style={styles.valor}>{solicitudActual?.duracion_servicio} min</Text>
                 <Text style={styles.label}>Monto:</Text>
-                <Text style={styles.valor}>{solicitudActual?.monto}</Text>
+                <Text style={styles.valor}>${solicitudActual?.monto}</Text>
               </View>
               <TouchableOpacity style={styles.finalizarBtn} onPress={handleFinalizar}>
                 <Text style={styles.btnText}>Finalizar Servicio</Text>
@@ -203,6 +293,34 @@ export default function MapaSolverOnline() {
           )}
         </Animated.View>
       )}
+
+      {/* Modal para ingresar código de finalización */}
+      <Modal
+        visible={modalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.overlay}>
+          <View style={styles.modalContent}>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 12 }}>Ingrese el código de finalización</Text>
+            <TextInput
+              style={styles.input}
+              keyboardType="numeric"
+              maxLength={4}
+              value={codigoInput}
+              onChangeText={setCodigoInput}
+              placeholder="Código"
+            />
+            <TouchableOpacity style={styles.finalizarBtn} onPress={confirmarFinalizacion}>
+              <Text style={styles.btnText}>Confirmar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.finalizarBtn, { backgroundColor: '#d32f2f', marginTop: 8 }]} onPress={() => setModalVisible(false)}>
+              <Text style={styles.btnText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -214,13 +332,16 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
+    bottom: 0,
     backgroundColor: '#009FE3',
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     paddingHorizontal: 20,
     paddingTop: 18,
+    paddingBottom: 48,
     elevation: 10,
-    zIndex: 10,
+    zIndex: 100,
+    minHeight: 320,
   },
   tituloPanel: {
     color: 'white',
@@ -282,5 +403,29 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     letterSpacing: 0.5,
     textAlign: 'center',
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 18,
+    padding: 24,
+    alignItems: 'center',
+    width: 300,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#007cc0',
+    borderRadius: 8,
+    padding: 10,
+    fontSize: 18,
+    width: '80%',
+    marginBottom: 18,
+    textAlign: 'center',
+    backgroundColor: '#f9f9f9',
   },
 });

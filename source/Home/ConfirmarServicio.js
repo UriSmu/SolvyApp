@@ -40,13 +40,13 @@ export default function ConfirmarServicio({ route, navigation }) {
       // Fecha y hora actual
       const fecha = new Date();
       const fechasolicitud = fecha.toISOString().split('T')[0]; // YYYY-MM-DD
-      const horainicial = fecha.toTimeString().slice(0,5); // HH:MM
+      const horainicial = fecha.toTimeString().slice(0,8); // HH:MM:SS
 
       const solicitudData = {
         idcliente,
         idsolver: null,
         idservicio: null,
-        direccion_servicio: address ?? '',
+        direccion_servicio: coord ?? '',
         duracion_servicio: duracion ?? 0,
         horainicial,
         horafinal: null,
@@ -61,23 +61,6 @@ export default function ConfirmarServicio({ route, navigation }) {
         codigo_confirmacion: null,
         hay_solver: false,
       };
-
-      console.log('Solicitud enviada:', solicitudData);
-
-      const res = await fetch('https://solvy-app-api.vercel.app/solit/nuevasolicitud', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(solicitudData),
-      });
-
-      if (!res.ok) {
-        const error = await res.json();
-        Alert.alert('Error', error?.message || 'No se pudo crear la solicitud.');
-        return;
-      }
 
       navigation.navigate('ConectarSolver', { solicitudData });
     } catch (e) {

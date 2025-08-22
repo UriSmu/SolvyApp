@@ -13,94 +13,108 @@ export default function ConectarSolver({ route, navigation }) {
   const [panelAnim] = useState(new Animated.Value(180));
   const { width, height } = Dimensions.get('window');
   const [solicitudId, setSolicitudId] = useState(null);
+  const [solicitudDataActualizada, setSolicitudDataActualizada] = useState(null);
+
+  // Extraer datos desde solicitudData
+  const coord = solicitudData?.coord;
+  const address = solicitudData?.direccion_servicio;
+  const duracion = solicitudData?.duracion_servicio;
+  const precio = solicitudData?.monto;
 
   useEffect(() => {
-  let channel;
-  const crearSolicitud = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      // Validación de campos obligatorios
-      if (!solicitudData?.idcliente || !solicitudData?.horainicial) {
-        setError('Faltan datos obligatorios en la solicitud.');
-        setLoading(false);
-        return;
-      }
-      const { data, error: insertError } = await supabase.from('solicitudes').insert([solicitudData]).select();
-      if (insertError) {
-        console.log('Supabase insert error:', JSON.stringify(insertError, null, 2));
-        setError(insertError.message || 'Error al crear la solicitud.');
-        setLoading(false);
-        return;
-      }
-      const id = data[0]?.idsolicitud;
-      setSolicitudId(id);
-
-      // Suscribirse a cambios en la solicitud para saber si fue aceptada
-      channel = supabase
-        .channel('solicitud-aceptada')
-        .on(
-          'postgres_changes',
-          {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'solicitudes',
-            filter: `idsolicitud=eq.${id}`,
-          },
-          (payload) => {
-            if (payload.new.hay_solver && payload.new.idsolver) {
-              obtenerDatosSolver(payload.new.idsolver);
-            }
-          }
-        )
-        .subscribe();
-
-      Animated.timing(panelAnim, {
-        toValue: 320,
-        duration: 350,
-        useNativeDriver: false,
-      }).start();
-    } catch (e) {
-      setError('Error al crear la solicitud.');
-    }
-    setLoading(false);
-  };
-
-  const obtenerDatosSolver = async (idsolver) => {
-    try {
-      const token = await AsyncStorage.getItem('token');
-      const solverRes = await fetch(
-        `https://solvy-app-api.vercel.app/sol/solver/${idsolver}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
+    let channel;
+    const crearSolicitud = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        if (!solicitudData?.idcliente || !solicitudData?.horainicial) {
+          setError('Faltan datos obligatorios en la solicitud.');
+          setLoading(false);
+          return;
         }
-      );
-      const solverData = await solverRes.json();
-      setSolver(Array.isArray(solverData) ? solverData[0] : solverData);
+        const { data, error: insertError } = await supabase.from('solicitudes').insert([solicitudData]).select();
+        if (insertError) {
+          setError(insertError.message || 'Error al crear la solicitud.');
+          setLoading(false);
+          return;
+        }
+        const id = data[0]?.idsolicitud;
+        setSolicitudId(id);
+
+        // Suscribirse a cambios en la solicitud para saber si fue aceptada
+        channel = supabase
+          .channel('solicitud-aceptada')
+          .on(
+            'postgres_changes',
+            {
+              event: 'UPDATE',
+              schema: 'public',
+              table: 'solicitudes',
+              filter: `idsolicitud=eq.${id}`,
+            },
+            async (payload) => {
+              if (payload.new.hay_solver && payload.new.idsolver) {
+                // Obtener datos del solver
+                await obtenerDatosSolver(payload.new.idsolver);
+                // Mostrar datos de la solicitud actualizada
+                setSolicitudDataActualizada(payload.new);
+              }
+            }
+          )
+          .subscribe();
+
+        Animated.timing(panelAnim, {
+          toValue: 320,
+          duration: 350,
+          useNativeDriver: false,
+        }).start();
+      } catch (e) {
+        setError('Error al crear la solicitud.');
+      }
       setLoading(false);
-    } catch {
-      setError('No se pudo obtener el solver.');
-    }
-  };
+    };
 
-  crearSolicitud();
+    const obtenerDatosSolver = async (idsolver) => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        const solverRes = await fetch(
+          `https://solvy-app-api.vercel.app/sol/solver/${idsolver}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+        const solverData = await solverRes.json();
+        setSolver(Array.isArray(solverData) ? solverData[0] : solverData);
+        setLoading(false);
+      } catch {
+        setError('No se pudo obtener el solver.');
+      }
+    };
 
-  return () => {
-    if (channel) supabase.removeChannel(channel);
-  };
-}, []);
+    crearSolicitud();
+
+    return () => {
+      if (channel) supabase.removeChannel(channel);
+    };
+  }, []);
 
   const handleVolver = () => {
     navigation.goBack();
   };
 
-  const region = coord
+  // Usar datos actualizados si existen
+  const datosSolicitud = solicitudDataActualizada || solicitudData;
+  const datosDireccion = typeof datosSolicitud?.direccion_servicio === 'string'
+    ? JSON.parse(datosSolicitud.direccion_servicio)
+    : datosSolicitud?.direccion_servicio;
+
+  const region = datosDireccion
     ? {
-        latitude: coord.latitude,
-        longitude: coord.longitude,
+        latitude: datosDireccion.latitude,
+        longitude: datosDireccion.longitude,
         latitudeDelta: 0.008,
         longitudeDelta: 0.008,
       }
@@ -121,14 +135,14 @@ export default function ConectarSolver({ route, navigation }) {
         region={region}
         pointerEvents="none"
       >
-        {coord && (
+        {datosDireccion && (
           <Marker
             coordinate={{
-              latitude: coord.latitude,
-              longitude: coord.longitude,
+              latitude: datosDireccion.latitude,
+              longitude: datosDireccion.longitude,
             }}
             title="Tu pedido"
-            description={address}
+            description={datosDireccion.title}
             pinColor="#007cc0"
           />
         )}
@@ -153,7 +167,7 @@ export default function ConectarSolver({ route, navigation }) {
         {error && (
           <Text style={styles.errorText}>{error}</Text>
         )}
-        {!loading && solver && (
+        {!loading && solver && datosSolicitud && (
           <View style={styles.solverCard}>
             {solver.foto_perfil && (
               <Image
@@ -167,16 +181,11 @@ export default function ConectarSolver({ route, navigation }) {
             <Text style={styles.solverInfo}>Tel: <Text style={styles.solverInfoBold}>{solver.telefono || 'No disponible'}</Text></Text>
             <Text style={styles.solverInfo}>Email: <Text style={styles.solverInfoBold}>{solver.email || 'No disponible'}</Text></Text>
             <Text style={styles.solverInfo}>Dirección del pedido:</Text>
-            <Text style={[styles.solverInfoBold, { marginBottom: 8 }]}>{address || 'No especificada'}</Text>
-            <Text style={styles.solverInfo}>Duración: <Text style={styles.solverInfoBold}>{duracion || 'No especificada'} min</Text></Text>
-            <Text style={styles.solverInfo}>Precio: <Text style={styles.solverInfoBold}>${precio?.toFixed(2) || 'No especificado'}</Text></Text>
-            <TouchableOpacity
-              style={styles.btn}
-              onPress={() => Alert.alert('Código de finalización', 'Tu código es: 123456')}
-            >
-              <Ionicons name="key-outline" size={22} color="#007cc0" style={{ marginRight: 8 }} />
-              <Text style={styles.btnText}>VER CÓDIGO DE FINALIZACION</Text>
-            </TouchableOpacity>
+            <Text style={[styles.solverInfoBold, { marginBottom: 8 }]}>{datosDireccion?.title || 'No especificada'}</Text>
+            <Text style={styles.solverInfo}>Duración: <Text style={styles.solverInfoBold}>{datosSolicitud?.duracion_servicio || 'No especificada'} min</Text></Text>
+            <Text style={styles.solverInfo}>Precio: <Text style={styles.solverInfoBold}>${datosSolicitud?.monto?.toFixed(2) || 'No especificado'}</Text></Text>
+            {/* Si querés mostrar el código de finalización, descomenta la siguiente línea */}
+            {/* <Text style={styles.solverInfo}>Código de finalización: <Text style={styles.solverInfoBold}>{datosSolicitud?.codigo_confirmacion}</Text></Text> */}
           </View>
         )}
       </Animated.View>
