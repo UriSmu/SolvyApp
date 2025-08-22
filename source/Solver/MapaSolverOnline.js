@@ -6,10 +6,12 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
+import { supabase } from '../context/supabaseClient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');
 
-export default function MapaSolverOnline({ solicitud }) {
+export default function MapaSolverOnline() {
   const [location, setLocation] = useState(null);
   const [region, setRegion] = useState(null);
   const [panelVisible, setPanelVisible] = useState(false);
@@ -36,49 +38,57 @@ export default function MapaSolverOnline({ solicitud }) {
     })();
   }, []);
 
-  // Simulación: cuando llega una solicitud, mostrar el panel
+  // Suscripción realtime a la tabla solicitudes
   useEffect(() => {
-    if (solicitud) {
-      setSolicitudActual(solicitud);
-      setPanelVisible(true);
-      Animated.timing(panelHeight, {
-        toValue: 350,
-        duration: 200,
-        useNativeDriver: false,
-      }).start();
-      // Centrar el mapa en la dirección del cliente
-      if (solicitud.coord) {
-        setRegion({
-          latitude: solicitud.coord.latitude,
-          longitude: solicitud.coord.longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01
-        });
+    const channel = supabase
+    .channel('solicitudes-realtime')
+    .on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'solicitudes' },
+      (payload) => {
+        console.log('Realtime payload:', payload);
       }
-    } else {
-      setPanelVisible(false);
-      setSolicitudActual(null);
-      setServicioActivo(false);
-      Animated.timing(panelHeight, {
-        toValue: 220,
-        duration: 200,
-        useNativeDriver: false,
-      }).start();
-    }
-  }, [solicitud]);
+    )
+    .subscribe((status) => {
+      console.log('Supabase channel status:', status);
+    });
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, []);
+
+  // Obtener el idsolver del solver logueado
+  const getSolverId = async () => {
+    // Aquí deberías obtener el idsolver del solver logueado (por ejemplo desde AsyncStorage)
+    // Ejemplo:
+    const solverId = await AsyncStorage.getItem('idsolver');
+    return solverId;
+  };
 
   // Aceptar solicitud
-  const handleAceptar = () => {
+  const handleAceptar = async () => {
     setServicioActivo(true);
     Animated.timing(panelHeight, {
       toValue: 300,
       duration: 200,
       useNativeDriver: false,
     }).start();
+    if (solicitudActual?.id) {
+      const idsolver = await getSolverId();
+      await supabase
+        .from('solicitudes')
+        .update({
+          estado: 'aceptada',
+          hay_solver: true,
+          idsolver: idsolver,
+        })
+        .eq('id', solicitudActual.id);
+    }
   };
 
   // Rechazar solicitud
-  const handleRechazar = () => {
+  const handleRechazar = async () => {
     setPanelVisible(false);
     setSolicitudActual(null);
     setServicioActivo(false);
@@ -87,10 +97,20 @@ export default function MapaSolverOnline({ solicitud }) {
       duration: 200,
       useNativeDriver: false,
     }).start();
+    if (solicitudActual?.id) {
+      await supabase
+        .from('solicitudes')
+        .update({
+          estado: 'rechazada',
+          hay_solver: false,
+          idsolver: null,
+        })
+        .eq('id', solicitudActual.id);
+    }
   };
 
   // Finalizar servicio
-  const handleFinalizar = () => {
+  const handleFinalizar = async () => {
     setPanelVisible(false);
     setSolicitudActual(null);
     setServicioActivo(false);
@@ -99,7 +119,14 @@ export default function MapaSolverOnline({ solicitud }) {
       duration: 200,
       useNativeDriver: false,
     }).start();
-    // Aquí podrías disparar una acción para finalizar el servicio
+    if (solicitudActual?.id) {
+      await supabase
+        .from('solicitudes')
+        .update({
+          estado: 'finalizada',
+        })
+        .eq('id', solicitudActual.id);
+    }
   };
 
   return (
@@ -114,7 +141,6 @@ export default function MapaSolverOnline({ solicitud }) {
         showsMyLocationButton
         showsPointsOfInterest
       >
-        {/* Marcar la dirección del cliente si hay solicitud */}
         {solicitudActual && solicitudActual.coord && (
           <Marker
             coordinate={{
@@ -126,13 +152,11 @@ export default function MapaSolverOnline({ solicitud }) {
         )}
       </MapView>
 
-      {/* Panel azul solo si hay solicitud */}
       {panelVisible && (
         <Animated.View style={[
           styles.panel,
           { bottom: 0, height: panelHeight }
         ]}>
-          {/* Estado: esperando solicitud */}
           {!servicioActivo ? (
             <>
               <Text style={styles.tituloPanel}>Conectando con Clientes</Text>

@@ -3,81 +3,100 @@ import { View, Text, ActivityIndicator, TouchableOpacity, StyleSheet, Alert, Dim
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import { supabase } from '../context/supabaseClient';
 
 export default function ConectarSolver({ route, navigation }) {
-  const { coord, address, suggestion, subservicio, duracion, precio } = route.params || {};
+  const { solicitudData } = route.params || {};
   const [loading, setLoading] = useState(true);
   const [solver, setSolver] = useState(null);
   const [error, setError] = useState(null);
   const [panelAnim] = useState(new Animated.Value(180));
   const { width, height } = Dimensions.get('window');
+  const [solicitudId, setSolicitudId] = useState(null);
 
   useEffect(() => {
-    const fetchAvailableSolver = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const token = await AsyncStorage.getItem('token');
-        if (!token) {
-          setError('No se encontró el token de autenticación.');
-          setLoading(false);
-          return;
-        }
-        if (!subservicio || !subservicio.idsubservicio) {
-          setError('No se especificó el subservicio.');
-          setLoading(false);
-          return;
-        }
-        // Buscar solvers del subservicio recibido
-        const res = await fetch(
-          `https://solvy-app-api.vercel.app/ser/solversubservicio/${subservicio.idsubservicio}`,
-          {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          }
-        );
-        const solversIds = await res.json();
-        // Filtrar solvers disponibles
-        const availableSolvers = solversIds.filter(s => s.esta_disponible);
-        if (!Array.isArray(availableSolvers) || availableSolvers.length === 0) {
-          setError('No hay solvers disponibles para este subservicio.');
-          setLoading(false);
-          return;
-        }
-        const solverId = availableSolvers[0].idsolver || availableSolvers[0].id || availableSolvers[0]._id;
-        const solverRes = await fetch(
-          `https://solvy-app-api.vercel.app/sol/solver/${solverId}`,
-          {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          }
-        );
-        const solverData = await solverRes.json();
-        setSolver(Array.isArray(solverData) ? solverData[0] : solverData);
-
-        Animated.timing(panelAnim, {
-          toValue: 320,
-          duration: 350,
-          useNativeDriver: false,
-        }).start();
-      } catch (e) {
-        setError('Error al conectar con un solver.');
-        setSolver(null);
+  let channel;
+  const crearSolicitud = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Validación de campos obligatorios
+      if (!solicitudData?.idcliente || !solicitudData?.horainicial) {
+        setError('Faltan datos obligatorios en la solicitud.');
+        setLoading(false);
+        return;
       }
+      const { data, error: insertError } = await supabase.from('solicitudes').insert([solicitudData]).select();
+      if (insertError) {
+        console.log('Supabase insert error:', JSON.stringify(insertError, null, 2));
+        setError(insertError.message || 'Error al crear la solicitud.');
+        setLoading(false);
+        return;
+      }
+      const id = data[0]?.idsolicitud;
+      setSolicitudId(id);
+
+      // Suscribirse a cambios en la solicitud para saber si fue aceptada
+      channel = supabase
+        .channel('solicitud-aceptada')
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'solicitudes',
+            filter: `idsolicitud=eq.${id}`,
+          },
+          (payload) => {
+            if (payload.new.hay_solver && payload.new.idsolver) {
+              obtenerDatosSolver(payload.new.idsolver);
+            }
+          }
+        )
+        .subscribe();
+
+      Animated.timing(panelAnim, {
+        toValue: 320,
+        duration: 350,
+        useNativeDriver: false,
+      }).start();
+    } catch (e) {
+      setError('Error al crear la solicitud.');
+    }
+    setLoading(false);
+  };
+
+  const obtenerDatosSolver = async (idsolver) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const solverRes = await fetch(
+        `https://solvy-app-api.vercel.app/sol/solver/${idsolver}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      const solverData = await solverRes.json();
+      setSolver(Array.isArray(solverData) ? solverData[0] : solverData);
       setLoading(false);
-    };
-    fetchAvailableSolver();
-  }, []);
+    } catch {
+      setError('No se pudo obtener el solver.');
+    }
+  };
+
+  crearSolicitud();
+
+  return () => {
+    if (channel) supabase.removeChannel(channel);
+  };
+}, []);
 
   const handleVolver = () => {
     navigation.goBack();
   };
 
-  // Región para el mapa
   const region = coord
     ? {
         latitude: coord.latitude,
@@ -92,7 +111,6 @@ export default function ConectarSolver({ route, navigation }) {
         longitudeDelta: 0.1,
       };
 
-  // Altura del panel para que entre todo sin scrollear
   const panelHeight = 320;
 
   return (
@@ -116,7 +134,6 @@ export default function ConectarSolver({ route, navigation }) {
         )}
       </MapView>
 
-      {/* Card superior */}
       <View style={styles.topCard}>
         <TouchableOpacity style={styles.backBtn} onPress={handleVolver}>
           <Ionicons name="arrow-back" size={26} color="#fff" />
@@ -126,12 +143,11 @@ export default function ConectarSolver({ route, navigation }) {
         <Text style={styles.topCardDesc}>Aquí verás toda la información de tu servicio.</Text>
       </View>
 
-      {/* Panel inferior tipo "desplegable" */}
       <Animated.View style={[styles.panel, { height: panelHeight }]}>
         {loading && (
           <View style={{ alignItems: 'center', marginTop: 18 }}>
             <ActivityIndicator size="large" color="#fff" />
-            <Text style={{ color: '#fff', marginTop: 16, fontSize: 16 }}>Conectando...</Text>
+            <Text style={{ color: '#fff', marginTop: 16, fontSize: 16 }}>Esperando que un solver acepte...</Text>
           </View>
         )}
         {error && (

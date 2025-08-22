@@ -43,14 +43,23 @@ export default function ConfirmarServicio({ route, navigation }) {
       const horainicial = fecha.toTimeString().slice(0,5); // HH:MM
 
       const solicitudData = {
-        idsubservicio: subservicio.idsubservicio,
-        idservicio: subservicio.idservicio,
         idcliente,
-        direccion_servicio: address,
-        fechasolicitud,
+        idsolver: null,
+        idservicio: null,
+        direccion_servicio: address ?? '',
+        duracion_servicio: duracion ?? 0,
         horainicial,
-        duracion_servicio: duracion,
-        monto: precio,
+        horafinal: null,
+        monto: precio ?? 0,
+        fechasolicitud,
+        fechaacordada: null,
+        fechaservicio: null,
+        idreseniasolver: null,
+        idreseniacliente: null,
+        idsubservicio: subservicio?.idsubservicio ?? null,
+        descargas: null,
+        codigo_confirmacion: null,
+        hay_solver: false,
       };
 
       console.log('Solicitud enviada:', solicitudData);
@@ -70,14 +79,7 @@ export default function ConfirmarServicio({ route, navigation }) {
         return;
       }
 
-      navigation.navigate('ConectarSolver', {
-        coord,
-        address,
-        suggestion,
-        subservicio,
-        duracion,
-        precio,
-      });
+      navigation.navigate('ConectarSolver', { solicitudData });
     } catch (e) {
       Alert.alert('Error', 'No se pudo conectar con el servidor.');
     }
