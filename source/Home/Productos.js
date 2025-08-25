@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../context/supabaseClient';
 import { View, Text, TextInput, TouchableOpacity, Image, FlatList, StyleSheet, SafeAreaView } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -8,56 +9,48 @@ import Fontisto from '@expo/vector-icons/Fontisto';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 
 
-const PRODUCTS = [
-    {
-        id: '1',
-        name: 'Quitamanchas',
-        price: 8399.99,
-        image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQpHYJhpMJOLA_DTGVAIFAKrLGP8cQGq_m3BQ&s',
-    },
-    {
-        id: '2',
-        name: 'Quitamanchas',
-        price: 8399.99,
-        image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQpHYJhpMJOLA_DTGVAIFAKrLGP8cQGq_m3BQ&s',
-    },
-    {
-        id: '3',
-        name: 'Quitamanchas',
-        price: 8399.99,
-        image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQpHYJhpMJOLA_DTGVAIFAKrLGP8cQGq_m3BQ&s',
-    },
-    {
-        id: '4',
-        name: 'Quitamanchas',
-        price: 8399.99,
-        image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQpHYJhpMJOLA_DTGVAIFAKrLGP8cQGq_m3BQ&s',
-    },
-    {
-        id: '5',
-        name: 'Quitamanchas',
-        price: 8399.99,
-        image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQpHYJhpMJOLA_DTGVAIFAKrLGP8cQGq_m3BQ&s',
-    },
-    {
-        id: '6',
-        name: 'Quitamanchas',
-        price: 8399.99,
-        image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQpHYJhpMJOLA_DTGVAIFAKrLGP8cQGq_m3BQ&s',
-    },
-];
-
 
 export default function ProductosScreen() {
     const [search, setSearch] = useState('');
+    const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        const fetchProducts = async () => {
+            setLoading(true);
+            setError(null);
+            const { data, error } = await supabase.from('productos').select('*');
+            if (error) {
+                setError('Error al cargar productos');
+                setProducts([]);
+            } else {
+                // Mapear los campos a los usados en el renderizado
+                const mapped = data.map((prod) => ({
+                    id: prod.id?.toString() ?? '',
+                    name: prod.nombre,
+                    price: prod['Precio unitario'],
+                    image: prod.imagen_url,
+                    description: prod.descripcion,
+                }));
+                setProducts(mapped);
+            }
+            setLoading(false);
+        };
+        fetchProducts();
+    }, []);
+
 
 
     const renderProduct = ({ item }) => (
         <View style={styles.card}>
-            <Image source={item.image} style={styles.productImage} resizeMode="contain" />
+            <Image source={{ uri: item.image }} style={styles.productImage} resizeMode="contain" />
             <View style={styles.cardFooter}>
                 <Text style={styles.productName}>{item.name}</Text>
-                <Text style={styles.productPrice}>Precio: ${item.price.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</Text>
+                <Text style={styles.productPrice}>Precio: ${item.price?.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</Text>
+                {item.description ? (
+                    <Text style={{ color: '#fff', fontSize: 11, marginBottom: 4 }}>{item.description}</Text>
+                ) : null}
                 <TouchableOpacity style={styles.buyButton}>
                     <Text style={styles.buyButtonText}>COMPRAR</Text>
                 </TouchableOpacity>
@@ -65,6 +58,20 @@ export default function ProductosScreen() {
         </View>
     );
 
+    if (loading) {
+        return (
+            <View style={[styles.todo, { justifyContent: 'center', alignItems: 'center' }]}> 
+                <Text>Cargando productos...</Text>
+            </View>
+        );
+    }
+    if (error) {
+        return (
+            <View style={[styles.todo, { justifyContent: 'center', alignItems: 'center' }]}> 
+                <Text>{error}</Text>
+            </View>
+        );
+    }
 
     return (
         <View style={styles.todo}>
@@ -73,22 +80,25 @@ export default function ProductosScreen() {
                     ListHeaderComponent={
                         <View style={styles.searchCartRow}>
                             <TextInput
-                                style={styles.searchInput} placeholder="Buscar..." />
+                                style={styles.searchInput}
+                                placeholder="Buscar..."
+                                value={search}
+                                onChangeText={setSearch}
+                            />
                             <TouchableOpacity style={styles.cartButton}>
                                 <Text style={styles.cartButtonText}>Mi carrito</Text>
                             </TouchableOpacity>
                         </View>
                     }
                     stickyHeaderIndices={[0]}
-                    data={PRODUCTS.filter(p => p.name.toLowerCase().includes(search.toLowerCase()))}
+                    data={products.filter(p => p.name?.toLowerCase().includes(search.toLowerCase()))}
                     renderItem={renderProduct}
                     keyExtractor={item => item.id}
                     numColumns={2}
                     contentContainerStyle={styles.productsList}
                     showsVerticalScrollIndicator={false}
-                    />
-                {/* Bottom NaVigation */}
-                    </View>
+                />
+            </View>
         </View>
     );
 }
