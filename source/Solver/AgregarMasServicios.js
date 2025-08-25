@@ -1,142 +1,212 @@
-import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image, ActivityIndicator } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, Modal, TextInput, Switch } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Entypo from '@expo/vector-icons/Entypo';
-import Fontisto from '@expo/vector-icons/Fontisto';
-import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 export default function AgregarMasServicios({ route, navigation }) {
   const servicio = route.params?.servicio;
-  const [subservicios, setSubservicios] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [convirtiendo, setConvirtiendo] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [estudios, setEstudios] = useState(false);
+  const [experiencia, setExperiencia] = useState('');
 
-  useEffect(() => {
-    const fetchSubservicios = async () => {
-      setLoading(true);
-      try {
-        const token = await AsyncStorage.getItem('token');
-        const url = `https://solvy-app-api.vercel.app/ser/${servicio?.idservicio}/subservicios`;
-        const res = await fetch(url, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setSubservicios(data);
-        } else {
-          setSubservicios([]);
+  async function handleEnviarDatos() {
+    setConvirtiendo(true);
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const usuarioStr = await AsyncStorage.getItem('usuario');
+      let idsolver = null;
+      if (usuarioStr) {
+        try {
+          const usuarioObj = JSON.parse(usuarioStr);
+          idsolver =
+            usuarioObj?.profile?.user?.idsolver ||
+            usuarioObj?.profile?.idsolver ||
+            usuarioObj?.user?.idsolver ||
+            usuarioObj?.idsolver ||
+            null;
+        } catch (err) {
+          console.log('Error parsing usuario:', err);
         }
-      } catch (e) {
-        setSubservicios([]);
       }
-      setLoading(false);
-    };
-    if (servicio) fetchSubservicios();
-  }, [servicio]);
-
-  function ServicioLogo({ idlogo }) {
-    const [iconData, setIconData] = useState(null);
-    const [error, setError] = useState(false);
-
-    useEffect(() => {
-      let mounted = true;
-      setIconData(null);
-      setError(false);
-      if (!idlogo) {
-        setError(true);
+      if (!idsolver || !servicio?.idservicio) {
+        Alert.alert('Error', 'No se pudo obtener el usuario o servicio.');
+        setConvirtiendo(false);
         return;
       }
-      fetch(`https://solvy-app-api.vercel.app/logos/logo/${idlogo}`)
-        .then(res => {
-          if (!res.ok) throw new Error();
-          return res.json();
-        })
-        .then(data => {
-          if (mounted && Array.isArray(data) && data.length > 0) setIconData(data[0]);
-          else setError(true);
-        })
-        .catch(() => {
-          if (mounted) setError(true);
-        });
-      return () => { mounted = false; };
-    }, [idlogo]);
-
-    if (error || !iconData) {
-      return <Image source={require('../../assets/Logo.png')} style={{ width: 60, height: 60 }} resizeMode="contain" />;
+      const body = {
+        idsolver,
+        idservicio: servicio.idservicio,
+        estudios,
+        certificadoestudios: estudios ? 'certificado_default.png' : null,
+        experiencia: experiencia ? parseInt(experiencia) : 0
+      };
+      const res = await fetch('https://solvy-app-api.vercel.app/sol/solverservicio', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const text = await res.text();
+      console.log('Body:', body);
+      console.log('Status:', res.status);
+      console.log('Response:', text);
+      if (res.ok) {
+        Alert.alert('¡Listo!', `Ahora ofreces el servicio "${servicio.nombre}".`);
+        setModalVisible(false);
+        navigation.goBack();
+      } else {
+        Alert.alert('Error', 'No se pudo agregar el servicio.\n' + text);
+      }
+    } catch (e) {
+      Alert.alert('Error', 'No se pudo conectar con el servidor.');
     }
-
-    const family = iconData.icon_family ? iconData.icon_family.trim() : 'FontAwesome';
-    let IconComponent = FontAwesome;
-    if (family === 'MaterialIcons') IconComponent = MaterialIcons;
-    if (family === 'Ionicons') IconComponent = Ionicons;
-    if (family === 'Entypo') IconComponent = Entypo;
-    if (family === 'Fontisto') IconComponent = Fontisto;
-    if (family === 'FontAwesome5') IconComponent = FontAwesome5;
-    if (family === 'MaterialCommunityIcons') IconComponent = MaterialCommunityIcons;
-    if (family === 'FontAwesome6') IconComponent = FontAwesome6;
-
-    return (
-      <IconComponent
-        name={iconData.icon_name || 'question'}
-        size={iconData.icon_size ? Math.max(Number(iconData.icon_size), 50) : 60}
-        color={iconData.icon_color || '#fff'}
-        style={{ textAlign: 'center', textAlignVertical: 'center' }}
-      />
-    );
+    setConvirtiendo(false);
   }
-
-  const handleSubservicioPress = (subservicio) => {
-    navigation.navigate('Subservicio', { subservicio, servicio });
-  };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Subservicios de {servicio?.nombre}</Text>
-      {loading ? (
-        <ActivityIndicator size="large" color="#007cc0" style={{ marginTop: 40 }} />
-      ) : (
-        <FlatList
-          data={subservicios}
-          keyExtractor={item => item.idsubservicio?.toString()}
-          renderItem={({ item }) => (
-            <TouchableOpacity style={styles.servicioItem} onPress={() => handleSubservicioPress(item)}>
-              <LinearGradient colors={['#007cc0', '#003f5c']} style={styles.iconoServicio}>
-                <ServicioLogo idlogo={item.idlogosapp} />
-              </LinearGradient>
-              <Text style={styles.servicioText}>{item.nombre}</Text>
-            </TouchableOpacity>
-          )}
-          ListEmptyComponent={<Text style={{ textAlign: 'center', marginTop: 40 }}>No hay subservicios disponibles.</Text>}
-        />
-      )}
+      <Text style={styles.title}>Convertirse en {servicio?.nombre}</Text>
+      <TouchableOpacity
+        style={styles.convertirseBtn}
+        onPress={() => setModalVisible(true)}
+        disabled={convirtiendo}
+      >
+        <Text style={styles.convertirseBtnText}>
+          {convirtiendo ? 'Convirtiendo...' : `Convertirse en ${servicio?.nombre}`}
+        </Text>
+      </TouchableOpacity>
+      <Modal
+        visible={modalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.overlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Datos requeridos</Text>
+            <View style={styles.fieldRow}>
+              <Text style={styles.fieldLabel}>¿Tenés estudios?</Text>
+              <Switch
+                value={estudios}
+                onValueChange={setEstudios}
+              />
+            </View>
+            <View style={styles.fieldRow}>
+              <Text style={styles.fieldLabel}>Años de experiencia</Text>
+              <TextInput
+                style={styles.input}
+                keyboardType="numeric"
+                value={experiencia}
+                onChangeText={setExperiencia}
+                placeholder="Ej: 2"
+                maxLength={2}
+              />
+            </View>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.cancelBtn}
+                onPress={() => setModalVisible(false)}
+                disabled={convirtiendo}
+              >
+                <Text style={styles.cancelBtnText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.enviarBtn}
+                onPress={handleEnviarDatos}
+                disabled={convirtiendo}
+              >
+                <Text style={styles.enviarBtnText}>
+                  {convirtiendo ? 'Enviando...' : 'Enviar'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+            {convirtiendo && (
+              <ActivityIndicator size="large" color="#007cc0" style={{ marginTop: 20 }} />
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', padding: 20 },
-  title: { fontSize: 26, fontWeight: 'bold', marginBottom: 20 },
-  servicioItem: {
-    backgroundColor: '#f7f7f7',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  iconoServicio: {
+  container: { flex: 1, backgroundColor: '#fff', padding: 20, justifyContent: 'center' },
+  title: { fontSize: 26, fontWeight: 'bold', marginBottom: 30, textAlign: 'center' },
+  convertirseBtn: {
     backgroundColor: '#007cc0',
-    width: 60,
-    height: 60,
-    borderRadius: 12,
+    paddingVertical: 18,
+    paddingHorizontal: 40,
+    borderRadius: 30,
+    alignSelf: 'center',
+    marginBottom: 18,
+  },
+  convertirseBtnText: { color: '#fff', fontSize: 18, fontWeight: 'bold', textAlign: 'center' },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.35)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
   },
-  servicioText: { fontSize: 16, fontWeight: '600', color: '#007cc0' },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 18,
+    padding: 24,
+    width: '85%',
+    elevation: 8,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 18,
+    textAlign: 'center',
+    color: '#007cc0',
+  },
+  fieldRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 18,
+    justifyContent: 'space-between',
+  },
+  fieldLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#007cc0',
+    borderRadius: 8,
+    padding: 8,
+    width: 70,
+    textAlign: 'center',
+    fontSize: 16,
+    backgroundColor: '#f7f7f7',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  cancelBtn: {
+    backgroundColor: '#eee',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+  },
+  cancelBtnText: {
+    color: '#007cc0',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  enviarBtn: {
+    backgroundColor: '#007cc0',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+  },
+  enviarBtnText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
 });

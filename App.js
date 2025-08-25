@@ -33,12 +33,11 @@ import SolverServicios from './source/Solver/Servicios';
 import SolverActividad from './source/Solver/Actividad';
 import SolverPerfil from './source/Solver/Perfil';
 import SolverSubservicio from './source/Solver/Subservicio';
-
-// NUEVAS PANTALLAS DEL STACK SOLVER
 import MisServicios from './source/Solver/MisServicios';
 import AgregarServicios from './source/Solver/AgregarServicios';
 import AgregarMasServicios from './source/Solver/AgregarMasServicios';
 import MapaSolverOnline from './source/Solver/MapaSolverOnline';
+import AgregarSubservicios from './source/Solver/AgregarSubservicios';
 
 import Header from './source/Layout/Header';
 import Tabbar from './source/Layout/Tabbar';
@@ -138,6 +137,7 @@ function SolverStack() {
         <Stack.Screen name="MapaSolverOnline" component={MapaSolverOnline} />
         <Stack.Screen name="Subservicios" component={Subservicios} />
         <Stack.Screen name="Subservicio" component={SolverSubservicio} />
+        <Stack.Screen name="AgregarSubservicio" component={AgregarSubservicios}/>
       </Stack.Navigator>
     </SolverLayout>
   );
