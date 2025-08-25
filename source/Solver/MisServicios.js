@@ -31,21 +31,44 @@ export default function MisServicios({ navigation }) {
               usuarioObj?.user?.idsolver ||
               usuarioObj?.idsolver ||
               null;
+            console.log('usuarioObj:', usuarioObj);
+            console.log('idsolver:', idsolver);
           } catch (err) {
             console.log('Error parsing usuario:', err);
           }
         }
         if (!idsolver) {
+          console.log('No idsolver encontrado');
           setServicios([]);
           setLoading(false);
           return;
         }
-        const res = await fetch(`https://solvy-app-api.vercel.app/sol/solverservicio/${idsolver}`, {
+        const url = `https://solvy-app-api.vercel.app/sol/solverservicio/${idsolver}`;
+        console.log('fetch url:', url);
+        const res = await fetch(url, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();
-        setServicios(Array.isArray(data) ? data : []);
+        console.log('Servicios recibidos:', data);
+
+        // Para cada servicio, obtener el logo usando idservicio
+        const serviciosConLogo = await Promise.all(
+          (Array.isArray(data) ? data : []).map(async (serv) => {
+            try {
+              // Cambiado: ahora toma el primer elemento del array devuelto por la API
+              const logoRes = await fetch(`https://solvy-app-api.vercel.app/logos/serv/${serv.idservicio}`);
+              const logoData = await logoRes.json();
+              let logo = Array.isArray(logoData) && logoData.length > 0 ? logoData[0] : {};
+              return { ...serv, logo };
+            } catch (e) {
+              console.log('Error obteniendo logo para servicio:', serv.idservicio, e);
+              return { ...serv, logo: undefined };
+            }
+          })
+        );
+        setServicios(serviciosConLogo);
       } catch (e) {
+        console.log('Error en fetchMisServicios:', e);
         setServicios([]);
       }
       setLoading(false);
@@ -54,41 +77,26 @@ export default function MisServicios({ navigation }) {
   }, []);
 
   const handleServicioPress = (servicio) => {
-    navigation.navigate('AgregarSubservicios', { idservicio: servicio.idservicio, nombre: servicio.nombreservicio });
+    console.log('Servicio seleccionado:', servicio);
+    navigation.navigate('AgregarSubservicios', { idservicio: servicio.idservicio, nombre: servicio.nombre_servicio });
   };
 
   const handleOnlinePress = () => {
+    console.log('Botón Ponerse Online presionado');
     navigation.navigate('MapaSolverOnline');
   };
 
-  function ServicioLogo({ idlogosapp }) {
-    const [iconData, setIconData] = useState(null);
-    const [error, setError] = useState(false);
+  function ServicioLogo({ logo }) {
+    const [iconData, setIconData] = useState(logo || null);
+    const [error, setError] = useState(!logo);
 
     useEffect(() => {
-      let mounted = true;
-      setIconData(null);
-      setError(false);
-      if (!idlogosapp) {
-        setError(true);
-        return;
-      }
-      fetch(`https://solvy-app-api.vercel.app/logos/logo/${idlogosapp}`)
-        .then(res => {
-          if (!res.ok) throw new Error();
-          return res.json();
-        })
-        .then(data => {
-          if (mounted && Array.isArray(data) && data.length > 0) setIconData(data[0]);
-          else setError(true);
-        })
-        .catch(() => {
-          if (mounted) setError(true);
-        });
-      return () => { mounted = false; };
-    }, [idlogosapp]);
+      setIconData(logo || null);
+      setError(!logo);
+    }, [logo]);
 
     if (error || !iconData) {
+      console.log('Mostrando imagen por defecto para logo:', logo);
       return <Image source={require('../../assets/Logo.png')} style={{ width: 60, height: 60 }} resizeMode="contain" />;
     }
 
@@ -101,6 +109,13 @@ export default function MisServicios({ navigation }) {
     if (family === 'FontAwesome5') IconComponent = FontAwesome5;
     if (family === 'MaterialCommunityIcons') IconComponent = MaterialCommunityIcons;
     if (family === 'FontAwesome6') IconComponent = FontAwesome6;
+
+    console.log('Renderizando icono:', {
+      family,
+      name: iconData.icon_name,
+      size: iconData.icon_size,
+      color: iconData.icon_color
+    });
 
     return (
       <IconComponent
@@ -123,15 +138,21 @@ export default function MisServicios({ navigation }) {
       ) : (
         <FlatList
           data={servicios}
-          keyExtractor={item => item.idservicio?.toString()}
-          renderItem={({ item }) => (
-            <TouchableOpacity style={styles.servicioItem} onPress={() => handleServicioPress(item)}>
-              <LinearGradient colors={['#007cc0', '#003f5c']} style={styles.iconoServicio}>
-                <ServicioLogo idlogosapp={item.idlogosapp} />
-              </LinearGradient>
-              <Text style={styles.servicioText}>{item.nombreservicio}</Text>
-            </TouchableOpacity>
-          )}
+          keyExtractor={item => {
+            console.log('FlatList keyExtractor item:', item);
+            return item.idservicio?.toString();
+          }}
+          renderItem={({ item }) => {
+            console.log('FlatList renderItem item:', item);
+            return (
+              <TouchableOpacity style={styles.servicioItem} onPress={() => handleServicioPress(item)}>
+                <LinearGradient colors={['#007cc0', '#003f5c']} style={styles.iconoServicio}>
+                  <ServicioLogo logo={item.logo} />
+                </LinearGradient>
+                <Text style={styles.servicioText}>{item.nombre_servicio}</Text>
+              </TouchableOpacity>
+            );
+          }}
           ListEmptyComponent={<Text style={{ textAlign: 'center', marginTop: 40 }}>No tenés servicios agregados.</Text>}
         />
       )}

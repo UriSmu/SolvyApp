@@ -60,7 +60,7 @@ export default function AgregarServicios({ navigation }) {
     navigation.navigate('AgregarMasServicios', { servicio });
   };
 
-  function ServicioLogo({ idlogoapp }) {
+  function ServicioLogo({ idservicio }) {
     const [iconData, setIconData] = useState(null);
     const [error, setError] = useState(false);
 
@@ -68,11 +68,12 @@ export default function AgregarServicios({ navigation }) {
       let mounted = true;
       setIconData(null);
       setError(false);
-      if (!idlogoapp) {
+      if (!idservicio) {
         setError(true);
         return;
       }
-      fetch(`https://solvy-app-api.vercel.app/logos/logo/${idlogoapp}`)
+      // Usar la nueva ruta para buscar el logo
+      fetch(`https://solvy-app-api.vercel.app/logos/serv/${idservicio}`)
         .then(res => {
           if (!res.ok) throw new Error();
           return res.json();
@@ -85,7 +86,7 @@ export default function AgregarServicios({ navigation }) {
           if (mounted) setError(true);
         });
       return () => { mounted = false; };
-    }, [idlogoapp]);
+    }, [idservicio]);
 
     if (error || !iconData) {
       return <Image source={require('../../assets/Logo.png')} style={{ width: 60, height: 60 }} resizeMode="contain" />;
@@ -123,7 +124,7 @@ export default function AgregarServicios({ navigation }) {
           renderItem={({ item }) => (
             <TouchableOpacity style={styles.servicioItem} onPress={() => handleServicioPress(item)}>
               <LinearGradient colors={['#007cc0', '#003f5c']} style={styles.iconoServicio}>
-                <ServicioLogo idlogoapp={item.idlogoapp} />
+                <ServicioLogo idservicio={item.idservicio} />
               </LinearGradient>
               <Text style={styles.servicioText}>{item.nombre}</Text>
             </TouchableOpacity>
