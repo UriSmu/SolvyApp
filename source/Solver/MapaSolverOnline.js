@@ -85,7 +85,7 @@ export default function MapaSolverOnline({ navigation }) {
               setServicioActivo(false);
               setModalVisible(false);
               setSolicitudActual(null);
-              navigation.navigate('Home');
+              navigation.navigate('ParteTrabajo');
             }
           }
           // Si es una nueva solicitud pendiente

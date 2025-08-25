@@ -40,6 +40,8 @@ import AgregarServicios from './source/Solver/AgregarServicios';
 import AgregarMasServicios from './source/Solver/AgregarMasServicios';
 import MapaSolverOnline from './source/Solver/MapaSolverOnline';
 
+import ParteTrabajo from './source/Solver/ParteTrabajo';
+
 import Header from './source/Layout/Header';
 import Tabbar from './source/Layout/Tabbar';
 
@@ -117,6 +119,8 @@ function HomeStack() {
         <Stack.Screen name="ConectarSolver" component={ConectarSolver} />
         <Stack.Screen name="Perfil" component={Perfil} />
         <Stack.Screen name="ConfirmarServicio" component={ConfirmarServicio} />
+
+        <Stack.Screen name="ParteTrabajo" component={ParteTrabajo}/>
       </Stack.Navigator>
     </HomeLayout>
   );
