@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, FlatList, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, Image } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import Entypo from '@expo/vector-icons/Entypo';
@@ -53,15 +53,15 @@ export default function MisServicios({ navigation }) {
     fetchMisServicios();
   }, []);
 
-  const handleOnline = () => {
+  const handleServicioPress = (servicio) => {
+    navigation.navigate('AgregarSubservicios', { idservicio: servicio.idservicio, nombre: servicio.nombreservicio });
+  };
+
+  const handleOnlinePress = () => {
     navigation.navigate('MapaSolverOnline');
   };
 
-  const handleServicioPress = (servicio) => {
-    navigation.navigate('Subservicios', { idservicio: servicio.idservicio, nombre: servicio.nombre });
-  };
-
-  function ServicioLogo({ idlogoapp }) {
+  function ServicioLogo({ idlogosapp }) {
     const [iconData, setIconData] = useState(null);
     const [error, setError] = useState(false);
 
@@ -69,11 +69,11 @@ export default function MisServicios({ navigation }) {
       let mounted = true;
       setIconData(null);
       setError(false);
-      if (!idlogoapp) {
+      if (!idlogosapp) {
         setError(true);
         return;
       }
-      fetch(`https://solvy-app-api.vercel.app/logos/logo/${idlogoapp}`)
+      fetch(`https://solvy-app-api.vercel.app/logos/logo/${idlogosapp}`)
         .then(res => {
           if (!res.ok) throw new Error();
           return res.json();
@@ -86,25 +86,21 @@ export default function MisServicios({ navigation }) {
           if (mounted) setError(true);
         });
       return () => { mounted = false; };
-    }, [idlogoapp]);
+    }, [idlogosapp]);
 
     if (error || !iconData) {
       return <Image source={require('../../assets/Logo.png')} style={{ width: 60, height: 60 }} resizeMode="contain" />;
     }
 
-  const family = iconData.icon_family ? iconData.icon_family.trim() : 'FontAwesome';
-  let IconComponent = FontAwesome;
-  if (family === 'MaterialIcons') IconComponent = MaterialIcons;
-  if (family === 'Ionicons') IconComponent = Ionicons;
-  if (family === 'Entypo') IconComponent = Entypo;
-  if (family === 'Fontisto') IconComponent = Fontisto;
-  if (family === 'FontAwesome5') IconComponent = FontAwesome5;
-  if (family === 'MaterialCommunityIcons') IconComponent = MaterialCommunityIcons;
-  if (family === 'FontAwesome6') IconComponent = FontAwesome6;
-
-    if (!IconComponent) {
-      return <Image source={require('../../assets/Logo.png')} style={{ width: 60, height: 60 }} resizeMode="contain" />;
-    }
+    const family = iconData.icon_family ? iconData.icon_family.trim() : 'FontAwesome';
+    let IconComponent = FontAwesome;
+    if (family === 'MaterialIcons') IconComponent = MaterialIcons;
+    if (family === 'Ionicons') IconComponent = Ionicons;
+    if (family === 'Entypo') IconComponent = Entypo;
+    if (family === 'Fontisto') IconComponent = Fontisto;
+    if (family === 'FontAwesome5') IconComponent = FontAwesome5;
+    if (family === 'MaterialCommunityIcons') IconComponent = MaterialCommunityIcons;
+    if (family === 'FontAwesome6') IconComponent = FontAwesome6;
 
     return (
       <IconComponent
@@ -119,8 +115,8 @@ export default function MisServicios({ navigation }) {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Mis servicios</Text>
-      <TouchableOpacity style={styles.onlineBtn} onPress={handleOnline}>
-        <Text style={styles.onlineBtnText}>Ponerme Online</Text>
+      <TouchableOpacity style={styles.onlineBtn} onPress={handleOnlinePress}>
+        <Text style={styles.onlineBtnText}>Ponerse Online</Text>
       </TouchableOpacity>
       {loading ? (
         <ActivityIndicator size="large" color="#007cc0" style={{ marginTop: 40 }} />
@@ -131,11 +127,12 @@ export default function MisServicios({ navigation }) {
           renderItem={({ item }) => (
             <TouchableOpacity style={styles.servicioItem} onPress={() => handleServicioPress(item)}>
               <LinearGradient colors={['#007cc0', '#003f5c']} style={styles.iconoServicio}>
-                <ServicioLogo idlogoapp={item.idlogoapp} />
+                <ServicioLogo idlogosapp={item.idlogosapp} />
               </LinearGradient>
-              <Text style={styles.servicioText}>{item.nombre}</Text>
+              <Text style={styles.servicioText}>{item.nombreservicio}</Text>
             </TouchableOpacity>
           )}
+          ListEmptyComponent={<Text style={{ textAlign: 'center', marginTop: 40 }}>No tenés servicios agregados.</Text>}
         />
       )}
     </View>
@@ -147,13 +144,13 @@ const styles = StyleSheet.create({
   title: { fontSize: 26, fontWeight: 'bold', marginBottom: 20 },
   onlineBtn: {
     backgroundColor: '#007cc0',
-    paddingVertical: 12,
-    paddingHorizontal: 30,
+    paddingVertical: 14,
+    paddingHorizontal: 40,
     borderRadius: 30,
-    marginBottom: 24,
     alignSelf: 'center',
+    marginBottom: 18,
   },
-  onlineBtnText: { color: '#fff', fontSize: 17, fontWeight: 'bold' },
+  onlineBtnText: { color: '#fff', fontSize: 18, fontWeight: 'bold', textAlign: 'center' },
   servicioItem: {
     backgroundColor: '#e6f2fb',
     padding: 16,
