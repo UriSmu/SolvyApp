@@ -52,7 +52,7 @@ export default function AgregarSubservicios({ route, navigation }) {
         setIdSolverservicio(idsolverservicio);
 
         // 2. Subservicios ya agregados
-        const resAgregados = await fetch(`https://solvy-app-api.vercel.app/sol/solverservicio/subservicios/${idsolverservicio}`, {
+        const resAgregados = await fetch(`https://solvy-app-api.vercel.app/sol/solverservicio/subservicio/${idsolverservicio}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const agregados = await resAgregados.json();

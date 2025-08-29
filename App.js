@@ -141,7 +141,7 @@ function SolverStack() {
         <Stack.Screen name="MapaSolverOnline" component={MapaSolverOnline} />
         <Stack.Screen name="Subservicios" component={Subservicios} />
         <Stack.Screen name="Subservicio" component={SolverSubservicio} />
-        <Stack.Screen name="AgregarSubservicio" component={AgregarSubservicios}/>
+        <Stack.Screen name="AgregarSubservicios" component={AgregarSubservicios}/>
       </Stack.Navigator>
     </SolverLayout>
   );
