@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, Alert, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, Alert, Image, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import Entypo from '@expo/vector-icons/Entypo';
@@ -18,6 +18,10 @@ export default function AgregarSubservicios({ route, navigation }) {
   const [subserviciosDisponibles, setSubserviciosDisponibles] = useState([]);
   const [idsolverservicio, setIdSolverservicio] = useState(null);
 
+  // Modal state
+  const [modalVisible, setModalVisible] = useState(false);
+  const [subservicioAEliminar, setSubservicioAEliminar] = useState(null);
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -34,9 +38,7 @@ export default function AgregarSubservicios({ route, navigation }) {
               usuarioObj?.user?.idsolver ||
               usuarioObj?.idsolver ||
               null;
-          } catch (err) {
-            console.log('Error parsing usuario:', err);
-          }
+          } catch (err) {}
         }
         // 1. Obtener el idsolverservicio para este servicio
         const resSolverServicio = await fetch(`https://solvy-app-api.vercel.app/sol/solverservicio/${idsolver}?idservicio=${idservicio}`, {
@@ -56,7 +58,6 @@ export default function AgregarSubservicios({ route, navigation }) {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const agregados = await resAgregados.json();
-        setSubserviciosAgregados(Array.isArray(agregados) ? agregados : []);
 
         // 3. Todos los subservicios del servicio
         const resTodos = await fetch(`https://solvy-app-api.vercel.app/ser/${idservicio}/subservicios`, {
@@ -67,6 +68,16 @@ export default function AgregarSubservicios({ route, navigation }) {
         // 4. Filtrar los que NO están agregados
         const agregadosIds = new Set((agregados || []).map(s => s.idsubservicio));
         const disponibles = (todos || []).filter(s => !agregadosIds.has(s.idsubservicio));
+
+        // 5. Completar datos de los agregados usando la lista de todos
+        const agregadosCompletos = (agregados || [])
+          .map(a => {
+            const completo = (todos || []).find(t => t.idsubservicio === a.idsubservicio);
+            return completo ? { ...a, ...completo } : null;
+          })
+          .filter(a => a && a.nombre);
+
+        setSubserviciosAgregados(agregadosCompletos);
         setSubserviciosDisponibles(disponibles);
       } catch (e) {
         setSubserviciosAgregados([]);
@@ -102,7 +113,36 @@ export default function AgregarSubservicios({ route, navigation }) {
     }
   }
 
-  function ServicioLogo({ idlogosapp }) {
+  async function handleEliminarSubservicio() {
+    if (!idsolverservicio || !subservicioAEliminar) return;
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const res = await fetch(
+        `https://solvy-app-api.vercel.app/sol/solverservicio/${idsolverservicio}/${subservicioAEliminar.idsubservicio}`,
+        {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        }
+      );
+      const text = await res.text();
+      if (res.ok) {
+        setSubserviciosAgregados(subserviciosAgregados.filter(s => s.idsubservicio !== subservicioAEliminar.idsubservicio));
+        setSubserviciosDisponibles([
+          ...subserviciosDisponibles,
+          subservicioAEliminar
+        ]);
+        setModalVisible(false);
+        setSubservicioAEliminar(null);
+        Alert.alert('Eliminado', 'El subservicio fue eliminado.');
+      } else {
+        Alert.alert('Error', 'No se pudo eliminar el subservicio.\n' + text);
+      }
+    } catch (e) {
+      Alert.alert('Error', 'No se pudo conectar con el servidor.');
+    }
+  }
+
+  function ServicioLogo({ idlogo }) {
     const [iconData, setIconData] = useState(null);
     const [error, setError] = useState(false);
 
@@ -110,13 +150,13 @@ export default function AgregarSubservicios({ route, navigation }) {
       let mounted = true;
       setIconData(null);
       setError(false);
-      if (!idlogosapp) {
+      if (!idlogo) {
         setError(true);
         return;
       }
-      fetch(`https://solvy-app-api.vercel.app/logos/logo/${idlogosapp}`)
+      fetch(`https://solvy-app-api.vercel.app/logos/logo/${idlogo}`)
         .then(res => {
-          if (!res.ok) throw new Error();
+          if (!res.ok) throw new Error('Logo API error');
           return res.json();
         })
         .then(data => {
@@ -127,7 +167,7 @@ export default function AgregarSubservicios({ route, navigation }) {
           if (mounted) setError(true);
         });
       return () => { mounted = false; };
-    }, [idlogosapp]);
+    }, [idlogo]);
 
     if (error || !iconData) {
       return <Image source={require('../../assets/Logo.png')} style={{ width: 60, height: 60 }} resizeMode="contain" />;
@@ -165,12 +205,18 @@ export default function AgregarSubservicios({ route, navigation }) {
             data={subserviciosAgregados}
             keyExtractor={item => item.idsubservicio?.toString()}
             renderItem={({ item }) => (
-              <View style={styles.servicioItem}>
+              <TouchableOpacity
+                style={styles.servicioItem}
+                onPress={() => {
+                  setSubservicioAEliminar(item);
+                  setModalVisible(true);
+                }}
+              >
                 <LinearGradient colors={['#007cc0', '#003f5c']} style={styles.iconoServicio}>
-                  <ServicioLogo idlogosapp={item.idlogosapp} />
+                  <ServicioLogo idlogo={item.idlogo} />
                 </LinearGradient>
                 <Text style={styles.servicioText}>{item.nombre}</Text>
-              </View>
+              </TouchableOpacity>
             )}
             ListEmptyComponent={<Text style={{ textAlign: 'center', marginBottom: 20 }}>No tenés subservicios agregados.</Text>}
           />
@@ -182,13 +228,35 @@ export default function AgregarSubservicios({ route, navigation }) {
             renderItem={({ item }) => (
               <TouchableOpacity style={styles.servicioItem} onPress={() => handleAgregarSubservicio(item.idsubservicio)}>
                 <LinearGradient colors={['#007cc0', '#003f5c']} style={styles.iconoServicio}>
-                  <ServicioLogo idlogosapp={item.idlogosapp} />
+                  <ServicioLogo idlogo={item.idlogo} />
                 </LinearGradient>
                 <Text style={styles.servicioText}>{item.nombre}</Text>
               </TouchableOpacity>
             )}
             ListEmptyComponent={<Text style={{ textAlign: 'center', marginBottom: 20 }}>No hay subservicios para agregar.</Text>}
           />
+
+          {/* Modal de confirmación */}
+          <Modal
+            visible={modalVisible}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setModalVisible(false)}
+          >
+            <View style={styles.overlay}>
+              <View style={styles.modalBox}>
+                <Text style={styles.modalTitle}>¿Seguro que desea eliminar este servicio?</Text>
+                <View style={styles.modalBtns}>
+                  <TouchableOpacity style={styles.btnEliminar} onPress={handleEliminarSubservicio}>
+                    <Text style={styles.btnEliminarText}>ELIMINAR</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.btnCancelar} onPress={() => setModalVisible(false)}>
+                    <Text style={styles.btnCancelarText}>NO, CANCELAR</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </Modal>
         </>
       )}
     </View>
@@ -224,4 +292,57 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   servicioText: { fontSize: 16, fontWeight: '600', color: '#007cc0' },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalBox: {
+    backgroundColor: '#fff',
+    borderRadius: 18,
+    padding: 28,
+    width: '80%',
+    alignItems: 'center',
+    elevation: 8,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 22,
+    textAlign: 'center',
+  },
+  modalBtns: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  btnEliminar: {
+    backgroundColor: '#e53935',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 10,
+    marginRight: 12,
+    flex: 1,
+  },
+  btnEliminarText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  btnCancelar: {
+    backgroundColor: '#007cc0',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 10,
+    flex: 1,
+  },
+  btnCancelarText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+    textAlign: 'center',
+  },
 });

@@ -31,8 +31,6 @@ export default function MisServicios({ navigation }) {
               usuarioObj?.user?.idsolver ||
               usuarioObj?.idsolver ||
               null;
-            console.log('usuarioObj:', usuarioObj);
-            console.log('idsolver:', idsolver);
           } catch (err) {
             console.log('Error parsing usuario:', err);
           }
@@ -44,12 +42,10 @@ export default function MisServicios({ navigation }) {
           return;
         }
         const url = `https://solvy-app-api.vercel.app/sol/solverservicio/${idsolver}`;
-        console.log('fetch url:', url);
         const res = await fetch(url, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();
-        console.log('Servicios recibidos:', data);
 
         // Para cada servicio, obtener el logo usando idservicio
         const serviciosConLogo = await Promise.all(
@@ -77,12 +73,10 @@ export default function MisServicios({ navigation }) {
   }, []);
 
   const handleServicioPress = (servicio) => {
-    console.log('Servicio seleccionado:', servicio);
     navigation.navigate('AgregarSubservicios', { idservicio: servicio.idservicio, nombre: servicio.nombre_servicio });
   };
 
   const handleOnlinePress = () => {
-    console.log('Botón Ponerse Online presionado');
     navigation.navigate('MapaSolverOnline');
   };
 
@@ -96,7 +90,6 @@ export default function MisServicios({ navigation }) {
     }, [logo]);
 
     if (error || !iconData) {
-      console.log('Mostrando imagen por defecto para logo:', logo);
       return <Image source={require('../../assets/Logo.png')} style={{ width: 60, height: 60 }} resizeMode="contain" />;
     }
 
@@ -109,13 +102,6 @@ export default function MisServicios({ navigation }) {
     if (family === 'FontAwesome5') IconComponent = FontAwesome5;
     if (family === 'MaterialCommunityIcons') IconComponent = MaterialCommunityIcons;
     if (family === 'FontAwesome6') IconComponent = FontAwesome6;
-
-    console.log('Renderizando icono:', {
-      family,
-      name: iconData.icon_name,
-      size: iconData.icon_size,
-      color: iconData.icon_color
-    });
 
     return (
       <IconComponent
@@ -139,11 +125,9 @@ export default function MisServicios({ navigation }) {
         <FlatList
           data={servicios}
           keyExtractor={item => {
-            console.log('FlatList keyExtractor item:', item);
             return item.idservicio?.toString();
           }}
           renderItem={({ item }) => {
-            console.log('FlatList renderItem item:', item);
             return (
               <TouchableOpacity style={styles.servicioItem} onPress={() => handleServicioPress(item)}>
                 <LinearGradient colors={['#007cc0', '#003f5c']} style={styles.iconoServicio}>
