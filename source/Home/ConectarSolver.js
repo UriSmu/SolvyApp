@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, TouchableOpacity, StyleSheet, Dimensions, Animated, Image, Modal } from 'react-native';
+import { View, Text, ActivityIndicator, TouchableOpacity, StyleSheet, Dimensions, Animated, Image, Modal, TextInput, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
@@ -11,12 +11,14 @@ export default function ConectarSolver({ route, navigation }) {
   const [solver, setSolver] = useState(null);
   const [error, setError] = useState(null);
   const [panelAnim] = useState(new Animated.Value(180));
-  const { width, height } = Dimensions.get('window');
   const [solicitudId, setSolicitudId] = useState(null);
   const [solicitudDataActualizada, setSolicitudDataActualizada] = useState(null);
   const [subservicioNombre, setSubservicioNombre] = useState('');
   const [showTopCard, setShowTopCard] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
+  const [codigoInicial, setCodigoInicial] = useState('');
+  const [inputCodigo, setInputCodigo] = useState('');
+  const [codigoValidado, setCodigoValidado] = useState(false);
 
   useEffect(() => {
     let channel;
@@ -35,8 +37,24 @@ export default function ConectarSolver({ route, navigation }) {
           setLoading(false);
           return;
         }
-        const id = data[0]?.idsolicitud;
+        const id = Array.isArray(data) ? data[0]?.idsolicitud : data?.idsolicitud;
         setSolicitudId(id);
+
+        // Obtener el código inicial desde la API
+        try {
+          const token = await AsyncStorage.getItem('token');
+          const res = await fetch(`https://solvy-app-api.vercel.app/solit/iniciar/${id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const logData = await res.clone().json().catch(() => ({}));
+          console.log('API codigo_inicial:', logData);
+          if (res.ok) {
+            const dataCodigo = logData;
+            setCodigoInicial(dataCodigo?.codigo_inicial?.toString() || '');
+          }
+        } catch (e) {
+          console.log('Error obteniendo código inicial:', e);
+        }
 
         // Suscribirse a cambios en la solicitud para saber si fue aceptada
         channel = supabase
@@ -51,13 +69,11 @@ export default function ConectarSolver({ route, navigation }) {
             },
             async (payload) => {
               setSolicitudDataActualizada(payload.new);
-              // Loading solo se va cuando hay_solver y idsolver existen
               if (payload.new.hay_solver && payload.new.idsolver) {
                 await obtenerDatosSolver(payload.new.idsolver);
                 setShowTopCard(false);
                 setLoading(false);
               }
-              // Solo se sale cuando el estado es finalizada
               if (payload.new.estado === 'finalizada') {
                 setModalVisible(false);
                 navigation.reset({
@@ -133,6 +149,17 @@ export default function ConectarSolver({ route, navigation }) {
 
   const handleVolver = () => {
     navigation.goBack();
+  };
+
+  // Validar código inicial ingresado por el usuario
+  const handleValidarCodigo = () => {
+    if (inputCodigo === codigoInicial) {
+      Alert.alert('¡Código correcto!', 'El solver comenzará tu servicio.');
+      setCodigoValidado(true);
+      setModalVisible(false);
+    } else {
+      Alert.alert('Código incorrecto', 'El código ingresado no es válido.');
+    }
   };
 
   // Usar datos actualizados si existen
@@ -218,17 +245,26 @@ export default function ConectarSolver({ route, navigation }) {
             <Text style={[styles.solverInfoBold, { marginBottom: 8 }]}>{datosDireccion?.title || 'No especificada'}</Text>
             <Text style={styles.solverInfo}>Duración: <Text style={styles.solverInfoBold}>{datosSolicitud?.duracion_servicio || 'No especificada'} min</Text></Text>
             <Text style={styles.solverInfo}>Precio: <Text style={styles.solverInfoBold}>${datosSolicitud?.monto?.toFixed(2) || 'No especificado'}</Text></Text>
-            <TouchableOpacity
-              style={[styles.finalizarBtn, { width: 220, paddingVertical: 10, paddingHorizontal: 0 }]}
-              onPress={() => setModalVisible(true)}
-            >
-              <Text style={[styles.btnText, { color: '#fff', fontSize: 16 }]}>Mostrar código de finalización</Text>
-            </TouchableOpacity>
+            {!codigoValidado ? (
+              <TouchableOpacity
+                style={[styles.finalizarBtn, { width: 220, paddingVertical: 10, paddingHorizontal: 0 }]}
+                onPress={() => setModalVisible(true)}
+              >
+                <Text style={[styles.btnText, { color: '#fff', fontSize: 16 }]}>Ingresar código inicial</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={[styles.finalizarBtn, { width: 220, paddingVertical: 10, paddingHorizontal: 0, backgroundColor: '#00c853' }]}
+                onPress={() => Alert.alert('Servicio finalizado', 'Aquí iría la lógica de finalización.')}
+              >
+                <Text style={[styles.btnText, { color: '#fff', fontSize: 16 }]}>Finalizar servicio</Text>
+              </TouchableOpacity>
+            )}
           </View>
         )}
       </Animated.View>
 
-      {/* Modal para mostrar código de confirmación */}
+      {/* Modal para ingresar código inicial */}
       <Modal
         visible={modalVisible}
         transparent
@@ -237,13 +273,37 @@ export default function ConectarSolver({ route, navigation }) {
       >
         <View style={styles.overlay}>
           <View style={styles.modalContent}>
-            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 12 }}>Código de confirmación</Text>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 12 }}>Ingrese el código inicial</Text>
+            <Text style={{ fontSize: 16, marginBottom: 8, textAlign: 'center' }}>
+              El solver le debe entregar este código para comenzar el servicio.
+            </Text>
             <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#007cc0', marginBottom: 18 }}>
-              {datosSolicitud?.codigo_confirmacion || '----'}
+              {codigoInicial || '----'}
             </Text>
-            <Text style={{ fontSize: 16, marginBottom: 18, textAlign: 'center' }}>
-              El solver debe ingresar este código para finalizar el servicio.
-            </Text>
+            <TextInput
+              style={{
+                borderWidth: 1,
+                borderColor: '#007cc0',
+                borderRadius: 8,
+                padding: 10,
+                fontSize: 18,
+                width: '80%',
+                marginBottom: 18,
+                textAlign: 'center',
+                backgroundColor: '#f9f9f9',
+              }}
+              keyboardType="numeric"
+              maxLength={4}
+              value={inputCodigo}
+              onChangeText={setInputCodigo}
+              placeholder="Ingrese el código"
+            />
+            <TouchableOpacity
+              style={[styles.finalizarBtn, { width: 120, paddingVertical: 10, paddingHorizontal: 0 }]}
+              onPress={handleValidarCodigo}
+            >
+              <Text style={[styles.btnText, { color: '#fff', fontSize: 16 }]}>Validar</Text>
+            </TouchableOpacity>
             <TouchableOpacity
               style={[styles.finalizarBtn, { backgroundColor: '#d32f2f', width: 120, paddingVertical: 10, paddingHorizontal: 0, marginTop: 8 }]}
               onPress={() => setModalVisible(false)}

@@ -12,6 +12,8 @@ export default function ConfirmarServicio({ route, navigation }) {
   const precioPorTiempo = subservicio?.precioportiempo || 500;
   const precio = tarifaBase + (precioPorTiempo * (duracion / 15));
 
+  const generarCodigo = () => Math.floor(1000 + Math.random() * 9000);
+
   const handlePedirSolver = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
@@ -42,6 +44,9 @@ export default function ConfirmarServicio({ route, navigation }) {
       const fechasolicitud = fecha.toISOString().split('T')[0]; // YYYY-MM-DD
       const horainicial = fecha.toTimeString().slice(0,8); // HH:MM:SS
 
+      // Generar código inicial
+      const codigoInicial = generarCodigo();
+
       const solicitudData = {
         idcliente,
         idsolver: null,
@@ -57,12 +62,14 @@ export default function ConfirmarServicio({ route, navigation }) {
         idreseniasolver: null,
         idreseniacliente: null,
         idsubservicio: subservicio?.idsubservicio ?? null,
-        descargas: null,
+        parte_trabajo: null,
         codigo_confirmacion: null,
+        codigo_inicial: codigoInicial,
         hay_solver: false,
       };
 
-      navigation.navigate('ConectarSolver', { solicitudData });
+      navigation.navigate('ConectarSolver', { solicitudData, codigoInicial });
+
     } catch (e) {
       Alert.alert('Error', 'No se pudo conectar con el servidor.');
     }
