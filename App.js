@@ -24,6 +24,7 @@ import Mapa from './source/Home/Mapa';
 import ReseniaSolv from './source/Home/ReseniaSolv';
 import Subservicios from './source/Home/Subservicios';
 import ConectarSolver from './source/Home/ConectarSolver';
+import ConectarSolver2 from './source/Home/ConectarSolver2';
 import Perfil from './source/Home/Perfil';
 import ConfirmarServicio from './source/Home/ConfirmarServicio';
 
@@ -116,9 +117,9 @@ function HomeStack() {
         <Stack.Screen name="ReseniaSolv" component={ReseniaSolv}/>
         <Stack.Screen name="Subservicios" component={Subservicios}/>
         <Stack.Screen name="ConectarSolver" component={ConectarSolver} />
+        <Stack.Screen name="ConectarSolver2" component={ConectarSolver2} />
         <Stack.Screen name="Perfil" component={Perfil} />
         <Stack.Screen name="ConfirmarServicio" component={ConfirmarServicio} />
-
         <Stack.Screen name="ParteTrabajo" component={ParteTrabajo}/>
       </Stack.Navigator>
     </HomeLayout>
@@ -134,7 +135,6 @@ function SolverStack() {
         <Stack.Screen name="Servicios" component={SolverServicios} />
         <Stack.Screen name="Actividad" component={SolverActividad} />
         <Stack.Screen name="Perfil" component={SolverPerfil} />
-        {/* NUEVAS RUTAS DEL STACK SOLVER */}
         <Stack.Screen name="MisServicios" component={MisServicios} />
         <Stack.Screen name="AgregarServicios" component={AgregarServicios} />
         <Stack.Screen name="AgregarMasServicios" component={AgregarMasServicios} />
@@ -142,6 +142,7 @@ function SolverStack() {
         <Stack.Screen name="Subservicios" component={Subservicios} />
         <Stack.Screen name="Subservicio" component={SolverSubservicio} />
         <Stack.Screen name="AgregarSubservicios" component={AgregarSubservicios}/>
+        <Stack.Screen name="ParteTrabajo" component={ParteTrabajo}/>
       </Stack.Navigator>
     </SolverLayout>
   );

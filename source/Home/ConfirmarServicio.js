@@ -14,66 +14,65 @@ export default function ConfirmarServicio({ route, navigation }) {
 
   const generarCodigo = () => Math.floor(1000 + Math.random() * 9000);
 
-  const handlePedirSolver = async () => {
-    try {
-      const token = await AsyncStorage.getItem('token');
-      const usuarioStr = await AsyncStorage.getItem('usuario');
-      let idcliente = null;
-      if (usuarioStr) {
-        try {
-          const usuarioObj = JSON.parse(usuarioStr);
-          idcliente =
-            usuarioObj?.profile?.user?.idcliente ||
-            usuarioObj?.profile?.idcliente ||
-            usuarioObj?.user?.idcliente ||
-            usuarioObj?.idcliente ||
-            null;
-        } catch (err) {
-          idcliente = null;
-        }
+const handlePedirSolver = async () => {
+  try {
+    const token = await AsyncStorage.getItem('token');
+    const usuarioStr = await AsyncStorage.getItem('usuario');
+    let idcliente = null;
+    if (usuarioStr) {
+      try {
+        const usuarioObj = JSON.parse(usuarioStr);
+        idcliente =
+          usuarioObj?.profile?.user?.idcliente ||
+          usuarioObj?.profile?.idcliente ||
+          usuarioObj?.user?.idcliente ||
+          usuarioObj?.idcliente ||
+          null;
+      } catch (err) {
+        idcliente = null;
       }
-
-      // Validación extra para idservicio
-      if (!idcliente || !subservicio?.idsubservicio || !subservicio?.idservicio) {
-        Alert.alert('Error', 'No se pudo obtener el usuario, subservicio o servicio.');
-        return;
-      }
-
-      // Fecha y hora actual
-      const fecha = new Date();
-      const fechasolicitud = fecha.toISOString().split('T')[0]; // YYYY-MM-DD
-      const horainicial = fecha.toTimeString().slice(0,8); // HH:MM:SS
-
-      // Generar código inicial
-      const codigoInicial = generarCodigo();
-
-      const solicitudData = {
-        idcliente,
-        idsolver: null,
-        idservicio: null,
-        direccion_servicio: coord ?? '',
-        duracion_servicio: duracion ?? 0,
-        horainicial,
-        horafinal: null,
-        monto: precio ?? 0,
-        fechasolicitud,
-        fechaacordada: null,
-        fechaservicio: null,
-        idreseniasolver: null,
-        idreseniacliente: null,
-        idsubservicio: subservicio?.idsubservicio ?? null,
-        parte_trabajo: null,
-        codigo_confirmacion: null,
-        codigo_inicial: codigoInicial,
-        hay_solver: false,
-      };
-
-      navigation.navigate('ConectarSolver', { solicitudData, codigoInicial });
-
-    } catch (e) {
-      Alert.alert('Error', 'No se pudo conectar con el servidor.');
     }
-  };
+
+    if (!idcliente || !subservicio?.idsubservicio || !subservicio?.idservicio) {
+      Alert.alert('Error', 'No se pudo obtener el usuario, subservicio o servicio.');
+      return;
+    }
+
+    const fecha = new Date();
+    const fechasolicitud = fecha.toISOString().split('T')[0];
+    const horainicial = fecha.toTimeString().slice(0,8);
+
+    // Generar ambos códigos
+    const codigoInicial = generarCodigo();
+    const codigoConfirmacion = generarCodigo();
+
+    const solicitudData = {
+      idcliente,
+      idsolver: null,
+      idservicio: null,
+      direccion_servicio: coord ?? '',
+      duracion_servicio: duracion ?? 0,
+      horainicial,
+      horafinal: null,
+      monto: precio ?? 0,
+      fechasolicitud,
+      fechaacordada: null,
+      fechaservicio: null,
+      idreseniasolver: null,
+      idreseniacliente: null,
+      idsubservicio: subservicio?.idsubservicio ?? null,
+      parte_trabajo: null,
+      codigo_confirmacion: codigoConfirmacion, // <--- AHORA SE GENERA Y GUARDA
+      codigo_inicial: codigoInicial,
+      hay_solver: false,
+    };
+
+    navigation.navigate('ConectarSolver', { solicitudData, codigoInicial });
+
+  } catch (e) {
+    Alert.alert('Error', 'No se pudo conectar con el servidor.');
+  }
+};
 
   return (
     <View style={styles.container}>

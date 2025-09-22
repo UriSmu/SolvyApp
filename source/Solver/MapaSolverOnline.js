@@ -1,7 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  StyleSheet, Text, View, TouchableOpacity, Dimensions, Animated, Modal
+  StyleSheet, Text, View, TouchableOpacity, Dimensions, Animated, Modal, TextInput, Alert
 } from 'react-native';
 import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
@@ -19,10 +19,12 @@ export default function MapaSolverOnline({ navigation }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [subservicioNombre, setSubservicioNombre] = useState('');
   const [codigoInicial, setCodigoInicial] = useState('');
+  const [codigoFinal, setCodigoFinal] = useState('');
+  const [inputCodigoFinal, setInputCodigoFinal] = useState('');
+  const [puedeFinalizar, setPuedeFinalizar] = useState(false);
   const panelHeight = useRef(new Animated.Value(220)).current;
   const mapRef = useRef(null);
 
-  // Obtener ubicación del solver
   useEffect(() => {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -40,7 +42,6 @@ export default function MapaSolverOnline({ navigation }) {
     })();
   }, []);
 
-  // Traer nombre del subservicio
   useEffect(() => {
     const fetchSubservicio = async () => {
       if (solicitudActual?.idsubservicio) {
@@ -65,33 +66,48 @@ export default function MapaSolverOnline({ navigation }) {
     fetchSubservicio();
   }, [solicitudActual?.idsubservicio]);
 
-  // Traer código inicial cuando hay solicitud actual
   useEffect(() => {
-    const fetchCodigoInicial = async () => {
+    const fetchCodigos = async () => {
       if (solicitudActual?.idsolicitud) {
         try {
           const token = await AsyncStorage.getItem('token');
-          const res = await fetch(`https://solvy-app-api.vercel.app/solit/iniciar/${solicitudActual.idsolicitud}`, {
+          // Código inicial
+          const resInicial = await fetch(`https://solvy-app-api.vercel.app/solit/iniciar/${solicitudActual.idsolicitud}`, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
-          const logData = await res.clone().json().catch(() => ({}));
-          console.log('API codigo_inicial:', logData);
-          if (res.ok) {
-            const data = logData;
-            setCodigoInicial(data?.codigo_inicial?.toString() || '');
+          const logDataInicial = await resInicial.clone().json().catch(() => ({}));
+          let dataInicial = logDataInicial;
+          if (Array.isArray(dataInicial) && dataInicial.length > 0) {
+            dataInicial = dataInicial[0];
           }
+          setCodigoInicial(dataInicial?.codigo_inicial?.toString() || '');
+
+          // Código final (nuevo endpoint, desestructurado)
+          const resFinal = await fetch(`https://solvy-app-api.vercel.app/solit/codigo/${solicitudActual.idsolicitud}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const logDataFinal = await resFinal.clone().json().catch(() => ({}));
+          // DEBUG: Mostramos el valor real que llega
+          console.log('DEBUG CODIGO FINAL:', logDataFinal);
+          let codigo = '';
+          if (Array.isArray(logDataFinal) && logDataFinal.length > 0) {
+            codigo = logDataFinal[0]?.codigo_confirmacion?.toString() || '';
+          } else if (logDataFinal?.codigo_confirmacion) {
+            codigo = logDataFinal.codigo_confirmacion.toString();
+          }
+          setCodigoFinal(codigo);
         } catch (e) {
           setCodigoInicial('');
-          console.log('Error obteniendo código inicial:', e);
+          setCodigoFinal('');
         }
       } else {
         setCodigoInicial('');
+        setCodigoFinal('');
       }
     };
-    fetchCodigoInicial();
+    fetchCodigos();
   }, [solicitudActual?.idsolicitud]);
 
-  // Suscripción realtime a la tabla solicitudes (INSERT y UPDATE)
   useEffect(() => {
     const channel = supabase
       .channel('solicitudes-realtime')
@@ -99,22 +115,23 @@ export default function MapaSolverOnline({ navigation }) {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'solicitudes' },
         (payload) => {
-          // Si es la solicitud actual, actualiza el estado local
           if (
             payload.new &&
             solicitudActual &&
             payload.new.idsolicitud === solicitudActual.idsolicitud
           ) {
             setSolicitudActual(payload.new);
+            if (payload.new.estado === 'en_curso') setPuedeFinalizar(true);
             if (payload.new.estado === 'finalizada') {
               setPanelVisible(false);
               setServicioActivo(false);
               setModalVisible(false);
               setSolicitudActual(null);
+              setPuedeFinalizar(false);
+              setInputCodigoFinal('');
               navigation.navigate('ParteTrabajo');
             }
           }
-          // Si es una nueva solicitud pendiente
           if (
             payload.new &&
             payload.new.hay_solver === false &&
@@ -152,7 +169,6 @@ export default function MapaSolverOnline({ navigation }) {
     };
   }, [solicitudActual]);
 
-  // Obtener el idsolver del solver logueado desde AsyncStorage
   const getSolverId = async () => {
     try {
       const usuarioStr = await AsyncStorage.getItem('usuario');
@@ -168,10 +184,8 @@ export default function MapaSolverOnline({ navigation }) {
     }
   };
 
-  // Generar código de confirmación de 4 dígitos
   const generarCodigo = () => Math.floor(1000 + Math.random() * 9000);
 
-  // Aceptar solicitud
   const handleAceptar = async () => {
     setServicioActivo(true);
     Animated.timing(panelHeight, {
@@ -181,21 +195,18 @@ export default function MapaSolverOnline({ navigation }) {
     }).start();
     if (solicitudActual?.idsolicitud) {
       const idsolver = await getSolverId();
-      const codigo = generarCodigo();
       await supabase
         .from('solicitudes')
         .update({
           estado: 'aceptada',
           hay_solver: true,
           idsolver: idsolver,
-          codigo_confirmacion: codigo,
         })
         .eq('idsolicitud', solicitudActual.idsolicitud)
         .select();
     }
   };
 
-  // Rechazar solicitud
   const handleRechazar = async () => {
     setPanelVisible(false);
     setSolicitudActual(null);
@@ -218,12 +229,33 @@ export default function MapaSolverOnline({ navigation }) {
     }
   };
 
-  // Abrir modal para mostrar código inicial
-  const handleMostrarCodigoInicial = () => {
+  const handleMostrarCodigo = () => {
     setModalVisible(true);
   };
 
-  // Parsear direccion_servicio si viene como string
+  const handleValidarCodigoFinal = async () => {
+    // DEBUG: Mostramos los valores que se comparan
+    console.log('DEBUG inputCodigoFinal:', inputCodigoFinal);
+    console.log('DEBUG codigoFinal:', codigoFinal);
+    // Comparamos ambos como string y sin espacios
+    if (
+      inputCodigoFinal.trim() === codigoFinal.trim()
+    ) {
+      if (solicitudActual?.idsolicitud) {
+        await supabase
+          .from('solicitudes')
+          .update({ estado: 'finalizada' })
+          .eq('idsolicitud', solicitudActual.idsolicitud);
+      }
+      setModalVisible(false);
+      setPuedeFinalizar(false);
+      setInputCodigoFinal('');
+      Alert.alert('¡Servicio finalizado!', 'Gracias por usar Solvy.');
+    } else {
+      Alert.alert('Código incorrecto', 'El código ingresado no es válido.');
+    }
+  };
+
   const direccionObj = typeof solicitudActual?.direccion_servicio === 'string'
     ? JSON.parse(solicitudActual.direccion_servicio)
     : solicitudActual?.direccion_servicio;
@@ -297,15 +329,20 @@ export default function MapaSolverOnline({ navigation }) {
                 <Text style={styles.label}>Monto:</Text>
                 <Text style={styles.valor}>${solicitudActual?.monto}</Text>
               </View>
-              <TouchableOpacity style={styles.finalizarBtn} onPress={handleMostrarCodigoInicial}>
-                <Text style={styles.btnText}>Mostrar código inicial</Text>
-              </TouchableOpacity>
+              {!puedeFinalizar ? (
+                <TouchableOpacity style={styles.finalizarBtn} onPress={handleMostrarCodigo}>
+                  <Text style={styles.btnText}>Mostrar código inicial</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity style={[styles.finalizarBtn, { backgroundColor: '#00c853' }]} onPress={handleMostrarCodigo}>
+                  <Text style={styles.btnText}>Finalizar servicio</Text>
+                </TouchableOpacity>
+              )}
             </>
           )}
         </Animated.View>
       )}
 
-      {/* Modal para mostrar código inicial */}
       <Modal
         visible={modalVisible}
         transparent
@@ -314,16 +351,57 @@ export default function MapaSolverOnline({ navigation }) {
       >
         <View style={styles.overlay}>
           <View style={styles.modalContent}>
-            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 12 }}>Código inicial para el usuario</Text>
-            <Text style={{ fontSize: 16, marginBottom: 8, textAlign: 'center' }}>
-              Entregue este código al usuario para que pueda iniciar el servicio.
-            </Text>
-            <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#007cc0', marginBottom: 18 }}>
-              {codigoInicial || '----'}
-            </Text>
-            <TouchableOpacity style={[styles.finalizarBtn, { backgroundColor: '#d32f2f', marginTop: 8 }]} onPress={() => setModalVisible(false)}>
-              <Text style={styles.btnText}>Cerrar</Text>
-            </TouchableOpacity>
+            {!puedeFinalizar ? (
+              <>
+                <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 12 }}>Código inicial para el cliente</Text>
+                <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#007cc0', marginBottom: 18 }}>
+                  {codigoInicial || '----'}
+                </Text>
+                <Text style={{ fontSize: 16, marginBottom: 8, textAlign: 'center' }}>
+                  Dale este código al cliente para que pueda iniciar el servicio.
+                </Text>
+                <TouchableOpacity
+                  style={[styles.finalizarBtn, { backgroundColor: '#d32f2f', marginTop: 8 }]}
+                  onPress={() => setModalVisible(false)}
+                >
+                  <Text style={styles.btnText}>Cerrar</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 12 }}>Ingrese el código final</Text>
+                <TextInput
+                  style={{
+                    borderWidth: 1,
+                    borderColor: '#007cc0',
+                    borderRadius: 8,
+                    padding: 10,
+                    fontSize: 18,
+                    width: '80%',
+                    marginBottom: 18,
+                    textAlign: 'center',
+                    backgroundColor: '#f9f9f9',
+                  }}
+                  keyboardType="numeric"
+                  maxLength={4}
+                  value={inputCodigoFinal}
+                  onChangeText={setInputCodigoFinal}
+                  placeholder="Ingrese el código"
+                />
+                <TouchableOpacity
+                  style={[styles.finalizarBtn, { width: 120, paddingVertical: 10, paddingHorizontal: 0 }]}
+                  onPress={handleValidarCodigoFinal}
+                >
+                  <Text style={[styles.btnText, { color: '#fff', fontSize: 16 }]}>Validar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.finalizarBtn, { backgroundColor: '#d32f2f', width: 120, paddingVertical: 10, paddingHorizontal: 0, marginTop: 8 }]}
+                  onPress={() => setModalVisible(false)}
+                >
+                  <Text style={[styles.btnText, { color: '#fff', fontSize: 16 }]}>Cerrar</Text>
+                </TouchableOpacity>
+              </>
+            )}
           </View>
         </View>
       </Modal>

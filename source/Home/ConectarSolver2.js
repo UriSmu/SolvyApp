@@ -1,60 +1,72 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, TouchableOpacity, StyleSheet, Dimensions, Animated, Image, Modal, TextInput, Alert } from 'react-native';
+import { View, Text, ActivityIndicator, TouchableOpacity, StyleSheet, Dimensions, Animated, Image, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { supabase } from '../context/supabaseClient';
 
-export default function ConectarSolver({ route, navigation }) {
-  const { solicitudData } = route.params || {};
+export default function ConectarSolver2({ route, navigation }) {
+  const { solicitudId } = route.params || {};
   const [loading, setLoading] = useState(true);
   const [solver, setSolver] = useState(null);
   const [error, setError] = useState(null);
   const [panelAnim] = useState(new Animated.Value(180));
-  const [solicitudId, setSolicitudId] = useState(null);
-  const [solicitudDataActualizada, setSolicitudDataActualizada] = useState(null);
+  const [solicitudData, setSolicitudData] = useState(null);
   const [subservicioNombre, setSubservicioNombre] = useState('');
   const [showTopCard, setShowTopCard] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
-  const [codigoInicial, setCodigoInicial] = useState('');
-  const [inputCodigo, setInputCodigo] = useState('');
+  const [codigoFinal, setCodigoFinal] = useState('');
 
   useEffect(() => {
     let channel;
-    const crearSolicitud = async () => {
+    const fetchSolicitud = async () => {
       setLoading(true);
       setError(null);
       try {
-        if (!solicitudData?.idcliente || !solicitudData?.horainicial) {
-          setError('Faltan datos obligatorios en la solicitud.');
+        const { data, error: fetchError } = await supabase.from('solicitudes').select('*').eq('idsolicitud', solicitudId).single();
+        if (fetchError) {
+          setError(fetchError.message || 'Error al traer la solicitud.');
           setLoading(false);
           return;
         }
-        const { data, error: insertError } = await supabase.from('solicitudes').insert([solicitudData]).select();
-        if (insertError) {
-          setError(insertError.message || 'Error al crear la solicitud.');
-          setLoading(false);
-          return;
-        }
-        const id = data[0]?.idsolicitud;
-        setSolicitudId(id);
+        setSolicitudData(data);
 
-        // Traer código inicial
+        // Traer datos del solver
+        if (data?.idsolver) {
+          try {
+            const token = await AsyncStorage.getItem('token');
+            const solverRes = await fetch(
+              `https://solvy-app-api.vercel.app/sol/solver/${data.idsolver}`,
+              {
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json',
+                },
+              }
+            );
+            const solverData = await solverRes.json();
+            setSolver(Array.isArray(solverData) ? solverData[0] : solverData);
+          } catch {
+            setSolver(null);
+          }
+        }
+
+        // Traer código final (usando el endpoint correcto y desestructurando bien)
         try {
           const token = await AsyncStorage.getItem('token');
-          const res = await fetch(`https://solvy-app-api.vercel.app/solit/iniciar/${id}`, {
+          const res = await fetch(`https://solvy-app-api.vercel.app/solit/codigo/${solicitudId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
           const logData = await res.clone().json().catch(() => ({}));
-          if (res.ok) {
-            let dataCodigo = logData;
-            if (Array.isArray(dataCodigo) && dataCodigo.length > 0) {
-              dataCodigo = dataCodigo[0];
-            }
-            setCodigoInicial(dataCodigo?.codigo_inicial?.toString() || '');
+          let codigo = '';
+          if (Array.isArray(logData) && logData.length > 0) {
+            codigo = logData[0]?.codigo_confirmacion?.toString() || '';
+          } else if (logData?.codigo_confirmacion) {
+            codigo = logData.codigo_confirmacion.toString();
           }
+          setCodigoFinal(codigo);
         } catch (e) {
-          setCodigoInicial('');
+          setCodigoFinal('');
         }
 
         // Suscribirse a cambios en la solicitud
@@ -66,17 +78,16 @@ export default function ConectarSolver({ route, navigation }) {
               event: 'UPDATE',
               schema: 'public',
               table: 'solicitudes',
-              filter: `idsolicitud=eq.${id}`,
+              filter: `idsolicitud=eq.${solicitudId}`,
             },
             async (payload) => {
-              setSolicitudDataActualizada(payload.new);
-              if (payload.new.hay_solver && payload.new.idsolver) {
-                await obtenerDatosSolver(payload.new.idsolver);
-                setShowTopCard(false);
-                setLoading(false);
-              }
-              if (payload.new.estado === 'en_curso') {
-                navigation.replace('ConectarSolver2', { solicitudId: id });
+              setSolicitudData(payload.new);
+              if (payload.new.estado === 'finalizada') {
+                setModalVisible(false);
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: 'Home' }],
+                });
               }
             }
           )
@@ -87,45 +98,25 @@ export default function ConectarSolver({ route, navigation }) {
           duration: 350,
           useNativeDriver: false,
         }).start();
+        setLoading(false);
       } catch (e) {
-        setError('Error al crear la solicitud.');
+        setError('Error al traer la solicitud.');
       }
     };
 
-    const obtenerDatosSolver = async (idsolver) => {
-      try {
-        const token = await AsyncStorage.getItem('token');
-        const solverRes = await fetch(
-          `https://solvy-app-api.vercel.app/sol/solver/${idsolver}`,
-          {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          }
-        );
-        const solverData = await solverRes.json();
-        setSolver(Array.isArray(solverData) ? solverData[0] : solverData);
-      } catch {
-        setError('No se pudo obtener el solver.');
-      }
-    };
-
-    crearSolicitud();
+    fetchSolicitud();
 
     return () => {
       if (channel) supabase.removeChannel(channel);
     };
   }, []);
 
-  // Traer nombre del subservicio
   useEffect(() => {
     const fetchSubservicio = async () => {
-      const datosSolicitud = solicitudDataActualizada || solicitudData;
-      if (datosSolicitud?.idsubservicio) {
+      if (solicitudData?.idsubservicio) {
         try {
           const token = await AsyncStorage.getItem('token');
-          const res = await fetch(`https://solvy-app-api.vercel.app/ser/nombresubservicio/${datosSolicitud.idsubservicio}`, {
+          const res = await fetch(`https://solvy-app-api.vercel.app/ser/nombresubservicio/${solicitudData.idsubservicio}`, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
           if (res.ok) {
@@ -142,32 +133,15 @@ export default function ConectarSolver({ route, navigation }) {
       }
     };
     fetchSubservicio();
-  }, [solicitudDataActualizada, solver]);
+  }, [solicitudData]);
 
   const handleVolver = () => {
     navigation.goBack();
   };
 
-  // Validar código inicial ingresado por el usuario
-  const handleValidarCodigo = async () => {
-    if (inputCodigo === codigoInicial) {
-      // Cambiar estado a "en_curso"
-      await supabase
-        .from('solicitudes')
-        .update({ estado: 'en_curso' })
-        .eq('idsolicitud', solicitudId);
-      setModalVisible(false);
-      navigation.replace('ConectarSolver2', { solicitudId });
-    } else {
-      Alert.alert('Código incorrecto', 'El código ingresado no es válido.');
-    }
-  };
-
-  // Usar datos actualizados si existen
-  const datosSolicitud = solicitudDataActualizada || solicitudData;
-  const datosDireccion = typeof datosSolicitud?.direccion_servicio === 'string'
-    ? JSON.parse(datosSolicitud.direccion_servicio)
-    : datosSolicitud?.direccion_servicio;
+  const datosDireccion = typeof solicitudData?.direccion_servicio === 'string'
+    ? JSON.parse(solicitudData.direccion_servicio)
+    : solicitudData?.direccion_servicio;
 
   const region = datosDireccion
     ? {
@@ -221,13 +195,13 @@ export default function ConectarSolver({ route, navigation }) {
         {loading && (
           <View style={{ alignItems: 'center', marginTop: 18 }}>
             <ActivityIndicator size="large" color="#fff" />
-            <Text style={{ color: '#fff', marginTop: 16, fontSize: 16 }}>Esperando que un solver acepte...</Text>
+            <Text style={{ color: '#fff', marginTop: 16, fontSize: 16 }}>Cargando...</Text>
           </View>
         )}
         {error && (
           <Text style={styles.errorText}>{error}</Text>
         )}
-        {!loading && solver && datosSolicitud && (
+        {!loading && solver && solicitudData && (
           <View style={styles.solverCard}>
             {solver.foto_perfil && (
               <Image
@@ -244,19 +218,18 @@ export default function ConectarSolver({ route, navigation }) {
             <Text style={[styles.solverInfoBold, { marginBottom: 8 }]}>{subservicioNombre || 'No especificado'}</Text>
             <Text style={styles.solverInfo}>Dirección del pedido:</Text>
             <Text style={[styles.solverInfoBold, { marginBottom: 8 }]}>{datosDireccion?.title || 'No especificada'}</Text>
-            <Text style={styles.solverInfo}>Duración: <Text style={styles.solverInfoBold}>{datosSolicitud?.duracion_servicio || 'No especificada'} min</Text></Text>
-            <Text style={styles.solverInfo}>Precio: <Text style={styles.solverInfoBold}>${datosSolicitud?.monto?.toFixed(2) || 'No especificado'}</Text></Text>
+            <Text style={styles.solverInfo}>Duración: <Text style={styles.solverInfoBold}>{solicitudData?.duracion_servicio || 'No especificada'} min</Text></Text>
+            <Text style={styles.solverInfo}>Precio: <Text style={styles.solverInfoBold}>${solicitudData?.monto?.toFixed(2) || 'No especificado'}</Text></Text>
             <TouchableOpacity
               style={[styles.finalizarBtn, { width: 220, paddingVertical: 10, paddingHorizontal: 0 }]}
               onPress={() => setModalVisible(true)}
             >
-              <Text style={[styles.btnText, { color: '#fff', fontSize: 16 }]}>Ingresar código inicial</Text>
+              <Text style={[styles.btnText, { color: '#fff', fontSize: 16 }]}>Mostrar código de finalización</Text>
             </TouchableOpacity>
           </View>
         )}
       </Animated.View>
 
-      {/* Modal para ingresar código inicial */}
       <Modal
         visible={modalVisible}
         transparent
@@ -265,31 +238,13 @@ export default function ConectarSolver({ route, navigation }) {
       >
         <View style={styles.overlay}>
           <View style={styles.modalContent}>
-            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 12 }}>Ingrese el código inicial</Text>
-            <TextInput
-              style={{
-                borderWidth: 1,
-                borderColor: '#007cc0',
-                borderRadius: 8,
-                padding: 10,
-                fontSize: 18,
-                width: '80%',
-                marginBottom: 18,
-                textAlign: 'center',
-                backgroundColor: '#f9f9f9',
-              }}
-              keyboardType="numeric"
-              maxLength={4}
-              value={inputCodigo}
-              onChangeText={setInputCodigo}
-              placeholder="Código"
-            />
-            <TouchableOpacity
-              style={[styles.finalizarBtn, { width: 120, paddingVertical: 10, paddingHorizontal: 0 }]}
-              onPress={handleValidarCodigo}
-            >
-              <Text style={[styles.btnText, { color: '#fff', fontSize: 16 }]}>Validar</Text>
-            </TouchableOpacity>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 12 }}>Código de confirmación</Text>
+            <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#007cc0', marginBottom: 18 }}>
+              {codigoFinal || '----'}
+            </Text>
+            <Text style={{ fontSize: 16, marginBottom: 18, textAlign: 'center' }}>
+              El solver debe ingresar este código para finalizar el servicio.
+            </Text>
             <TouchableOpacity
               style={[styles.finalizarBtn, { backgroundColor: '#d32f2f', width: 120, paddingVertical: 10, paddingHorizontal: 0, marginTop: 8 }]}
               onPress={() => setModalVisible(false)}
