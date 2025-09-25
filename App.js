@@ -120,7 +120,6 @@ function HomeStack() {
         <Stack.Screen name="ConectarSolver2" component={ConectarSolver2} />
         <Stack.Screen name="Perfil" component={Perfil} />
         <Stack.Screen name="ConfirmarServicio" component={ConfirmarServicio} />
-        <Stack.Screen name="ParteTrabajo" component={ParteTrabajo}/>
       </Stack.Navigator>
     </HomeLayout>
   );

@@ -129,7 +129,7 @@ export default function MapaSolverOnline({ navigation }) {
               setSolicitudActual(null);
               setPuedeFinalizar(false);
               setInputCodigoFinal('');
-              navigation.navigate('ParteTrabajo');
+              navigation.navigate('ParteTrabajo', { solicitudId: payload.new.idsolicitud });
             }
           }
           if (
@@ -167,7 +167,7 @@ export default function MapaSolverOnline({ navigation }) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [solicitudActual]);
+  }, [solicitudActual, navigation]);
 
   const getSolverId = async () => {
     try {
@@ -251,6 +251,8 @@ export default function MapaSolverOnline({ navigation }) {
       setPuedeFinalizar(false);
       setInputCodigoFinal('');
       Alert.alert('¡Servicio finalizado!', 'Gracias por usar Solvy.');
+      // Navegar a ParteTrabajo con el id de la solicitud
+      navigation.navigate('ParteTrabajo', { solicitudId: solicitudActual.idsolicitud });
     } else {
       Alert.alert('Código incorrecto', 'El código ingresado no es válido.');
     }
