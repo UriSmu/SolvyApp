@@ -92,7 +92,7 @@ export default function SolverProductos({ navigation, route }) {
   };
 
   // Comprar productos (enviar a la API)
-  const handleComprar = async () => {
+const handleComprar = async () => {
   if (!idsolicitud) {
     Alert.alert('Error', 'No se encontró la solicitud activa.');
     return;
@@ -109,6 +109,11 @@ export default function SolverProductos({ navigation, route }) {
       nombre: name,
       precio: Number(price),
     }));
+
+    // DEBUG: Mostrar el payload que se envía
+    Alert.alert('DEBUG', 'Payload enviado:\n' + JSON.stringify({ productos: productosPayload }, null, 2));
+    console.log('Payload enviado:', { productos: productosPayload });
+
     const res = await fetch(
       `https://solvy-app-api.vercel.app/solit/agregar-productos/${idsolicitud}`,
       {
@@ -117,10 +122,18 @@ export default function SolverProductos({ navigation, route }) {
           'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ productos: productosPayload }),
+        // Enviamos productos como string
+        body: JSON.stringify({ productos: JSON.stringify(productosPayload) }),
       }
     );
     const text = await res.text();
+
+    // DEBUG: Mostrar status y respuesta del backend
+    Alert.alert(
+      'DEBUG',
+      `Status: ${res.status}\nBody: ${text}`
+    );
+
     if (res.ok) {
       Alert.alert('¡Éxito!', 'Productos agregados a la solicitud.');
       setCart([]);
