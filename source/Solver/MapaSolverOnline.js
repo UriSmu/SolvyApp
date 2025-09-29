@@ -7,6 +7,7 @@ import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { supabase } from '../context/supabaseClient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 const { width, height } = Dimensions.get('window');
 
@@ -87,8 +88,6 @@ export default function MapaSolverOnline({ navigation }) {
             headers: { 'Authorization': `Bearer ${token}` }
           });
           const logDataFinal = await resFinal.clone().json().catch(() => ({}));
-          // DEBUG: Mostramos el valor real que llega
-          console.log('DEBUG CODIGO FINAL:', logDataFinal);
           let codigo = '';
           if (Array.isArray(logDataFinal) && logDataFinal.length > 0) {
             codigo = logDataFinal[0]?.codigo_confirmacion?.toString() || '';
@@ -234,10 +233,6 @@ export default function MapaSolverOnline({ navigation }) {
   };
 
   const handleValidarCodigoFinal = async () => {
-    // DEBUG: Mostramos los valores que se comparan
-    console.log('DEBUG inputCodigoFinal:', inputCodigoFinal);
-    console.log('DEBUG codigoFinal:', codigoFinal);
-    // Comparamos ambos como string y sin espacios
     if (
       inputCodigoFinal.trim() === codigoFinal.trim()
     ) {
@@ -251,10 +246,18 @@ export default function MapaSolverOnline({ navigation }) {
       setPuedeFinalizar(false);
       setInputCodigoFinal('');
       Alert.alert('¡Servicio finalizado!', 'Gracias por usar Solvy.');
-      // Navegar a ParteTrabajo con el id de la solicitud
       navigation.navigate('ParteTrabajo', { solicitudId: solicitudActual.idsolicitud });
     } else {
       Alert.alert('Código incorrecto', 'El código ingresado no es válido.');
+    }
+  };
+
+  // Navegar a la pantalla de productos, pasando el id de la solicitud
+  const handleAdquirirProductos = () => {
+    if (solicitudActual?.idsolicitud) {
+      navigation.navigate('Productos', { idsolicitud: solicitudActual.idsolicitud });
+    } else {
+      Alert.alert('Error', 'No hay una solicitud activa.');
     }
   };
 
@@ -331,15 +334,24 @@ export default function MapaSolverOnline({ navigation }) {
                 <Text style={styles.label}>Monto:</Text>
                 <Text style={styles.valor}>${solicitudActual?.monto}</Text>
               </View>
-              {!puedeFinalizar ? (
-                <TouchableOpacity style={styles.finalizarBtn} onPress={handleMostrarCodigo}>
-                  <Text style={styles.btnText}>Mostrar código inicial</Text>
+              <View style={styles.botonesRow}>
+                <TouchableOpacity
+                  style={[styles.finalizarBtn, { backgroundColor: '#00c853', flex: 1, marginRight: 8 }]}
+                  onPress={handleAdquirirProductos}
+                >
+                  <Ionicons name="cart" size={20} color="#fff" style={{ marginRight: 6 }} />
+                  <Text style={styles.btnText}>Adquirir Productos</Text>
                 </TouchableOpacity>
-              ) : (
-                <TouchableOpacity style={[styles.finalizarBtn, { backgroundColor: '#00c853' }]} onPress={handleMostrarCodigo}>
-                  <Text style={styles.btnText}>Finalizar servicio</Text>
-                </TouchableOpacity>
-              )}
+                {!puedeFinalizar ? (
+                  <TouchableOpacity style={[styles.finalizarBtn, { flex: 1, marginLeft: 8 }]} onPress={handleMostrarCodigo}>
+                    <Text style={styles.btnText}>Mostrar código inicial</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity style={[styles.finalizarBtn, { backgroundColor: '#007cc0', flex: 1, marginLeft: 8 }]} onPress={handleMostrarCodigo}>
+                    <Text style={styles.btnText}>Finalizar servicio</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             </>
           )}
         </Animated.View>
@@ -455,6 +467,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 10,
+    alignItems: 'center',
   },
   aceptarBtn: {
     backgroundColor: '#00c853',
@@ -473,7 +486,7 @@ const styles = StyleSheet.create({
   finalizarBtn: {
     backgroundColor: '#007cc0',
     paddingVertical: 14,
-    paddingHorizontal: 40,
+    paddingHorizontal: 20,
     borderRadius: 30,
     alignSelf: 'center',
     marginTop: 10,
@@ -482,6 +495,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   btnText: {
     color: 'white',
