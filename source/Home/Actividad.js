@@ -1,15 +1,22 @@
 import { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, FlatList, ScrollView, ActivityIndicator, Dimensions } from 'react-native';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { StatusBar } from 'expo-status-bar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { BarChart, PieChart } from 'react-native-chart-kit';
+
+const TABS = [
+  { key: 'actividad', label: 'Actividad' },
+  { key: 'estadisticas', label: 'Estadísticas' }
+];
 
 export default function ActividadScreen() {
   const [actividades, setActividades] = useState([]);
   const [loading, setLoading] = useState(true);
   const [nombresSubservicio, setNombresSubservicio] = useState({});
   const [idCliente, setIdCliente] = useState(null);
+  const [tab, setTab] = useState('actividad');
 
   // Cargar idcliente desde AsyncStorage
   useEffect(() => {
@@ -98,6 +105,54 @@ export default function ActividadScreen() {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  // Filtrar actividades de los últimos 30 días
+  const actividadesUltimoMes = actividades.filter(item => {
+    if (!item.fechaservicio) return false;
+    const fecha = new Date(item.fechaservicio);
+    if (isNaN(fecha.getTime())) return false;
+    const hoy = new Date();
+    const hace30 = new Date();
+    hace30.setDate(hoy.getDate() - 30);
+    return fecha >= hace30 && fecha <= hoy;
+  });
+
+  // Estadísticas: servicios pedidos por tipo
+  const serviciosPorTipo = {};
+  actividadesUltimoMes.forEach(item => {
+    const nombre = nombresSubservicio[item.idsubservicio] || 'Servicio';
+    serviciosPorTipo[nombre] = (serviciosPorTipo[nombre] || 0) + 1;
+  });
+
+  // Estadísticas: servicios por día
+  const serviciosPorDia = {};
+  actividadesUltimoMes.forEach(item => {
+    const fecha = item.fechaservicio;
+    if (fecha) {
+      serviciosPorDia[fecha] = (serviciosPorDia[fecha] || 0) + 1;
+    }
+  });
+
+  // Estadísticas: plata gastada
+  const totalGastado = actividadesUltimoMes.reduce((acc, item) => {
+    let monto = parseFloat(item.monto);
+    if (isNaN(monto)) monto = 0;
+    return acc + monto;
+  }, 0);
+
+  // Preparar datos para gráficos
+  const chartWidth = Math.min(Dimensions.get('window').width - 40, 400);
+
+  const pieData = Object.keys(serviciosPorTipo).map((key, idx) => ({
+    name: key,
+    count: serviciosPorTipo[key],
+    color: ['#003f5c', '#58508d', '#bc5090', '#ff6361', '#ffa600'][idx % 5],
+    legendFontColor: "#333",
+    legendFontSize: 13
+  }));
+
+  const barLabels = Object.keys(serviciosPorDia).sort();
+  const barData = barLabels.map(fecha => serviciosPorDia[fecha]);
+
   const renderItem = ({ item }) => (
     <View style={styles.card}>
       <View style={styles.cardImageContainer}>
@@ -125,25 +180,99 @@ export default function ActividadScreen() {
     <View style={styles.todo}>
       <StatusBar style="auto" />
       <View style={styles.container}>
+        {/* Tabs */}
+        <View style={styles.tabsContainer}>
+          {TABS.map(t => (
+            <TouchableOpacity
+              key={t.key}
+              style={[styles.tab, tab === t.key && styles.tabActive]}
+              onPress={() => setTab(t.key)}
+            >
+              <Text style={[styles.tabText, tab === t.key && styles.tabTextActive]}>
+                {t.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+        {/* Contenido de la pestaña */}
         <ScrollView contentContainerStyle={styles.scrollContainer}>
-          <Text style={styles.titulo}>Actividad</Text>
-          {loading ? (
-            <ActivityIndicator size="large" color="#007cc0" />
+          {tab === 'actividad' ? (
+            <>
+              <Text style={styles.titulo}>Actividad</Text>
+              {loading ? (
+                <ActivityIndicator size="large" color="#007cc0" />
+              ) : (
+                <FlatList
+                  data={actividades}
+                  renderItem={renderItem}
+                  keyExtractor={item => item.id?.toString() || Math.random().toString()}
+                  contentContainerStyle={styles.listContent}
+                  showsVerticalScrollIndicator={false}
+                  ListEmptyComponent={<Text style={{ textAlign: 'center', marginTop: 30 }}>No hay actividades.</Text>}
+                />
+              )}
+            </>
           ) : (
-            <FlatList
-              data={actividades}
-              renderItem={renderItem}
-              keyExtractor={item => item.id?.toString() || Math.random().toString()}
-              contentContainerStyle={styles.listContent}
-              showsVerticalScrollIndicator={false}
-              ListEmptyComponent={<Text style={{ textAlign: 'center', marginTop: 30 }}>No hay actividades.</Text>}
-            />
+            <>
+              <Text style={styles.titulo}>Estadísticas (últimos 30 días)</Text>
+              {loading ? (
+                <ActivityIndicator size="large" color="#007cc0" />
+              ) : actividadesUltimoMes.length === 0 ? (
+                <Text style={{ textAlign: 'center', marginTop: 30 }}>No hay datos para mostrar.</Text>
+              ) : (
+                <View>
+                  {/* Pie Chart: Servicios pedidos por tipo */}
+                  <Text style={styles.statsTitle}>Servicios pedidos por tipo</Text>
+                  <PieChart
+                    data={pieData}
+                    width={chartWidth}
+                    height={180}
+                    chartConfig={chartConfig}
+                    accessor="count"
+                    backgroundColor="transparent"
+                    paddingLeft="10"
+                    absolute
+                  />
+                  {/* Bar Chart: Servicios por día */}
+                  <Text style={styles.statsTitle}>Servicios pedidos por día</Text>
+                  <BarChart
+                    data={{
+                      labels: barLabels.map(f => f.slice(5)), // MM-DD
+                      datasets: [{ data: barData }]
+                    }}
+                    width={chartWidth}
+                    height={180}
+                    yAxisLabel=""
+                    chartConfig={chartConfig}
+                    verticalLabelRotation={-30}
+                    fromZero
+                    showBarTops={false}
+                  />
+                  {/* Total gastado */}
+                  <Text style={styles.statsTitle}>Total gastado en servicios</Text>
+                  <View style={styles.gastoContainer}>
+                    <FontAwesome5 name="money-bill-wave" size={28} color="#007cc0" />
+                    <Text style={styles.gastoText}>${totalGastado.toFixed(2)}</Text>
+                  </View>
+                </View>
+              )}
+            </>
           )}
         </ScrollView>
       </View>
     </View>
   );
 }
+
+const chartConfig = {
+  backgroundGradientFrom: "#fff",
+  backgroundGradientTo: "#fff",
+  color: (opacity = 1) => `rgba(0, 63, 92, ${opacity})`,
+  labelColor: (opacity = 1) => `rgba(0,0,0,${opacity})`,
+  decimalPlaces: 0,
+  style: { borderRadius: 16 },
+  propsForDots: { r: "4", strokeWidth: "2", stroke: "#ffa726" }
+};
 
 const styles = StyleSheet.create({
   todo: {
@@ -159,22 +288,36 @@ const styles = StyleSheet.create({
   scrollContainer: {
     paddingBottom: 100,
   },
-  header: {
+  tabsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    marginTop: 20,
+    marginBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 10,
     alignItems: 'center',
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
   },
-  logoText: {
-    fontSize: 18,
+  tabActive: {
+    borderBottomColor: '#007cc0',
+  },
+  tabText: {
+    color: '#888',
     fontWeight: 'bold',
+    fontSize: 16,
   },
-  iconoPerfil: {
-    fontSize: 30,
+  tabTextActive: {
+    color: '#007cc0',
   },
   titulo: {
     fontSize: 26,
     fontWeight: 'bold',
     marginVertical: 20,
+    textAlign: 'center',
   },
   card: {
     flexDirection: 'row',
@@ -237,6 +380,26 @@ const styles = StyleSheet.create({
     color: '#003f5c',
     fontWeight: 'bold',
     marginLeft: 6,
+  },
+  statsTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 24,
+    marginBottom: 8,
+    textAlign: 'center',
+    color: '#003f5c',
+  },
+  gastoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 16,
+  },
+  gastoText: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#007cc0',
+    marginLeft: 10,
   },
   footerContainer: {
     backgroundColor: '#007cc0',
