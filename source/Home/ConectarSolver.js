@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, TouchableOpacity, StyleSheet, Dimensions, Animated, Image, Modal, TextInput, Alert } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { View, Text, ActivityIndicator, TouchableOpacity, StyleSheet, Animated, Image, Modal, TextInput, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
@@ -18,9 +18,10 @@ export default function ConectarSolver({ route, navigation }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [codigoInicial, setCodigoInicial] = useState('');
   const [inputCodigo, setInputCodigo] = useState('');
+  const channelRef = useRef(null); // Para limpiar bien el canal
 
   useEffect(() => {
-    let channel;
+    let isMounted = true;
     const crearSolicitud = async () => {
       setLoading(true);
       setError(null);
@@ -57,8 +58,8 @@ export default function ConectarSolver({ route, navigation }) {
           setCodigoInicial('');
         }
 
-        // Suscribirse a cambios en la solicitud
-        channel = supabase
+        // Suscribirse a cambios en la solicitud SOLO cuando ya tenemos el id
+        const channel = supabase
           .channel('solicitud-aceptada')
           .on(
             'postgres_changes',
@@ -69,6 +70,8 @@ export default function ConectarSolver({ route, navigation }) {
               filter: `idsolicitud=eq.${id}`,
             },
             async (payload) => {
+              // DEBUG: Ver si llega el payload
+              console.log('Realtime payload:', payload);
               setSolicitudDataActualizada(payload.new);
               if (payload.new.hay_solver && payload.new.idsolver) {
                 await obtenerDatosSolver(payload.new.idsolver);
@@ -81,6 +84,7 @@ export default function ConectarSolver({ route, navigation }) {
             }
           )
           .subscribe();
+        channelRef.current = channel;
 
         Animated.timing(panelAnim, {
           toValue: 320,
@@ -114,7 +118,8 @@ export default function ConectarSolver({ route, navigation }) {
     crearSolicitud();
 
     return () => {
-      if (channel) supabase.removeChannel(channel);
+      // Limpiar canal correctamente
+      if (channelRef.current) supabase.removeChannel(channelRef.current);
     };
   }, []);
 
