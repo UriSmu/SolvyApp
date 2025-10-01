@@ -40,6 +40,12 @@ export default function ConectarSolver({ route, navigation }) {
         const id = data[0]?.idsolicitud;
         setSolicitudId(id);
 
+        if (data[0]?.hay_solver && data[0]?.idsolver) {
+          await obtenerDatosSolver(data[0].idsolver);
+          setShowTopCard(false);
+          setLoading(false);
+        }
+
         // Traer código inicial
         try {
           const token = await AsyncStorage.getItem('token');

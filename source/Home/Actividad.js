@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, ScrollView, ActivityIndicator, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, FlatList, ActivityIndicator, Dimensions, ScrollView } from 'react-native';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import Entypo from '@expo/vector-icons/Entypo';
+import Fontisto from '@expo/vector-icons/Fontisto';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { StatusBar } from 'expo-status-bar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BarChart, PieChart } from 'react-native-chart-kit';
@@ -11,14 +17,138 @@ const TABS = [
   { key: 'estadisticas', label: 'Estadísticas' }
 ];
 
+// Componente para mostrar el logo del subservicio (igual que Subservicios.js)
+function SubservicioLogo({ idlogo }) {
+  const [iconData, setIconData] = useState(null);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    setIconData(null);
+    setError(false);
+    if (!idlogo) {
+      setError(true);
+      return;
+    }
+    fetch(`https://solvy-app-api.vercel.app/logos/logo/${idlogo}`)
+      .then(res => {
+        if (!res.ok) throw new Error();
+        return res.json();
+      })
+      .then(data => {
+        if (mounted && Array.isArray(data) && data.length > 0) setIconData(data[0]);
+        else setError(true);
+      })
+      .catch(() => {
+        if (mounted) setError(true);
+      });
+    return () => { mounted = false; };
+  }, [idlogo]);
+
+  if (error || !iconData) {
+    return <FontAwesome5 name="question" size={40} color="#003f5c" />;
+  }
+
+  const family = iconData.icon_family ? iconData.icon_family.trim() : 'FontAwesome';
+  let IconComponent = FontAwesome;
+  if (family === 'MaterialIcons') IconComponent = MaterialIcons;
+  if (family === 'Ionicons') IconComponent = Ionicons;
+  if (family === 'Entypo') IconComponent = Entypo;
+  if (family === 'Fontisto') IconComponent = Fontisto;
+  if (family === 'FontAwesome5') IconComponent = FontAwesome5;
+  if (family === 'MaterialCommunityIcons') IconComponent = MaterialCommunityIcons;
+  if (family === 'FontAwesome6') IconComponent = FontAwesome6;
+
+  return (
+    <IconComponent
+      name={iconData.icon_name || 'question'}
+      size={iconData.icon_size ? Math.max(Number(iconData.icon_size), 40) : 40}
+      color={iconData.icon_color || '#003f5c'}
+      style={{ textAlign: 'center', textAlignVertical: 'center' }}
+    />
+  );
+}
+
+// Traduce coordenadas a dirección si corresponde
+async function getDireccionTitle(item) {
+  let direccion = item.direccion_servicio;
+  if (typeof direccion === 'string' && direccion.startsWith('{') && direccion.endsWith('}')) {
+    try {
+      direccion = JSON.parse(direccion);
+    } catch {}
+  }
+  if (
+    direccion === 'Tu ubicación actual' ||
+    (typeof direccion === 'object' && direccion.title === 'Tu ubicación actual')
+  ) {
+    let lat, lon;
+    if (typeof direccion === 'object') {
+      lat = direccion.latitude;
+      lon = direccion.longitude;
+    } else if (typeof direccion === 'string' && direccion.includes(',')) {
+      [lat, lon] = direccion.split(',').map(Number);
+    }
+    if (lat && lon) {
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+        const data = await res.json();
+        return data.display_name || `${lat},${lon}`;
+      } catch {
+        return `${lat},${lon}`;
+      }
+    }
+    return 'Tu ubicación actual';
+  }
+  if (typeof direccion === 'object' && direccion.title) {
+    return direccion.title;
+  }
+  return typeof direccion === 'string' ? direccion : '';
+}
+
+// Componente para cada actividad (soluciona el error de hooks)
+function ActividadItem({ item, nombre, idlogo, getHoraMinutos }) {
+  const [direccion, setDireccion] = useState('');
+  useEffect(() => {
+    let mounted = true;
+    getDireccionTitle(item).then(title => { if (mounted) setDireccion(title); });
+    return () => { mounted = false; };
+  }, [item.direccion_servicio]);
+
+  // Mostrar fecha: usar fechaservicio, si no existe usar fechasolicitud
+  const fechaMostrar = item.fechaservicio || item.fechasolicitud || '';
+
+  return (
+    <View style={styles.card}>
+      <View style={styles.cardImageContainer}>
+        <SubservicioLogo idlogo={idlogo} />
+      </View>
+      <View style={styles.cardContent}>
+        <Text style={styles.title}>
+          {nombre || 'Servicio'}
+        </Text>
+        <Text style={styles.address}>{direccion}</Text>
+        <View style={styles.dateTimeRow}>
+          <Text style={styles.date}>{fechaMostrar}</Text>
+          <Text style={styles.time}>{getHoraMinutos(item.horainicial)}</Text>
+        </View>
+        <Text style={styles.price}>{item.monto}</Text>
+      </View>
+      <TouchableOpacity style={styles.repeatButton}>
+        <FontAwesome name="repeat" size={24} color="#003f5c" />
+        <Text style={styles.repeatText}>Repetir</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
 export default function ActividadScreen() {
   const [actividades, setActividades] = useState([]);
   const [loading, setLoading] = useState(true);
   const [nombresSubservicio, setNombresSubservicio] = useState({});
+  const [logosSubservicio, setLogosSubservicio] = useState({});
   const [idCliente, setIdCliente] = useState(null);
   const [tab, setTab] = useState('actividad');
 
-  // Cargar idcliente desde AsyncStorage
   useEffect(() => {
     const cargarIdCliente = async () => {
       try {
@@ -37,7 +167,6 @@ export default function ActividadScreen() {
     cargarIdCliente();
   }, []);
 
-  // Obtener actividades y nombres de subservicio
   useEffect(() => {
     const fetchActividades = async () => {
       setLoading(true);
@@ -59,8 +188,8 @@ export default function ActividadScreen() {
           const data = await response.json();
           setActividades(data);
 
-          // Obtener nombres de subservicio para cada actividad
           const nombres = {};
+          const logos = {};
           await Promise.all(
             data.map(async (item) => {
               if (item.idsubservicio) {
@@ -75,14 +204,17 @@ export default function ActividadScreen() {
                   if (res.ok) {
                     const nombreData = await res.json();
                     nombres[item.idsubservicio] = nombreData.nombre || nombreData.nombresubservicio || '';
+                    logos[item.idsubservicio] = nombreData.idlogo || null;
                   }
                 } catch (e) {
                   nombres[item.idsubservicio] = '';
+                  logos[item.idsubservicio] = null;
                 }
               }
             })
           );
           setNombresSubservicio(nombres);
+          setLogosSubservicio(logos);
         } else {
           setActividades([]);
         }
@@ -94,7 +226,6 @@ export default function ActividadScreen() {
     if (idCliente) fetchActividades();
   }, [idCliente]);
 
-  // Función para extraer solo la hora y minutos de un timestamp
   const getHoraMinutos = (timestamp) => {
     if (!timestamp) return '';
     const date = new Date(timestamp);
@@ -105,10 +236,12 @@ export default function ActividadScreen() {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  // Filtrar actividades de los últimos 30 días
+  // ARREGLO: considerar fechasolicitud si fechaservicio es null
   const actividadesUltimoMes = actividades.filter(item => {
-    if (!item.fechaservicio) return false;
-    const fecha = new Date(item.fechaservicio);
+    // Usar fechaservicio si existe, sino fechasolicitud
+    const fechaStr = item.fechaservicio || item.fechasolicitud;
+    if (!fechaStr) return false;
+    const fecha = new Date(fechaStr);
     if (isNaN(fecha.getTime())) return false;
     const hoy = new Date();
     const hace30 = new Date();
@@ -116,30 +249,26 @@ export default function ActividadScreen() {
     return fecha >= hace30 && fecha <= hoy;
   });
 
-  // Estadísticas: servicios pedidos por tipo
   const serviciosPorTipo = {};
   actividadesUltimoMes.forEach(item => {
     const nombre = nombresSubservicio[item.idsubservicio] || 'Servicio';
     serviciosPorTipo[nombre] = (serviciosPorTipo[nombre] || 0) + 1;
   });
 
-  // Estadísticas: servicios por día
   const serviciosPorDia = {};
   actividadesUltimoMes.forEach(item => {
-    const fecha = item.fechaservicio;
-    if (fecha) {
-      serviciosPorDia[fecha] = (serviciosPorDia[fecha] || 0) + 1;
+    const fechaStr = item.fechaservicio || item.fechasolicitud;
+    if (fechaStr) {
+      serviciosPorDia[fechaStr] = (serviciosPorDia[fechaStr] || 0) + 1;
     }
   });
 
-  // Estadísticas: plata gastada
   const totalGastado = actividadesUltimoMes.reduce((acc, item) => {
     let monto = parseFloat(item.monto);
     if (isNaN(monto)) monto = 0;
     return acc + monto;
   }, 0);
 
-  // Preparar datos para gráficos
   const chartWidth = Math.min(Dimensions.get('window').width - 40, 400);
 
   const pieData = Object.keys(serviciosPorTipo).map((key, idx) => ({
@@ -153,34 +282,10 @@ export default function ActividadScreen() {
   const barLabels = Object.keys(serviciosPorDia).sort();
   const barData = barLabels.map(fecha => serviciosPorDia[fecha]);
 
-  const renderItem = ({ item }) => (
-    <View style={styles.card}>
-      <View style={styles.cardImageContainer}>
-        <FontAwesome5 name="chef-hat" size={40} color="#003f5c" />
-      </View>
-      <View style={styles.cardContent}>
-        <Text style={styles.title}>
-          {nombresSubservicio[item.idsubservicio] || 'Servicio'}
-        </Text>
-        <Text style={styles.address}>{item.direccion_servicio}</Text>
-        <View style={styles.dateTimeRow}>
-          <Text style={styles.date}>{item.fechaservicio}</Text>
-          <Text style={styles.time}>{getHoraMinutos(item.horainicial)}</Text>
-        </View>
-        <Text style={styles.price}>{item.monto}</Text>
-      </View>
-      <TouchableOpacity style={styles.repeatButton}>
-        <FontAwesome name="repeat" size={24} color="#003f5c" />
-        <Text style={styles.repeatText}>Repetir</Text>
-      </TouchableOpacity>
-    </View>
-  );
-
   return (
     <View style={styles.todo}>
       <StatusBar style="auto" />
       <View style={styles.container}>
-        {/* Tabs */}
         <View style={styles.tabsContainer}>
           {TABS.map(t => (
             <TouchableOpacity
@@ -194,71 +299,72 @@ export default function ActividadScreen() {
             </TouchableOpacity>
           ))}
         </View>
-        {/* Contenido de la pestaña */}
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
-          {tab === 'actividad' ? (
-            <>
-              <Text style={styles.titulo}>Actividad</Text>
-              {loading ? (
-                <ActivityIndicator size="large" color="#007cc0" />
-              ) : (
-                <FlatList
-                  data={actividades}
-                  renderItem={renderItem}
-                  keyExtractor={item => item.id?.toString() || Math.random().toString()}
-                  contentContainerStyle={styles.listContent}
-                  showsVerticalScrollIndicator={false}
-                  ListEmptyComponent={<Text style={{ textAlign: 'center', marginTop: 30 }}>No hay actividades.</Text>}
-                />
-              )}
-            </>
-          ) : (
-            <>
-              <Text style={styles.titulo}>Estadísticas (últimos 30 días)</Text>
-              {loading ? (
-                <ActivityIndicator size="large" color="#007cc0" />
-              ) : actividadesUltimoMes.length === 0 ? (
-                <Text style={{ textAlign: 'center', marginTop: 30 }}>No hay datos para mostrar.</Text>
-              ) : (
-                <View>
-                  {/* Pie Chart: Servicios pedidos por tipo */}
-                  <Text style={styles.statsTitle}>Servicios pedidos por tipo</Text>
-                  <PieChart
-                    data={pieData}
-                    width={chartWidth}
-                    height={180}
-                    chartConfig={chartConfig}
-                    accessor="count"
-                    backgroundColor="transparent"
-                    paddingLeft="10"
-                    absolute
-                  />
-                  {/* Bar Chart: Servicios por día */}
-                  <Text style={styles.statsTitle}>Servicios pedidos por día</Text>
-                  <BarChart
-                    data={{
-                      labels: barLabels.map(f => f.slice(5)), // MM-DD
-                      datasets: [{ data: barData }]
-                    }}
-                    width={chartWidth}
-                    height={180}
-                    yAxisLabel=""
-                    chartConfig={chartConfig}
-                    verticalLabelRotation={-30}
-                    fromZero
-                    showBarTops={false}
-                  />
-                  {/* Total gastado */}
-                  <Text style={styles.statsTitle}>Total gastado en servicios</Text>
-                  <View style={styles.gastoContainer}>
-                    <FontAwesome5 name="money-bill-wave" size={28} color="#007cc0" />
-                    <Text style={styles.gastoText}>${totalGastado.toFixed(2)}</Text>
-                  </View>
-                </View>
-              )}
-            </>
-          )}
-        </ScrollView>
+        {tab === 'actividad' ? (
+  <>
+    <Text style={styles.titulo}>Actividad</Text>
+    {loading ? (
+      <ActivityIndicator size="large" color="#007cc0" />
+    ) : (
+      <FlatList
+        data={actividades}
+        renderItem={({ item }) => (
+          <ActividadItem
+            item={item}
+            nombre={nombresSubservicio[item.idsubservicio]}
+            idlogo={logosSubservicio[item.idsubservicio]}
+            getHoraMinutos={getHoraMinutos}
+          />
+        )}
+        keyExtractor={item => item.idsolicitud?.toString() || Math.random().toString()}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+        ListEmptyComponent={<Text style={{ textAlign: 'center', marginTop: 30 }}>No hay actividades.</Text>}
+      />
+    )}
+  </>
+) : (
+  <ScrollView contentContainerStyle={styles.scrollContainer}>
+    <Text style={styles.titulo}>Estadísticas (últimos 30 días)</Text>
+    {loading ? (
+      <ActivityIndicator size="large" color="#007cc0" />
+    ) : actividadesUltimoMes.length === 0 ? (
+      <Text style={{ textAlign: 'center', marginTop: 30 }}>No hay datos para mostrar.</Text>
+    ) : (
+      <View>
+        <Text style={styles.statsTitle}>Servicios pedidos por tipo</Text>
+        <PieChart
+          data={pieData}
+          width={chartWidth}
+          height={180}
+          chartConfig={chartConfig}
+          accessor="count"
+          backgroundColor="transparent"
+          paddingLeft="10"
+          absolute
+        />
+        <Text style={styles.statsTitle}>Servicios pedidos por día</Text>
+        <BarChart
+          data={{
+            labels: barLabels.map(f => f.slice(5)),
+            datasets: [{ data: barData }]
+          }}
+          width={chartWidth}
+          height={180}
+          yAxisLabel=""
+          chartConfig={chartConfig}
+          verticalLabelRotation={-30}
+          fromZero
+          showBarTops={false}
+        />
+        <Text style={styles.statsTitle}>Total gastado en servicios</Text>
+        <View style={styles.gastoContainer}>
+          <FontAwesome5 name="money-bill-wave" size={28} color="#007cc0" />
+          <Text style={styles.gastoText}>${totalGastado.toFixed(2)}</Text>
+        </View>
+      </View>
+      )}
+    </ScrollView>
+    )}
       </View>
     </View>
   );
@@ -423,5 +529,8 @@ const styles = StyleSheet.create({
     marginTop: 5,
     textAlign: 'center',
     fontSize: 12,
+  },
+  listContent: {
+    paddingBottom: 40,
   },
 });
