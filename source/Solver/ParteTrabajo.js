@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert, ScrollView, Image } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImagePicker from 'expo-image-picker';
+import { supabase } from '../context/supabaseClient';
 
 const ParteTrabajo = ({ navigation, route }) => {
   const [realizado, setRealizado] = useState('');
@@ -9,6 +11,9 @@ const ParteTrabajo = ({ navigation, route }) => {
   const [productos, setProductos] = useState([]);
   const [usosProductos, setUsosProductos] = useState({});
   const [loadingProductos, setLoadingProductos] = useState(true);
+  const [evidenciaUri, setEvidenciaUri] = useState(null);
+  const [evidenciaBase64, setEvidenciaBase64] = useState(null);
+  const [takingPhoto, setTakingPhoto] = useState(false);
   const { solicitudId } = route.params;
 
   useEffect(() => {
@@ -153,10 +158,63 @@ const ParteTrabajo = ({ navigation, route }) => {
       }
 
       Alert.alert('Parte de trabajo guardado correctamente');
+
+      // Si tenemos evidencia en base64, actualizamos también la columna 'evidencia' en Supabase
+      try {
+        if (evidenciaBase64) {
+          const { error: supError } = await supabase
+            .from('solicitudes')
+            .update({ evidencia: evidenciaBase64 })
+            .eq('idsolicitud', solicitudId);
+
+          if (supError) {
+            console.warn('Error actualizando evidencia en Supabase:', supError.message || supError);
+          }
+        }
+      } catch (e) {
+        console.log('supabase update error', e);
+      }
+
       navigation.navigate('Home');
     } catch (error) {
       console.error(error);
       Alert.alert('Error al guardar el parte de trabajo', error.message);
+    }
+  };
+
+  const takeEvidencePhoto = async () => {
+    try {
+      setTakingPhoto(true);
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permiso denegado', 'Se necesita permiso para usar la cámara');
+        setTakingPhoto(false);
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        quality: 0.7,
+        base64: true,
+        allowsEditing: false,
+      });
+
+      // compat con diferentes versiones
+      const cancelled = result.cancelled === true || result.canceled === true;
+      if (cancelled) {
+        setTakingPhoto(false);
+        return;
+      }
+
+      const uri = result.uri || (result.assets && result.assets[0] && result.assets[0].uri);
+      const base64 = result.base64 || (result.assets && result.assets[0] && result.assets[0].base64);
+
+      if (uri) setEvidenciaUri(uri);
+      if (base64) setEvidenciaBase64(`data:image/jpeg;base64,${base64}`);
+    } catch (e) {
+      console.log('takeEvidencePhoto error', e);
+      Alert.alert('Error', 'No se pudo tomar la foto');
+    } finally {
+      setTakingPhoto(false);
     }
   };
 
@@ -223,6 +281,27 @@ const ParteTrabajo = ({ navigation, route }) => {
       ) : (
         <Text style={{ marginVertical: 20, textAlign: 'center' }}>No hay productos usados registrados para esta solicitud.</Text>
       )}
+
+      <View style={{ marginVertical: 12 }}>
+        <Text style={{ fontWeight: 'bold', marginBottom: 8 }}>Evidencia (foto del trabajo)</Text>
+
+        {evidenciaUri ? (
+          <Image source={{ uri: evidenciaUri }} style={{ width: 220, height: 220, borderRadius: 8, marginBottom: 8 }} />
+        ) : (
+          <View style={{ width: 220, height: 220, backgroundColor: '#eee', borderRadius: 8, justifyContent: 'center', alignItems: 'center', marginBottom: 8 }}>
+            <Text>Sin foto</Text>
+          </View>
+        )}
+
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <View style={{ flex: 1, marginRight: 6 }}>
+            <Button title={takingPhoto ? 'Abriendo cámara...' : 'Tomar evidencia'} onPress={takeEvidencePhoto} disabled={takingPhoto} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Button title="Borrar foto" onPress={() => { setEvidenciaUri(null); setEvidenciaBase64(null); }} disabled={!evidenciaUri} />
+          </View>
+        </View>
+      </View>
 
       <Button title="Guardar parte de trabajo" onPress={guardarParteTrabajo} />
     </ScrollView>
