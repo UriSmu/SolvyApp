@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, TouchableOpacity, StyleSheet, Dimensions, Animated, Image, Modal } from 'react-native';
+import { View, Text, ActivityIndicator, TouchableOpacity, StyleSheet, Dimensions, Animated, Image, Modal, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
@@ -16,9 +16,13 @@ export default function ConectarSolver2({ route, navigation }) {
   const [showTopCard, setShowTopCard] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [codigoFinal, setCodigoFinal] = useState('');
+  const [solverLocation, setSolverLocation] = useState(null);
+  const [estimatedTime, setEstimatedTime] = useState(null);
+  const [distance, setDistance] = useState(null);
 
   useEffect(() => {
     let channel;
+    let locationChannel;
     const fetchSolicitud = async () => {
       setLoading(true);
       setError(null);
@@ -69,6 +73,34 @@ export default function ConectarSolver2({ route, navigation }) {
           setCodigoFinal('');
         }
 
+        // Suscribirse a la ubicación del solver usando Broadcast (plan gratuito)
+        locationChannel = supabase
+          .channel(`tracking-${solicitudId}`)
+          .on('broadcast', { event: 'location_update' }, (payload) => {
+            if (payload.payload) {
+              const { latitude, longitude } = payload.payload;
+              setSolverLocation({ latitude, longitude });
+              
+              // Calcular distancia y tiempo estimado
+              const datosDireccion = typeof data?.direccion_servicio === 'string'
+                ? JSON.parse(data.direccion_servicio)
+                : data?.direccion_servicio;
+                
+              if (datosDireccion) {
+                const dist = calculateDistance(
+                  latitude,
+                  longitude,
+                  datosDireccion.latitude,
+                  datosDireccion.longitude
+                );
+                setDistance(dist);
+                const timeInMinutes = Math.round((dist / 30) * 60);
+                setEstimatedTime(timeInMinutes);
+              }
+            }
+          })
+          .subscribe();
+
         // Suscribirse a cambios en la solicitud
         channel = supabase
           .channel('solicitud-aceptada')
@@ -108,6 +140,7 @@ export default function ConectarSolver2({ route, navigation }) {
 
     return () => {
       if (channel) supabase.removeChannel(channel);
+      if (locationChannel) supabase.removeChannel(locationChannel);
     };
   }, []);
 
@@ -134,6 +167,21 @@ export default function ConectarSolver2({ route, navigation }) {
     };
     fetchSubservicio();
   }, [solicitudData]);
+
+  // Función para calcular distancia (fórmula de Haversine)
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371; // Radio de la Tierra en km
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  const toRad = (value) => (value * Math.PI) / 180;
 
   const handleVolver = () => {
     navigation.goBack();
@@ -165,7 +213,6 @@ export default function ConectarSolver2({ route, navigation }) {
         provider={PROVIDER_GOOGLE}
         style={StyleSheet.absoluteFill}
         region={region}
-        pointerEvents="none"
       >
         {datosDireccion && (
           <Marker
@@ -177,6 +224,28 @@ export default function ConectarSolver2({ route, navigation }) {
             description={datosDireccion.title}
             pinColor="#007cc0"
           />
+        )}
+        
+        {/* Marcador del solver */}
+        {solverLocation && (
+          <Marker
+            coordinate={{
+              latitude: solverLocation.latitude,
+              longitude: solverLocation.longitude,
+            }}
+            title="Solver trabajando"
+            pinColor="#00c853"
+          >
+            <View style={{
+              backgroundColor: '#00c853',
+              borderRadius: 20,
+              padding: 8,
+              borderWidth: 2,
+              borderColor: '#fff',
+            }}>
+              <Ionicons name="person" size={24} color="#fff" />
+            </View>
+          </Marker>
         )}
       </MapView>
 
@@ -195,41 +264,72 @@ export default function ConectarSolver2({ route, navigation }) {
         {loading && (
           <View style={{ alignItems: 'center', marginTop: 18 }}>
             <ActivityIndicator size="large" color="#fff" />
-            <Text style={{ color: '#fff', marginTop: 16, fontSize: 16 }}>Cargando...</Text>
+            <Text style={{ color: '#fff', marginTop: 16, fontSize: 16 }}>Cargando información...</Text>
           </View>
         )}
         {error && (
           <Text style={styles.errorText}>{error}</Text>
         )}
         {!loading && solver && solicitudData && (
-          <View style={styles.solverCard}>
-            {solver.foto_perfil && (
-              <Image
-                source={{ uri: solver.foto_perfil }}
-                style={{ width: 70, height: 70, borderRadius: 35, marginBottom: 8 }}
-              />
-            )}
-            <Text style={styles.solverName}>
-              {solver.nombre} {solver.apellido}
-            </Text>
-            <Text style={styles.solverInfo}>Tel: <Text style={styles.solverInfoBold}>{solver.telefono || 'No disponible'}</Text></Text>
-            <Text style={styles.solverInfo}>Email: <Text style={styles.solverInfoBold}>{solver.email || 'No disponible'}</Text></Text>
-            <Text style={styles.solverInfo}>Subservicio:</Text>
-            <Text style={[styles.solverInfoBold, { marginBottom: 8 }]}>{subservicioNombre || 'No especificado'}</Text>
-            <Text style={styles.solverInfo}>Dirección del pedido:</Text>
-            <Text style={[styles.solverInfoBold, { marginBottom: 8 }]}>{datosDireccion?.title || 'No especificada'}</Text>
-            <Text style={styles.solverInfo}>Duración: <Text style={styles.solverInfoBold}>{solicitudData?.duracion_servicio || 'No especificada'} min</Text></Text>
-            <Text style={styles.solverInfo}>Precio: <Text style={styles.solverInfoBold}>${solicitudData?.monto?.toFixed(2) || 'No especificado'}</Text></Text>
-            <TouchableOpacity
-              style={[styles.finalizarBtn, { width: 220, paddingVertical: 10, paddingHorizontal: 0 }]}
-              onPress={() => setModalVisible(true)}
-            >
-              <Text style={[styles.btnText, { color: '#fff', fontSize: 16 }]}>Mostrar código de finalización</Text>
-            </TouchableOpacity>
-          </View>
+          <ScrollView 
+            style={{ flex: 1 }} 
+            contentContainerStyle={{ alignItems: 'center', paddingBottom: 20 }}
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.solverCard}>
+              {solver.foto_perfil && (
+                <Image
+                  source={{ uri: solver.foto_perfil }}
+                  style={{ width: 70, height: 70, borderRadius: 35, marginBottom: 8 }}
+                />
+              )}
+              <Text style={styles.solverName}>
+                {solver.nombre} {solver.apellido}
+              </Text>
+              <Text style={styles.solverInfo}>Tel: <Text style={styles.solverInfoBold}>{solver.telefono || 'No disponible'}</Text></Text>
+              <Text style={styles.solverInfo}>Subservicio:</Text>
+              <Text style={[styles.solverInfoBold, { marginBottom: 8 }]}>{subservicioNombre || 'No especificado'}</Text>
+              <Text style={styles.solverInfo}>Dirección: <Text style={styles.solverInfoBold}>{datosDireccion?.title || 'No especificada'}</Text></Text>
+              <Text style={styles.solverInfo}>Duración: <Text style={styles.solverInfoBold}>{solicitudData?.duracion_servicio || 'No especificada'} min</Text></Text>
+              <Text style={styles.solverInfo}>Precio: <Text style={styles.solverInfoBold}>${solicitudData?.monto?.toFixed(2) || 'No especificado'}</Text></Text>
+              
+              {/* Información de seguimiento */}
+              {solverLocation && (
+                <View style={{
+                  backgroundColor: 'rgba(255,255,255,0.15)',
+                  borderRadius: 12,
+                  padding: 10,
+                  marginTop: 10,
+                  width: '95%',
+                }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                    <Ionicons name="navigate" size={18} color="#fff" />
+                    <Text style={[styles.solverInfo, { marginLeft: 8, marginTop: 0, fontSize: 14 }]}>
+                      Distancia: <Text style={styles.solverInfoBold}>{distance?.toFixed(2)} km</Text>
+                    </Text>
+                  </View>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Ionicons name="time" size={18} color="#fff" />
+                    <Text style={[styles.solverInfo, { marginLeft: 8, marginTop: 0, fontSize: 14 }]}>
+                      Tiempo estimado: <Text style={styles.solverInfoBold}>{estimatedTime} min</Text>
+                    </Text>
+                  </View>
+                </View>
+              )}
+              
+              <TouchableOpacity
+                style={[styles.finalizarBtn, { width: 220, paddingVertical: 12, paddingHorizontal: 0, marginTop: 16 }]}
+                onPress={() => setModalVisible(true)}
+              >
+                <Ionicons name="key" size={20} color="#fff" style={{ marginRight: 8 }} />
+                <Text style={[styles.btnText, { color: '#fff', fontSize: 16 }]}>Ver código final</Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
         )}
       </Animated.View>
 
+      {/* Modal para mostrar código final */}
       <Modal
         visible={modalVisible}
         transparent
@@ -238,15 +338,19 @@ export default function ConectarSolver2({ route, navigation }) {
       >
         <View style={styles.overlay}>
           <View style={styles.modalContent}>
-            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 12 }}>Código de confirmación</Text>
-            <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#007cc0', marginBottom: 18 }}>
-              {codigoFinal || '----'}
-            </Text>
-            <Text style={{ fontSize: 16, marginBottom: 18, textAlign: 'center' }}>
-              El solver debe ingresar este código para finalizar el servicio.
-            </Text>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 12 }}>Código final del servicio</Text>
+            <Text style={{
+              fontSize: 32,
+              fontWeight: 'bold',
+              color: '#007cc0',
+              marginBottom: 18,
+              textAlign: 'center',
+              backgroundColor: '#f9f9f9',
+              borderRadius: 8,
+              padding: 10,
+            }}>{codigoFinal || '----'}</Text>
             <TouchableOpacity
-              style={[styles.finalizarBtn, { backgroundColor: '#d32f2f', width: 120, paddingVertical: 10, paddingHorizontal: 0, marginTop: 8 }]}
+              style={[styles.finalizarBtn, { backgroundColor: '#d32f2f', width: 120, paddingVertical: 10, paddingHorizontal: 0 }]}
               onPress={() => setModalVisible(false)}
             >
               <Text style={[styles.btnText, { color: '#fff', fontSize: 16 }]}>Cerrar</Text>

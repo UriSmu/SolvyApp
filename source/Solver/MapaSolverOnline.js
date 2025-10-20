@@ -23,8 +23,11 @@ export default function MapaSolverOnline({ navigation }) {
   const [codigoFinal, setCodigoFinal] = useState('');
   const [inputCodigoFinal, setInputCodigoFinal] = useState('');
   const [puedeFinalizar, setPuedeFinalizar] = useState(false);
+  const [trackingLocation, setTrackingLocation] = useState(false);
   const panelHeight = useRef(new Animated.Value(220)).current;
   const mapRef = useRef(null);
+  const locationSubscription = useRef(null);
+  
 
   useEffect(() => {
     (async () => {
@@ -168,6 +171,15 @@ export default function MapaSolverOnline({ navigation }) {
     };
   }, [solicitudActual, navigation]);
 
+  // Limpiar al desmontar
+  useEffect(() => {
+    return () => {
+      if (locationSubscription.current) {
+        locationSubscription.current.remove();
+      }
+    };
+  }, []);
+
   const getSolverId = async () => {
     try {
       const usuarioStr = await AsyncStorage.getItem('usuario');
@@ -185,8 +197,62 @@ export default function MapaSolverOnline({ navigation }) {
 
   const generarCodigo = () => Math.floor(1000 + Math.random() * 9000);
 
+  // Nueva función para tracking de ubicación usando Broadcast
+  const startLocationTracking = async (idsolicitud, idsolver) => {
+    try {
+      // Crear canal de broadcast para esta solicitud
+      const trackingChannel = supabase.channel(`tracking-${idsolicitud}`);
+      
+      // Actualizar ubicación cada 5 segundos
+      locationSubscription.current = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.High,
+          timeInterval: 5000,
+          distanceInterval: 10,
+        },
+        async (newLocation) => {
+          const { latitude, longitude } = newLocation.coords;
+          
+          // Enviar ubicación a través de Broadcast (plan gratuito)
+          await trackingChannel.send({
+            type: 'broadcast',
+            event: 'location_update',
+            payload: {
+              idsolver: idsolver,
+              idsolicitud: idsolicitud,
+              latitude: latitude,
+              longitude: longitude,
+              timestamp: new Date().toISOString(),
+            }
+          });
+
+          // También guardar en DB como backup
+          await supabase
+            .from('solver_ubicaciones')
+            .upsert({
+              idsolver: idsolver,
+              idsolicitud: idsolicitud,
+              latitude: latitude,
+              longitude: longitude,
+              timestamp: new Date().toISOString(),
+            }, {
+              onConflict: 'idsolver,idsolicitud'
+            });
+          
+          setLocation({ latitude, longitude });
+        }
+      );
+
+      // Suscribirse al canal
+      trackingChannel.subscribe();
+    } catch (error) {
+      console.error('Error en tracking:', error);
+    }
+  };
+
   const handleAceptar = async () => {
     setServicioActivo(true);
+    setTrackingLocation(true);
     Animated.timing(panelHeight, {
       toValue: 300,
       duration: 200,
@@ -203,6 +269,9 @@ export default function MapaSolverOnline({ navigation }) {
         })
         .eq('idsolicitud', solicitudActual.idsolicitud)
         .select();
+      
+      // Iniciar tracking de ubicación
+      startLocationTracking(solicitudActual.idsolicitud, idsolver);
     }
   };
 
@@ -236,11 +305,24 @@ export default function MapaSolverOnline({ navigation }) {
     if (
       inputCodigoFinal.trim() === codigoFinal.trim()
     ) {
+      // Detener tracking
+      if (locationSubscription.current) {
+        locationSubscription.current.remove();
+      }
+      setTrackingLocation(false);
+      
       if (solicitudActual?.idsolicitud) {
         await supabase
           .from('solicitudes')
           .update({ estado: 'finalizada' })
           .eq('idsolicitud', solicitudActual.idsolicitud);
+        
+        // Limpiar ubicación
+        const idsolver = await getSolverId();
+        await supabase
+          .from('solver_ubicaciones')
+          .delete()
+          .match({ idsolver: idsolver, idsolicitud: solicitudActual.idsolicitud });
       }
       setModalVisible(false);
       setPuedeFinalizar(false);
@@ -343,12 +425,12 @@ export default function MapaSolverOnline({ navigation }) {
                   <Text style={styles.btnText}>Adquirir Productos</Text>
                 </TouchableOpacity>
                 {!puedeFinalizar ? (
-                  <TouchableOpacity style={[styles.finalizarBtn, { flex: 1, marginLeft: 8 }]} onPress={handleMostrarCodigo}>
+                  <TouchableOpacity style={[styles.finalizarBtn, { flex: 1, marginLeft: 8 }]} onPress={() => setModalVisible(true)}>
                     <Text style={styles.btnText}>Mostrar código inicial</Text>
                   </TouchableOpacity>
                 ) : (
-                  <TouchableOpacity style={[styles.finalizarBtn, { backgroundColor: '#007cc0', flex: 1, marginLeft: 8 }]} onPress={handleMostrarCodigo}>
-                    <Text style={styles.btnText}>Finalizar servicio</Text>
+                  <TouchableOpacity style={[styles.finalizarBtn, { backgroundColor: '#007cc0', flex: 1, marginLeft: 8 }]} onPress={() => setModalVisible(true)}>
+                    <Text style={styles.btnText}>Ingresar código final</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -357,6 +439,7 @@ export default function MapaSolverOnline({ navigation }) {
         </Animated.View>
       )}
 
+      {/* Modal para mostrar el código inicial o ingresar el código final */}
       <Modal
         visible={modalVisible}
         transparent
