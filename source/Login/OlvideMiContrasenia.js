@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Alert, ImageBackground, Image, ActivityIndicator, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
-import { supabase } from "../context/supabaseClient";
 import Ionicons from '@expo/vector-icons/Ionicons';
 
-// Puedes usar un ícono de ojito de react-native-vector-icons o un PNG/SVG local.
-// Aquí te muestro con emoji para simplicidad, pero puedes reemplazarlo por un ícono real.
+// Backend API URL - change this to your backend URL
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3000';
+
 const fondo = require("../../assets/Fondo-de-pantalla.png");
 const logo = require("../../assets/Logo.png");
 const fondoBoton = require("../../assets/Fondo-boton.png");
@@ -12,12 +12,10 @@ const fondoBoton = require("../../assets/Fondo-boton.png");
 const OlvideMiContrasenia = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [codigoEnviado, setCodigoEnviado] = useState(false);
-  const [codigo, setCodigo] = useState("");
-  const [nuevaPassword, setNuevaPassword] = useState("");
+  const [linkEnviado, setLinkEnviado] = useState(false);
 
-  // Enviar código de recuperación usando resetPasswordForEmail
-  const handleEnviarCodigo = async () => {
+  // Enviar magic link usando el backend API
+  const handleEnviarMagicLink = async () => {
     if (!email.trim()) {
       Alert.alert("Error", "Por favor ingresa tu correo electrónico");
       return;
@@ -32,138 +30,56 @@ const OlvideMiContrasenia = ({ navigation }) => {
     setLoading(true);
     const emailLower = email.toLowerCase().trim();
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('🔄 ENVIANDO CÓDIGO DE RECUPERACIÓN');
+    console.log('🔄 ENVIANDO MAGIC LINK');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('📧 Email:', emailLower);
     console.log('⏰ Hora:', new Date().toLocaleTimeString());
 
     try {
-      // Método que SÍ funciona: resetPasswordForEmail
-      const { data, error } = await supabase.auth.resetPasswordForEmail(
-        emailLower,
-        {
-          redirectTo: 'solvy://reset-password',
-        }
-      );
+      const response = await fetch(`${BACKEND_URL}/api/auth/magic-link`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: emailLower }),
+      });
+
+      const data = await response.json();
 
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('📊 RESPUESTA DE SUPABASE:');
+      console.log('📊 RESPUESTA DEL BACKEND:');
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.log('Data:', JSON.stringify(data, null, 2));
-      console.log('Error:', error ? JSON.stringify(error, null, 2) : 'null');
 
-      if (error) {
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        console.log('❌ ERROR AL ENVIAR:');
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        console.log('Código:', error.code);
-        console.log('Mensaje:', error.message);
-        console.log('Estado:', error.status);
-        
-        Alert.alert(
-          'Error al enviar',
-          `No se pudo enviar el código.\n\nMotivo: ${error.message}\n\n¿El email está registrado en la app?`
-        );
-      } else {
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        console.log('✅ CÓDIGO ENVIADO EXITOSAMENTE');
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        console.log('📧 Remitente: noreply@mail.app.supabase.io');
-        console.log('📬 Destinatario:', emailLower);
-        console.log('📋 Asunto: "Reset Your Password" o similar');
-        console.log('🚫 REVISA SPAM si no aparece en 1-2 minutos');
-        console.log('⏱️ El código es válido por 60 minutos');
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        
-        setCodigoEnviado(true);
-        Alert.alert(
-          '¡Código enviado! 📧',
-          `Email enviado a:\n${emailLower}\n\n⚠️ IMPORTANTE:\n\n1. REVISA LA CARPETA DE SPAM\n2. Remitente: noreply@mail.app.supabase.io\n3. Puede tardar 1-2 minutos\n4. Código válido por 60 min.`
-        );
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al enviar el magic link');
       }
+
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('✅ MAGIC LINK ENVIADO EXITOSAMENTE');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('📧 Destinatario:', emailLower);
+      console.log('📋 Revisa tu correo electrónico');
+      console.log('�� REVISA SPAM si no aparece en 1-2 minutos');
+      console.log('⏱️ El enlace es válido por 60 minutos');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+      setLinkEnviado(true);
+      Alert.alert(
+        '¡Enlace enviado! 📧',
+        `Email enviado a:\n${emailLower}\n\n⚠️ IMPORTANTE:\n\n1. REVISA LA CARPETA DE SPAM\n2. Puede tardar 1-2 minutos\n3. El enlace es válido por 60 min.\n4. Haz clic en el enlace del correo para verificar tu identidad`
+      );
     } catch (error) {
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('💥 ERROR INESPERADO:');
+      console.log('💥 ERROR AL ENVIAR:');
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.log('Error completo:', error);
       console.log('Mensaje:', error.message);
-      console.log('Stack:', error.stack);
-      
-      Alert.alert('Error', 'Ocurrió un error inesperado. Revisa la consola.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  // Verificar código y cambiar contraseña
-  const handleVerificarCodigo = async () => {
-    if (!codigo.trim() || codigo.length !== 6) {
-      Alert.alert("Error", "Ingresa el código de 6 dígitos que recibiste");
-      return;
-    }
-
-    if (!nuevaPassword || nuevaPassword.length < 6) {
-      Alert.alert("Error", "La contraseña debe tener al menos 6 caracteres");
-      return;
-    }
-
-    setLoading(true);
-    console.log('🔐 Verificando código...');
-
-    try {
-      // Verificar el código OTP de tipo 'recovery' para reset password
-      const { data, error } = await supabase.auth.verifyOtp({
-        email: email.toLowerCase().trim(),
-        token: codigo.trim(),
-        type: 'recovery', // Tipo 'recovery' para resetPasswordForEmail
-      });
-
-      if (error) {
-        console.error('❌ Error al verificar código:', error);
-        Alert.alert(
-          'Error',
-          'Código incorrecto o expirado. Verifica que hayas ingresado bien los 6 dígitos.'
-        );
-        setLoading(false);
-        return;
-      }
-
-      if (!data?.session) {
-        Alert.alert('Error', 'No se pudo verificar el código');
-        setLoading(false);
-        return;
-      }
-
-      console.log('✅ Código verificado correctamente');
-
-      // Si el código es correcto, cambiar la contraseña
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: nuevaPassword
-      });
-
-      if (updateError) {
-        console.error('❌ Error al actualizar contraseña:', updateError);
-        Alert.alert('Error', 'No se pudo actualizar la contraseña');
-      } else {
-        console.log('✅ Contraseña actualizada exitosamente');
-        
-        // Cerrar sesión automáticamente
-        await supabase.auth.signOut();
-        
-        Alert.alert(
-          '¡Éxito! ✅',
-          'Tu contraseña ha sido actualizada correctamente. Ahora puedes iniciar sesión con tu nueva contraseña.',
-          [
-            {
-              text: 'OK',
-              onPress: () => navigation.navigate('IniciarSesion'),
-            },
-          ]
-        );
-      }
-    } catch (error) {
-      console.error('💥 Error inesperado:', error);
-      Alert.alert('Error', 'Ocurrió un error inesperado');
+      Alert.alert(
+        'Error',
+        'No se pudo enviar el enlace. Por favor, verifica tu conexión e intenta nuevamente.'
+      );
     } finally {
       setLoading(false);
     }
@@ -177,21 +93,21 @@ const OlvideMiContrasenia = ({ navigation }) => {
       >
         <View style={styles.container}>
           <Image source={logo} style={styles.logo} resizeMode="contain" />
-          
+
           <View style={styles.iconContainer}>
             <Ionicons name="lock-closed-outline" size={70} color="#fff" />
           </View>
-          
+
           <Text style={styles.title}>Recuperar Contraseña</Text>
           <Text style={styles.subtitle}>
-            {!codigoEnviado 
-              ? "Ingresa tu correo y te enviaremos un código de verificación"
-              : "Ingresa el código que recibiste y tu nueva contraseña"
+            {!linkEnviado
+              ? "Ingresa tu correo y te enviaremos un enlace mágico para recuperar tu cuenta"
+              : "¡Enlace enviado! Revisa tu correo electrónico"
             }
           </Text>
 
-          {/* PASO 1: Ingresar email */}
-          {!codigoEnviado && (
+          {/* Ingresar email */}
+          {!linkEnviado && (
             <>
               <View style={styles.inputWrapper}>
                 <Ionicons name="mail" size={20} color="#007cc0" style={styles.inputIcon} />
@@ -209,7 +125,7 @@ const OlvideMiContrasenia = ({ navigation }) => {
               </View>
 
               <TouchableOpacity
-                onPress={handleEnviarCodigo}
+                onPress={handleEnviarMagicLink}
                 disabled={loading}
                 style={styles.button}
                 activeOpacity={0.8}
@@ -227,7 +143,7 @@ const OlvideMiContrasenia = ({ navigation }) => {
                   ) : (
                     <View style={styles.buttonContent}>
                       <Ionicons name="send" size={20} color="#fff" />
-                      <Text style={[styles.buttonText, { marginLeft: 8 }]}>Enviar código</Text>
+                      <Text style={[styles.buttonText, { marginLeft: 8 }]}>Enviar enlace mágico</Text>
                     </View>
                   )}
                 </ImageBackground>
@@ -235,75 +151,29 @@ const OlvideMiContrasenia = ({ navigation }) => {
             </>
           )}
 
-          {/* PASO 2: Ingresar código y nueva contraseña */}
-          {codigoEnviado && (
+          {/* Enlace enviado */}
+          {linkEnviado && (
             <>
               <View style={styles.successMessage}>
                 <Ionicons name="checkmark-circle" size={24} color="#00c853" />
-                <Text style={styles.successText}>¡Código enviado a {email}!</Text>
+                <Text style={styles.successText}>¡Enlace enviado a {email}!</Text>
               </View>
 
-              <View style={styles.inputWrapper}>
-                <Ionicons name="keypad" size={20} color="#007cc0" style={styles.inputIcon} />
-                <TextInput
-                  placeholder="Código de 6 dígitos"
-                  value={codigo}
-                  onChangeText={setCodigo}
-                  keyboardType="number-pad"
-                  maxLength={6}
-                  placeholderTextColor="#888"
-                  style={styles.input}
-                  editable={!loading}
-                />
+              <View style={styles.infoBox}>
+                <Text style={styles.infoTitle}>Próximos pasos:</Text>
+                <Text style={styles.infoItem}>1. Abre tu correo electrónico</Text>
+                <Text style={styles.infoItem}>2. Busca el email de SolvyApp</Text>
+                <Text style={styles.infoItem}>3. Haz clic en el enlace mágico</Text>
+                <Text style={styles.infoItem}>4. Serás redirigido automáticamente</Text>
               </View>
-
-              <View style={styles.inputWrapper}>
-                <Ionicons name="lock-closed" size={20} color="#007cc0" style={styles.inputIcon} />
-                <TextInput
-                  placeholder="Nueva contraseña"
-                  value={nuevaPassword}
-                  onChangeText={setNuevaPassword}
-                  secureTextEntry
-                  placeholderTextColor="#888"
-                  style={styles.input}
-                  editable={!loading}
-                />
-              </View>
-
-              <TouchableOpacity
-                onPress={handleVerificarCodigo}
-                disabled={loading}
-                style={styles.button}
-                activeOpacity={0.8}
-              >
-                <ImageBackground
-                  source={fondoBoton}
-                  style={styles.buttonBackground}
-                  imageStyle={{ borderRadius: 10 }}
-                >
-                  {loading ? (
-                    <View style={styles.buttonContent}>
-                      <ActivityIndicator color="#fff" />
-                      <Text style={[styles.buttonText, { marginLeft: 10 }]}>Verificando...</Text>
-                    </View>
-                  ) : (
-                    <View style={styles.buttonContent}>
-                      <Ionicons name="checkmark-circle" size={20} color="#fff" />
-                      <Text style={[styles.buttonText, { marginLeft: 8 }]}>Cambiar contraseña</Text>
-                    </View>
-                  )}
-                </ImageBackground>
-              </TouchableOpacity>
 
               <TouchableOpacity
                 onPress={() => {
-                  setCodigoEnviado(false);
-                  setCodigo('');
-                  setNuevaPassword('');
+                  setLinkEnviado(false);
                 }}
                 style={styles.linkButton}
               >
-                <Text style={styles.linkText}>Reenviar código</Text>
+                <Text style={styles.linkText}>Reenviar enlace</Text>
               </TouchableOpacity>
             </>
           )}
@@ -394,6 +264,25 @@ const styles = StyleSheet.create({
     fontSize: 15,
     marginLeft: 8,
     fontWeight: '600',
+  },
+  infoBox: {
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 10,
+    padding: 20,
+    marginBottom: 20,
+    width: '100%',
+  },
+  infoTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#007cc0',
+    marginBottom: 10,
+  },
+  infoItem: {
+    fontSize: 14,
+    color: '#333',
+    marginBottom: 5,
+    lineHeight: 20,
   },
   button: {
     width: "100%",
