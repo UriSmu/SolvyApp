@@ -1,15 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet, ImageBackground, Image } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet, ImageBackground, Image, TouchableOpacity } from 'react-native';
 import { supabase } from '../context/supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import * as Linking from 'expo-linking';
 
 const fondo = require("../../assets/Fondo-de-pantalla.png");
 const logo = require("../../assets/Logo.png");
+const fondoBoton = require("../../assets/Fondo-boton.png");
 
 const VerificarMagicLink = ({ navigation, route }) => {
   const [verificando, setVerificando] = useState(true);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
   const { login } = useAuth();
 
   useEffect(() => {
@@ -22,14 +25,30 @@ const VerificarMagicLink = ({ navigation, route }) => {
       console.log('🔐 VERIFICANDO MAGIC LINK');
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       
-      // Obtener los parámetros de la URL
-      const params = route?.params || {};
-      const token = params.token || params.access_token;
-      const type = params.type || 'magiclink';
-      const email = params.email;
+      // Obtener la URL completa
+      const url = await Linking.getInitialURL();
+      console.log('URL recibida:', url);
+      
+      // Parsear los parámetros de la URL
+      const params = Linking.parse(url || '');
+      console.log('Parámetros parseados:', JSON.stringify(params, null, 2));
+      
+      // Los parámetros también pueden venir desde route.params
+      const routeParams = route?.params || {};
+      console.log('Route params:', JSON.stringify(routeParams, null, 2));
+      
+      // Combinar parámetros de ambas fuentes
+      const allParams = { ...params.queryParams, ...routeParams };
+      console.log('Todos los parámetros:', JSON.stringify(allParams, null, 2));
 
-      console.log('Token recibido:', token ? 'Sí' : 'No');
-      console.log('Email:', email);
+      // Supabase envía el token como parte de un hash fragment (#access_token=...)
+      // Necesitamos extraerlo correctamente
+      const token = allParams.access_token || allParams.token;
+      const refresh_token = allParams.refresh_token;
+      const type = allParams.type || 'magiclink';
+
+      console.log('Token extraído:', token ? 'Sí (longitud: ' + token.length + ')' : 'No');
+      console.log('Refresh token:', refresh_token ? 'Sí' : 'No');
       console.log('Type:', type);
 
       if (!token) {
@@ -39,28 +58,28 @@ const VerificarMagicLink = ({ navigation, route }) => {
         return;
       }
 
-      // Verificar el token con Supabase
-      const { data, error: verifyError } = await supabase.auth.verifyOtp({
-        token_hash: token,
-        type: type,
+      // Establecer la sesión con los tokens recibidos
+      const { data, error: sessionError } = await supabase.auth.setSession({
+        access_token: token,
+        refresh_token: refresh_token || token,
       });
 
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('📊 RESPUESTA DE VERIFICACIÓN:');
+      console.log('📊 RESPUESTA DE SESIÓN:');
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.log('Data:', JSON.stringify(data, null, 2));
-      console.log('Error:', verifyError ? JSON.stringify(verifyError, null, 2) : 'null');
+      console.log('Error:', sessionError ? JSON.stringify(sessionError, null, 2) : 'null');
 
-      if (verifyError) {
-        console.log('❌ Error al verificar:', verifyError.message);
+      if (sessionError) {
+        console.log('❌ Error al establecer sesión:', sessionError.message);
         
         let errorMsg = 'No se pudo verificar el enlace.';
-        if (verifyError.message.includes('expired')) {
+        if (sessionError.message.includes('expired')) {
           errorMsg = 'El enlace ha expirado. Por favor solicita uno nuevo.';
-        } else if (verifyError.message.includes('invalid')) {
+        } else if (sessionError.message.includes('invalid')) {
           errorMsg = 'El enlace es inválido o ya fue utilizado.';
         } else {
-          errorMsg = verifyError.message;
+          errorMsg = sessionError.message;
         }
         
         setError(errorMsg);
@@ -79,30 +98,18 @@ const VerificarMagicLink = ({ navigation, route }) => {
       console.log('Usuario:', data.user.email);
       console.log('Session ID:', data.session.access_token.substring(0, 20) + '...');
 
-      // Ahora necesitamos sincronizar con el sistema de autenticación existente
-      // El usuario tiene una sesión de Supabase, pero necesitamos obtener sus datos del API existente
-      const userEmail = data.user.email;
-      
-      // Intentar obtener el usuario del sistema existente
-      // Como es un magic link, no tenemos la contraseña, así que usamos el email
-      // Nota: Esto requiere que el backend tenga un endpoint para autenticar con Supabase session
-      // Por ahora, simplemente redirigimos indicando que deben configurar su acceso
-      
-      console.log('⚠️ Sesión de Supabase creada para:', userEmail);
-      console.log('ℹ️ Redirigiendo a pantalla de inicio de sesión...');
+      // Marcar como exitoso
+      setSuccess(true);
+      setVerificando(false);
 
       // Cerrar la sesión de Supabase ya que el sistema principal usa su propio auth
       await supabase.auth.signOut();
 
-      setVerificando(false);
-      
-      // Redirigir a la pantalla de login con un mensaje
-      setTimeout(() => {
-        navigation.navigate('IniciarSesion', {
-          magicLinkVerified: true,
-          email: userEmail
-        });
-      }, 2000);
+      // Nota: En este punto, el usuario ha sido verificado por Supabase,
+      // pero el sistema principal de autenticación de la app usa un API diferente.
+      // Por ahora, redirigimos a la pantalla de login con el email verificado.
+      console.log('ℹ️ Redirigiendo a pantalla de inicio de sesión...');
+      console.log('⚠️ Email verificado:', data.user.email);
 
     } catch (err) {
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -110,10 +117,15 @@ const VerificarMagicLink = ({ navigation, route }) => {
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.log('Error:', err);
       console.log('Mensaje:', err.message);
+      console.log('Stack:', err.stack);
       
       setError('Ocurrió un error inesperado. Por favor intenta nuevamente.');
       setVerificando(false);
     }
+  };
+
+  const handleContinue = () => {
+    navigation.navigate('IniciarSesion');
   };
 
   return (
@@ -141,18 +153,55 @@ const VerificarMagicLink = ({ navigation, route }) => {
             <Text style={styles.subtitle}>
               Puedes solicitar un nuevo enlace desde la pantalla de inicio de sesión.
             </Text>
+            <TouchableOpacity
+              onPress={handleContinue}
+              style={styles.button}
+              activeOpacity={0.8}
+            >
+              <ImageBackground
+                source={fondoBoton}
+                style={styles.buttonBackground}
+                imageStyle={{ borderRadius: 10 }}
+              >
+                <View style={styles.buttonContent}>
+                  <Ionicons name="arrow-forward" size={20} color="#fff" />
+                  <Text style={[styles.buttonText, { marginLeft: 8 }]}>Ir a Iniciar Sesión</Text>
+                </View>
+              </ImageBackground>
+            </TouchableOpacity>
           </>
-        ) : (
+        ) : success ? (
           <>
             <View style={styles.iconContainer}>
               <Ionicons name="checkmark-circle" size={70} color="#00c853" />
             </View>
             <Text style={styles.title}>¡Verificación exitosa!</Text>
-            <Text style={styles.subtitle}>
-              Tu enlace ha sido verificado correctamente. Serás redirigido en un momento...
-            </Text>
+            <View style={styles.successBox}>
+              <Text style={styles.successText}>
+                Tu identidad ha sido verificada correctamente mediante el enlace mágico.
+              </Text>
+              <Text style={styles.successText}>
+                Ahora puedes iniciar sesión con tus credenciales normales.
+              </Text>
+            </View>
+            <TouchableOpacity
+              onPress={handleContinue}
+              style={styles.button}
+              activeOpacity={0.8}
+            >
+              <ImageBackground
+                source={fondoBoton}
+                style={styles.buttonBackground}
+                imageStyle={{ borderRadius: 10 }}
+              >
+                <View style={styles.buttonContent}>
+                  <Ionicons name="log-in" size={20} color="#fff" />
+                  <Text style={[styles.buttonText, { marginLeft: 8 }]}>Iniciar Sesión</Text>
+                </View>
+              </ImageBackground>
+            </TouchableOpacity>
           </>
-        )}
+        ) : null}
       </View>
     </ImageBackground>
   );
@@ -211,6 +260,47 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderRadius: 10,
     width: '100%',
+  },
+  successBox: {
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 12,
+    padding: 20,
+    marginTop: 20,
+    marginBottom: 20,
+    width: '100%',
+  },
+  successText: {
+    fontSize: 15,
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 10,
+    lineHeight: 22,
+  },
+  button: {
+    width: "100%",
+    borderRadius: 10,
+    overflow: "hidden",
+    marginTop: 10,
+  },
+  buttonBackground: {
+    width: "100%",
+    paddingVertical: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 10,
+  },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 17,
+    textShadowColor: "#007cc0",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
 });
 
