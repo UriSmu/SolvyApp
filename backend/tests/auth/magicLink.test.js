@@ -1,6 +1,3 @@
-const request = require('supertest');
-const app = require('../../src/index');
-
 // Mock environment variables for testing
 process.env.SUPABASE_URL = 'https://test.supabase.co';
 process.env.SUPABASE_SERVICE_KEY = 'test-service-key';
@@ -8,6 +5,37 @@ process.env.JWT_SECRET = 'test-jwt-secret';
 process.env.MAGIC_LINK_BASE_URL = 'http://localhost:19000';
 process.env.MAGIC_LINK_EXPIRATION = '60';
 process.env.EMAIL_FROM = 'test@example.com';
+process.env.SMTP_URL = 'smtp://test:test@smtp.test.com:587';
+
+// Mock Supabase client
+jest.mock('@supabase/supabase-js', () => ({
+  createClient: jest.fn(() => ({
+    from: jest.fn(() => ({
+      select: jest.fn().mockReturnThis(),
+      insert: jest.fn().mockReturnThis(),
+      update: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      single: jest.fn(),
+    })),
+    auth: {
+      admin: {
+        listUsers: jest.fn(),
+        getUserById: jest.fn(),
+        generateLink: jest.fn(),
+      },
+    },
+  })),
+}));
+
+// Mock nodemailer
+jest.mock('nodemailer', () => ({
+  createTransport: jest.fn(() => ({
+    sendMail: jest.fn().mockResolvedValue({ messageId: 'test-message-id' }),
+  })),
+}));
+
+const request = require('supertest');
+const app = require('../../src/index');
 
 describe('Magic Link Authentication', () => {
   describe('POST /api/auth/magic-link', () => {
