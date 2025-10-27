@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Alert, ImageBackground, Image, ActivityIndicator, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from "../context/supabaseClient";
 import Ionicons from '@expo/vector-icons/Ionicons';
 
@@ -15,6 +16,8 @@ const OlvideMiContrasenia = ({ navigation }) => {
   const [codigoEnviado, setCodigoEnviado] = useState(false);
   const [codigo, setCodigo] = useState("");
   const [nuevaPassword, setNuevaPassword] = useState("");
+  const [resendDisabled, setResendDisabled] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
 
   // Enviar código de recuperación usando resetPasswordForEmail
   const handleEnviarCodigo = async () => {
@@ -29,66 +32,47 @@ const OlvideMiContrasenia = ({ navigation }) => {
       return;
     }
 
-    setLoading(true);
-    const emailLower = email.toLowerCase().trim();
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('🔄 ENVIANDO CÓDIGO DE RECUPERACIÓN');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('📧 Email:', emailLower);
-    console.log('⏰ Hora:', new Date().toLocaleTimeString());
+  setLoading(true);
+  const emailLower = email.toLowerCase().trim();
 
     try {
       // Método que SÍ funciona: resetPasswordForEmail
-      const { data, error } = await supabase.auth.resetPasswordForEmail(
-        emailLower,
-        {
-          redirectTo: 'solvy://reset-password',
-        }
-      );
+      // Envío usando Supabase: resetPasswordForEmail para trigger de recuperación.
+      // Nota: Para recibir un código OTP numérico (en lugar de link) habilita "Email OTP" en Auth settings de Supabase.
+      const { data, error } = await supabase.auth.resetPasswordForEmail(emailLower);
 
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('📊 RESPUESTA DE SUPABASE:');
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('Data:', JSON.stringify(data, null, 2));
-      console.log('Error:', error ? JSON.stringify(error, null, 2) : 'null');
+      
 
       if (error) {
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        console.log('❌ ERROR AL ENVIAR:');
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        console.log('Código:', error.code);
-        console.log('Mensaje:', error.message);
-        console.log('Estado:', error.status);
+        
         
         Alert.alert(
           'Error al enviar',
           `No se pudo enviar el código.\n\nMotivo: ${error.message}\n\n¿El email está registrado en la app?`
         );
       } else {
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        console.log('✅ CÓDIGO ENVIADO EXITOSAMENTE');
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        console.log('📧 Remitente: noreply@mail.app.supabase.io');
-        console.log('📬 Destinatario:', emailLower);
-        console.log('📋 Asunto: "Reset Your Password" o similar');
-        console.log('🚫 REVISA SPAM si no aparece en 1-2 minutos');
-        console.log('⏱️ El código es válido por 60 minutos');
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        
         
         setCodigoEnviado(true);
+        // Deshabilitar reenvío por 60s para evitar spam
+        setResendDisabled(true);
+        setResendTimer(60);
+        const interval = setInterval(() => {
+          setResendTimer((t) => {
+            if (t <= 1) {
+              clearInterval(interval);
+              setResendDisabled(false);
+              return 0;
+            }
+            return t - 1;
+          });
+        }, 1000);
         Alert.alert(
           '¡Código enviado! 📧',
           `Email enviado a:\n${emailLower}\n\n⚠️ IMPORTANTE:\n\n1. REVISA LA CARPETA DE SPAM\n2. Remitente: noreply@mail.app.supabase.io\n3. Puede tardar 1-2 minutos\n4. Código válido por 60 min.`
         );
       }
     } catch (error) {
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('💥 ERROR INESPERADO:');
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('Error completo:', error);
-      console.log('Mensaje:', error.message);
-      console.log('Stack:', error.stack);
-      
       Alert.alert('Error', 'Ocurrió un error inesperado. Revisa la consola.');
     } finally {
       setLoading(false);
@@ -108,58 +92,104 @@ const OlvideMiContrasenia = ({ navigation }) => {
     }
 
     setLoading(true);
-    console.log('🔐 Verificando código...');
+    
 
     try {
       // Verificar el código OTP de tipo 'recovery' para reset password
       const { data, error } = await supabase.auth.verifyOtp({
         email: email.toLowerCase().trim(),
         token: codigo.trim(),
-        type: 'recovery', // Tipo 'recovery' para resetPasswordForEmail
+        type: 'recovery',
       });
 
       if (error) {
         console.error('❌ Error al verificar código:', error);
-        Alert.alert(
-          'Error',
-          'Código incorrecto o expirado. Verifica que hayas ingresado bien los 6 dígitos.'
-        );
+        Alert.alert('Error', 'Código incorrecto o expirado. Verifica que hayas ingresado bien el código.');
         setLoading(false);
         return;
       }
 
+  // En supabase v2, verifyOtp devuelve data.session si el token es válido.
       if (!data?.session) {
-        Alert.alert('Error', 'No se pudo verificar el código');
+        Alert.alert('Error', 'No se pudo verificar el código. Intenta reenviarlo.');
         setLoading(false);
         return;
       }
 
-      console.log('✅ Código verificado correctamente');
-
-      // Si el código es correcto, cambiar la contraseña
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: nuevaPassword
-      });
+      // Cambiar la contraseña del usuario autenticado
+  const { data: updateUserData, error: updateError } = await supabase.auth.updateUser({ password: nuevaPassword });
 
       if (updateError) {
         console.error('❌ Error al actualizar contraseña:', updateError);
-        Alert.alert('Error', 'No se pudo actualizar la contraseña');
+        Alert.alert('Error', updateError.message || 'No se pudo actualizar la contraseña');
       } else {
-        console.log('✅ Contraseña actualizada exitosamente');
         
-        // Cerrar sesión automáticamente
+
+        // Actualizar AsyncStorage 'usuario' si existía con la contraseña antigua
+        try {
+          const stored = await AsyncStorage.getItem('usuario');
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            // Si el email coincide con el usuario almacenado, actualizamos la contraseña almacenada
+            if (parsed.usuario && parsed.usuario.toLowerCase() === email.toLowerCase()) {
+              parsed.contrasena = nuevaPassword;
+              await AsyncStorage.setItem('usuario', JSON.stringify(parsed));
+            }
+          }
+          } catch (e) {
+          }
+
+        // Intentar también actualizar la contraseña en las tablas locales `clientes` / `solvers`
+        // (esto requiere permisos en la clave anon; si falla, ver instrucciones abajo).
+        try {
+          const emailLower = email.toLowerCase().trim();
+
+          // Buscar en clientes
+          const { data: clienteData, error: clienteSelectErr } = await supabase
+            .from('clientes')
+            .select('idcliente')
+            .eq('email', emailLower)
+            .limit(1)
+            .maybeSingle();
+
+          if (clienteSelectErr) {
+          } else {
+            if (clienteData && clienteData.idcliente) {
+              const { data: clienteUpdateData, error: clienteUpdateErr } = await supabase
+                .from('clientes')
+                .update({ contraseña: nuevaPassword })
+                .eq('idcliente', clienteData.idcliente)
+                .select();
+            }
+          }
+
+          // Buscar en solvers
+          const { data: solverData, error: solverSelectErr } = await supabase
+            .from('solvers')
+            .select('idsolver')
+            .eq('email', emailLower)
+            .limit(1)
+            .maybeSingle();
+
+          if (solverSelectErr) {
+          } else {
+            if (solverData && solverData.idsolver) {
+              const { data: solverUpdateData, error: solverUpdateErr } = await supabase
+                .from('solvers')
+                .update({ contraseña: nuevaPassword })
+                .eq('idsolver', solverData.idsolver)
+                .select();
+            }
+          }
+        } catch (e) {
+          console.warn('Error al intentar actualizar tablas clientes/solvers:', e);
+        }
+
+        // Cerrar sesión y redirigir al inicio de sesión
         await supabase.auth.signOut();
-        
-        Alert.alert(
-          '¡Éxito! ✅',
-          'Tu contraseña ha sido actualizada correctamente. Ahora puedes iniciar sesión con tu nueva contraseña.',
-          [
-            {
-              text: 'OK',
-              onPress: () => navigation.navigate('IniciarSesion'),
-            },
-          ]
-        );
+        Alert.alert('¡Éxito! ✅', 'Tu contraseña ha sido actualizada correctamente. Ahora puedes iniciar sesión con tu nueva contraseña.', [
+          { text: 'OK', onPress: () => navigation.navigate('IniciarSesion') },
+        ]);
       }
     } catch (error) {
       console.error('💥 Error inesperado:', error);
@@ -297,6 +327,7 @@ const OlvideMiContrasenia = ({ navigation }) => {
 
               <TouchableOpacity
                 onPress={() => {
+                  // Reenviar: volver al paso 1
                   setCodigoEnviado(false);
                   setCodigo('');
                   setNuevaPassword('');

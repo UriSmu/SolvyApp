@@ -6,6 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 import {useState} from 'react';
 
 import { useAuth } from '../context/AuthContext';
+import { supabase } from '../context/supabaseClient';
 
 import { useRegister } from '../context/RegisterContext';
 
@@ -45,6 +46,44 @@ export default function Registrarse() {
     };
 
     try {
+      // Primero crear usuario en Supabase Auth para que aparezca en Authentication -> Users
+      const { data: signData, error: signError } = await supabase.auth.signUp({
+        email: finalData.email,
+        password: finalData.contraseña,
+      });
+
+      if (signError) {
+        // Si el error es que el usuario ya existe, continuamos (el usuario puede haber sido creado antes)
+        // De lo contrario mostramos error
+        const msg = (signError?.message || '').toLowerCase();
+        if (!msg.includes('already registered') && !msg.includes('user already exists')) {
+          Alert.alert('Error', signError.message || 'No se pudo crear usuario en Auth');
+          return;
+        }
+      }
+
+      // Si se creó correctamente, signData.user.id contiene el uid
+      if (signData?.user?.id) {
+        finalData.auth_uid = signData.user.id;
+      }
+
+      // Intentar iniciar sesión en Supabase para generar la sesión JS (necesaria para RLS desde el cliente)
+      try {
+        // signInWithPassword es la forma de obtener sesión en supabase-js v2
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email: finalData.email,
+          password: finalData.contraseña,
+        });
+        // Si hay error de signin y no se obtuvo session, lo ignoramos (el backend puede seguir creando la fila)
+        if (signInError) {
+          // si es "Invalid login" es posible que el usuario no exista aun en Auth
+          console.warn('Sign-in tras registro falló:', signInError.message);
+        }
+      } catch (e) {
+        console.warn('Error al intentar signInWithPassword:', e);
+      }
+
+      // En cualquier caso, ahora creamos el registro en el backend tradicional
       const response = await fetch('https://solvy-app-api.vercel.app/cli/clientes/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -52,7 +91,10 @@ export default function Registrarse() {
       });
 
       if (response.ok) {
-        login();
+        const responseData = await response.json();
+        // Autologin: llamamos a login con los datos del backend y las credenciales usadas
+        // (esto guarda AsyncStorage y mantiene la UX)
+        login(responseData, { usuario: finalData.nombre_usuario, contrasena: finalData.contraseña, esSolver: false });
       } else {
         const error = await response.json();
         Alert.alert('Error', error.message || 'No se pudo registrar');
