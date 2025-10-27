@@ -1,5 +1,6 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import * as Linking from 'expo-linking';
 
 import { AuthProvider, useAuth } from './source/context/AuthContext';
 import { RegisterProvider } from './source/context/RegisterContext';
@@ -15,6 +16,7 @@ import Registrarse from './source/Login/Registrarse';
 import Registrarse2 from './source/Login/Registrarse2';
 import RegistrarseSolv from './source/Login/RegistrarseSolv';
 import OlvideMiContrasenia from './source/Login/OlvideMiContrasenia';
+import VerificarMagicLink from './source/Login/VerificarMagicLink';
 
 import Home from './source/Home';
 import Productos from './source/Home/Productos';
@@ -47,6 +49,19 @@ import Tabbar from './source/Layout/Tabbar';
 
 const Stack = createNativeStackNavigator();
 
+// Configuración de deep linking
+const prefix = Linking.createURL('/');
+const linking = {
+  prefixes: [prefix, 'solvy://'],
+  config: {
+    screens: {
+      Login: 'login',
+      VerificarMagicLink: 'magic-link',
+      OlvideMiContrasenia: 'forgot-password',
+    },
+  },
+};
+
 function LoginStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -59,6 +74,7 @@ function LoginStack() {
       <Stack.Screen name="Registrarse2" component={Registrarse2} />
       <Stack.Screen name="RegistrarseSolv" component={RegistrarseSolv} />
       <Stack.Screen name="OlvideMiContrasenia" component={OlvideMiContrasenia} />
+      <Stack.Screen name="VerificarMagicLink" component={VerificarMagicLink} />
     </Stack.Navigator>
   );
 }
@@ -159,7 +175,7 @@ export default function App() {
     <UserProfileProvider>
       <AuthProvider>
         <RegisterProvider>
-          <NavigationContainer>
+          <NavigationContainer linking={linking}>
             <RootNavigation />
           </NavigationContainer>
         </RegisterProvider>
