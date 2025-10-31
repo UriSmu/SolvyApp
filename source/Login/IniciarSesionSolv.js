@@ -100,6 +100,11 @@ export default function IniciarSesionSolv() {
               <Text style={styles.botonTexto}>{loading ? 'Ingresando...' : 'Ingresar'}</Text>
             </ImageBackground>
           </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('OlvideMiContraseniaSolv')}>
+            <Text style={{ color: '#007cc0', marginTop: 10, textAlign: 'center', textDecorationLine: 'underline' }}>
+              Olvidé Mi Contraseña
+            </Text>
+          </TouchableOpacity>
         </View>
         <View style={styles.container3}>
           <View style={styles.horizontalLine} />

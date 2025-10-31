@@ -15,6 +15,7 @@ import Registrarse from './source/Login/Registrarse';
 import Registrarse2 from './source/Login/Registrarse2';
 import RegistrarseSolv from './source/Login/RegistrarseSolv';
 import OlvideMiContrasenia from './source/Login/OlvideMiContrasenia';
+import OlvideMiContraseniaSolv from './source/Solver/OlvideMiContraseniaSolv';
 
 import Home from './source/Home';
 import Productos from './source/Home/Productos';
@@ -59,6 +60,7 @@ function LoginStack() {
       <Stack.Screen name="Registrarse2" component={Registrarse2} />
       <Stack.Screen name="RegistrarseSolv" component={RegistrarseSolv} />
       <Stack.Screen name="OlvideMiContrasenia" component={OlvideMiContrasenia} />
+      <Stack.Screen name="OlvideMiContraseniaSolv" component={OlvideMiContraseniaSolv} />
     </Stack.Navigator>
   );
 }
