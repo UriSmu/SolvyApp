@@ -15,7 +15,6 @@ const { width, height } = Dimensions.get('window');
 const TABBAR_HEIGHT = 70;
 
 export default function Mapa({ route, navigation }) {
-  // Recibe el subservicio por parámetro si existe
   const subservicio = route?.params?.subservicio;
   const [address, setAddress] = useState('');
   const [suggestions, setSuggestions] = useState([]);
@@ -26,15 +25,12 @@ export default function Mapa({ route, navigation }) {
   const [selectedCoord, setSelectedCoord] = useState(null);
   const mapRef = useRef(null);
 
-  // Panel animation
   const [panelExpanded, setPanelExpanded] = useState(false);
   const panelHeight = useRef(new Animated.Value(200)).current;
   const [userExpanded, setUserExpanded] = useState(false);
 
-  // Si navigation no viene por props, usar hook
   navigation = navigation || useNavigation();
 
-  // Simulación de favoritos y recientes
   const favoritos = [
     { id: 1, label: 'Destino favorito 1', icon: 'location' },
     { id: 2, label: 'Destino favorito 2', icon: 'location' }
@@ -62,7 +58,6 @@ export default function Mapa({ route, navigation }) {
     })();
   }, []);
 
-  // Keyboard listeners SOLO para abrir/cerrar el panel, NO para moverlo
   useEffect(() => {
     const showSub = Keyboard.addListener('keyboardDidShow', () => {
       Animated.timing(panelHeight, {
@@ -141,7 +136,6 @@ export default function Mapa({ route, navigation }) {
     setUserExpanded(!panelExpanded); // Guardar si el usuario expandió o no
   };
 
-  // Cuando se empieza a escribir, el panel SIEMPRE debe estar abierto (pero no guardar como userExpanded)
   useEffect(() => {
     if (address.length > 0) {
       Animated.timing(panelHeight, {
@@ -150,9 +144,7 @@ export default function Mapa({ route, navigation }) {
         useNativeDriver: false,
       }).start();
       setPanelExpanded(true);
-      // NO modificar userExpanded aquí
     } else if (!userExpanded) {
-      // Si el usuario no lo dejó abierto, volver a colapsar
       Animated.timing(panelHeight, {
         toValue: 220,
         duration: 200,
@@ -171,7 +163,7 @@ export default function Mapa({ route, navigation }) {
     try {
       const loc = await Location.getCurrentPositionAsync({});
       setLocation({ latitude: loc.coords.latitude, longitude: loc.coords.longitude });
-      setAddress(`${loc.coords.latitude},${loc.coords.longitude}`); // <-- CAMBIO
+      setAddress(`${loc.coords.latitude},${loc.coords.longitude}`); 
       setSelectedCoord({
         latitude: loc.coords.latitude,
         longitude: loc.coords.longitude,
@@ -184,11 +176,11 @@ export default function Mapa({ route, navigation }) {
         longitudeDelta: 0.01
       });
     } catch (e) {
-      // Manejo de error
+      
     }
     setLoading(false);
   } else {
-    setAddress(`${location.latitude},${location.longitude}`); // <-- CAMBIO
+    setAddress(`${location.latitude},${location.longitude}`); 
     setSelectedCoord({
       latitude: location.latitude,
       longitude: location.longitude,
@@ -280,7 +272,6 @@ export default function Mapa({ route, navigation }) {
                   useNativeDriver: false,
                 }).start();
                 setPanelExpanded(true);
-                // NO modificar userExpanded aquí
               }}
             />
           </View>
