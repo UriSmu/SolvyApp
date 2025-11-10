@@ -11,6 +11,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { StatusBar } from 'expo-status-bar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BarChart, PieChart } from 'react-native-chart-kit';
+import { formatDate } from '../utils/formatDate';
 
 const TABS = [
   { key: 'actividad', label: 'Actividad' },
@@ -115,7 +116,8 @@ function ActividadItem({ item, nombre, idlogo, getHoraMinutos }) {
   }, [item.direccion_servicio]);
 
   // Mostrar fecha: usar fechaservicio, si no existe usar fechasolicitud
-  const fechaMostrar = item.fechaservicio || item.fechasolicitud || '';
+  const rawFecha = item.fechaservicio || item.fechasolicitud || '';
+  const fechaMostrar = formatDate(rawFecha, { withTime: false });
 
   return (
     <View style={styles.card}>
@@ -259,7 +261,11 @@ export default function ActividadScreen() {
   actividadesUltimoMes.forEach(item => {
     const fechaStr = item.fechaservicio || item.fechasolicitud;
     if (fechaStr) {
-      serviciosPorDia[fechaStr] = (serviciosPorDia[fechaStr] || 0) + 1;
+      const f = new Date(fechaStr);
+      if (!isNaN(f.getTime())) {
+        const dayKey = f.toISOString().slice(0, 10);
+        serviciosPorDia[dayKey] = (serviciosPorDia[dayKey] || 0) + 1;
+      }
     }
   });
 

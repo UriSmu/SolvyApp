@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, FlatList, ActivityIndicator, 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { BarChart, PieChart } from 'react-native-chart-kit';
+import { formatDate } from '../utils/formatDate';
 
 const TABS = [
   { key: 'actividad', label: 'Actividad' },
@@ -87,8 +88,16 @@ export default function SolverActividad({ navigation }) {
 
   const renderItem = ({ item }) => {
     const nombre = nombresSubservicio[item.idsubservicio] || item.nombre_subservicio || 'Servicio';
-    const fecha = item.fechaservicio || item.fechasolicitud || '';
+    const rawFecha = item.fechaservicio || item.fechasolicitud || '';
+    const fecha = formatDate(rawFecha, { withTime: false });
     const hora = item.horainicial || '';
+    const horaFormateada = (() => {
+      if (!hora) return '';
+      const d = new Date(hora);
+      if (!isNaN(d.getTime())) return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const m = hora.match(/T(\d{2}:\d{2})/);
+      return m ? m[1] : hora;
+    })();
     const monto = item.monto || '';
     return (
       <View style={styles.card}>
@@ -99,7 +108,7 @@ export default function SolverActividad({ navigation }) {
         </View>
         <View style={styles.center}>
           <Text style={styles.title}>{nombre}</Text>
-          <Text style={styles.meta}>{fecha} {hora ? `- ${hora}` : ''}</Text>
+          <Text style={styles.meta}>{fecha}{horaFormateada ? ` - ${horaFormateada}` : ''}</Text>
           <Text style={styles.meta}>${monto}</Text>
         </View>
       </View>
@@ -140,7 +149,11 @@ export default function SolverActividad({ navigation }) {
   actividadesUltimoMes.forEach(item => {
     const fechaStr = item.fechaservicio || item.fechasolicitud;
     if (fechaStr) {
-      serviciosPorDia[fechaStr] = (serviciosPorDia[fechaStr] || 0) + 1;
+      const f = new Date(fechaStr);
+      if (!isNaN(f.getTime())) {
+        const dayKey = f.toISOString().slice(0, 10); // YYYY-MM-DD
+        serviciosPorDia[dayKey] = (serviciosPorDia[dayKey] || 0) + 1;
+      }
     }
   });
 
